@@ -1,0 +1,45 @@
+<section>
+  <header>
+    <button type="button" aria-label="Zurück">←</button>
+    <h1>Konto erstellen</h1>
+    <p>Mit deinem Namen und deiner E-Mail-Adresse hast du dein neues DABubble-Konto.</p>
+  </header>
+
+  <form>
+    <label for="fullName">Name und Nachname</label>
+    <input
+      id="fullName"
+      name="fullName"
+      type="text"
+      autocomplete="name"
+      required
+    />
+
+    <label for="email">E-Mail</label>
+    <input
+      id="email"
+      name="email"
+      type="email"
+      autocomplete="email"
+      required
+    />
+
+    <label for="password">Passwort</label>
+    <input
+      id="password"
+      name="password"
+      type="password"
+      autocomplete="new-password"
+      required
+    />
+
+    <div>
+      <input id="privacy" name="privacy" type="checkbox" required />
+      <label for="privacy">Ich stimme der <a href="#">Datenschutzerklärung</a> zu.</label>
+    </div>
+
+    <footer>
+      <button type="submit">Weiter</button>
+    </footer>
+  </form>
+</section>
