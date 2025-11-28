@@ -5,7 +5,13 @@
     <p>Mit deinem Namen und deiner E-Mail-Adresse hast du dein neues DABubble-Konto.</p>
   </header>
 
-  <form>
+  <form #signupForm="ngForm" (ngSubmit)="onSubmit(signupForm)" novalidate>
+    @if (errorMessage) {
+    <p>
+      {{ errorMessage }}
+    </p>
+    }
+
     <label for="fullName">Name und Nachname</label>
     <input
       id="fullName"
@@ -13,6 +19,7 @@
       type="text"
       autocomplete="name"
       required
+      [(ngModel)]="name"
     />
 
     <label for="email">E-Mail</label>
@@ -22,6 +29,7 @@
       type="email"
       autocomplete="email"
       required
+      [(ngModel)]="emailAddress"
     />
 
     <label for="password">Passwort</label>
@@ -31,15 +39,26 @@
       type="password"
       autocomplete="new-password"
       required
+      [(ngModel)]="password"
     />
 
+    @if (passwordValidationErrors.length > 0) {
+    <ul>
+      @for (message of passwordValidationErrors; track $index) {
+      <li>
+        {{ message }}
+      </li>
+      }
+    </ul>
+    }
+
     <div>
-      <input id="privacy" name="privacy" type="checkbox" required />
+      <input id="privacy" name="privacy" type="checkbox" required [(ngModel)]="acceptedPrivacy" />
       <label for="privacy">Ich stimme der <a href="#">Datenschutzerklärung</a> zu.</label>
     </div>
 
     <footer>
-      <button type="submit">Weiter</button>
+      <button type="submit" [disabled]="isSubmitting || signupForm.invalid">Weiter</button>
     </footer>
   </form>
 </section>
