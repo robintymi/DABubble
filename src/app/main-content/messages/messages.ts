@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-messages',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './messages.html',
   styleUrl: './messages.scss',
 })
