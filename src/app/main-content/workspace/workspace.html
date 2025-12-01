@@ -10,7 +10,7 @@
     <div>
       <span>▾</span>
       <div><img src="imgs/workspace/channellist img.png" alt="" /><span>Channels</span></div>
-      <span>+</span>
+      <span role="button" tabindex="0" (click)="openCreateChannel()">+</span>
     </div>
     <ul>
       <li *ngFor="let channel of channels$ | async">
@@ -18,9 +18,11 @@
       </li>
     </ul>
     <div>
-      <button>
-        <img src="imgs/workspace/add new channel.png" alt="" />
+      <button type="button" (click)="openCreateChannel()">
+        <img src="imgs/workspace/add new channel.png" alt="Neuen Channel anlegen" />
       </button>
     </div>
   </div>
 </section>
+
+<app-create-channel *ngIf="isCreateChannelOpen" (close)="closeCreateChannel()"></app-create-channel>

@@ -1,16 +1,41 @@
-<form action="">
+<div class="overlay" (click)="closeOverlay()">
+  <form
+    (ngSubmit)="createChannel(createChannelForm)"
+    (click)="$event.stopPropagation()"
+    #createChannelForm="ngForm"
+  >
+    <header>
+      <h1>Channel erstellen</h1>
+      <button (click)="closeOverlay()">x</button>
+    </header>
+    <label>
+      <div>
+        <h2>Channel-Name</h2>
+      </div>
+      <input
+        name="title"
+        type="text"
+        placeholder="# z.B. Kooperationsprojekte"
+        required
+        maxlength="120"
+        [(ngModel)]="title"
+      />
+    </label>
+    <label>
+      <div class="label-row">
+        <h2>Beschreibung</h2>
+        <span>(optional)</span>
+      </div>
+      <textarea
+        name="description"
+        placeholder="Dein Text hier"
+        maxlength="200"
+        [(ngModel)]="description"
+      ></textarea>
+    </label>
     <div>
-    <h1>Channel erstellen</h1>
-      <span>X</span>
+        <button (click)="closeOverlay()" [disabled]="isSubmitting">Abbrechen</button>
+        <button type="submit" [disabled] ="createChannelForm.invalid || isSubmitting">{{isSubmitting? 'Erstellen...':'Erstellen'}}</button>
     </div>
-<div>
-    <h2>Channel-Name</h2>
-    <input type="text" placeholder="# z.B. Kooperationsprojekte">
+  </form>
 </div>
-<div>
-    <h2>Beschreibung</h2>
-    <span>(optional)</span>
-    <input type="text" placeholder="Dein Text hier">
-</div>
-<Button>Erstellen</Button>
-</form>
