@@ -1,0 +1,60 @@
+<section class="set-profile-picture">
+  <div class="set-profile-picture-card">
+    <header class="set-profile-picture-header">
+      <button
+        type="button"
+        class="set-profile-picture-back-button"
+        aria-label="Zurück"
+        (click)="onBackToSignup()"
+      >
+        ←
+      </button>
+
+      <h1 class="set-profile-picture-title">Wähle deinen Avatar</h1>
+    </header>
+
+    <main class="set-profile-picture-content">
+      <div class="set-profile-picture-avatar-wrapper">
+        <div class="set-profile-picture-avatar-circle">
+          <img [src]="profilePicture.path" alt="Aktuelles Profilbild" />
+        </div>
+      </div>
+
+      <div class="set-profile-picture-username">{{ displayName }}</div>
+
+      <div class="set-profile-picture-subtitle">Aus der Liste wählen</div>
+
+      <div class="set-profile-picture-options">
+        @for (picture of profilePictureOptions; track picture.key) { @if (picture.key !=
+        profilePicture.key) {
+        <button
+          type="button"
+          class="set-profile-picture-option-button"
+          (click)="selectProfilePicture(picture.path)"
+        >
+          <img [src]="picture.path" [alt]="'Profilbild ' + ($index + 1)" />
+        </button>
+        } }
+      </div>
+
+      <div class="set-profile-picture-footer">
+        <button
+          type="button"
+          class="set-profile-picture-next-button"
+          (click)="signUp()"
+          [disabled]="isSubmitting"
+        >
+          Konto jetzt erstellen
+        </button>
+      </div>
+
+      @if (isSubmitting) {
+      <p class="set-profile-picture-status">Konto wird erstellt …</p>
+      } @if (updateErrorMessage) {
+      <p class="set-profile-picture-status set-profile-picture-status-error">
+        {{ updateErrorMessage }}
+      </p>
+      }
+    </main>
+  </div>
+</section>

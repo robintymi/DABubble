@@ -1,20 +1,22 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth';
-import { AuthenticationResult } from '../interfaces';
+import { NOTIFICATIONS } from '../notifications';
+import { RegistrationStateService } from '../services/registration-state';
+import { PROFILE_PICTURE_URLS } from '../set-profile-picture/set-profile-picture';
 
 @Component({
   selector: 'app-signup',
-  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './signup.html',
   styleUrl: './signup.scss',
 })
-export class Signup {
+export class Signup implements OnInit {
   private authenticationService = inject(AuthService);
   private router = inject(Router);
+  private registrationStateService = inject(RegistrationStateService);
 
   name = '';
   emailAddress = '';
@@ -24,6 +26,16 @@ export class Signup {
   isSubmitting = false;
   errorMessage: string | null = null;
   passwordValidationErrors: string[] = [];
+
+  ngOnInit(): void {
+    const storedData = this.registrationStateService.getRegistrationData();
+    if (storedData) {
+      this.name = storedData.fullName;
+      this.emailAddress = storedData.emailAddress;
+      this.password = storedData.password;
+      this.acceptedPrivacy = storedData.acceptedPrivacy;
+    }
+  }
 
   async onSubmit(form: NgForm): Promise<void> {
     if (this.isSubmitting || form.invalid) {
@@ -45,23 +57,24 @@ export class Signup {
         return;
       }
 
-      const authenticationResult = await this.authenticationService.signUpWithEmailAndPassword(
-        this.emailAddress,
-        this.password
-      );
+      this.registrationStateService.setRegistrationData({
+        fullName: this.name,
+        emailAddress: this.emailAddress,
+        password: this.password,
+        acceptedPrivacy: this.acceptedPrivacy,
+        profilePicture: { key: 'default', path: PROFILE_PICTURE_URLS.default },
+      });
 
-      console.log(authenticationResult);
-
-      await this.router.navigate(['/app']);
+      await this.router.navigate(['/set-profile-picture']);
     } catch (error: any) {
-      if (error && typeof error === 'object' && 'success' in error) {
-        const authenticationResultError = error as AuthenticationResult<unknown>;
-        this.errorMessage = authenticationResultError.errorMessage ?? 'Signup fehlgeschlagen.';
-      } else {
-        this.errorMessage = error?.message ?? 'Signup fehlgeschlagen.';
-      }
+      this.errorMessage = error?.message ?? NOTIFICATIONS.SIGNUP_ERROR;
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  onBackToLogin(): void {
+    this.registrationStateService.clearRegistrationData();
+    this.router.navigate(['/login']);
   }
 }

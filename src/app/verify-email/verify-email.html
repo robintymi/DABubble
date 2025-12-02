@@ -1,0 +1,19 @@
+<section class="min-h-screen flex items-center justify-center px-4">
+  <div
+    class="w-full max-w-xl rounded-[32px] bg-white shadow-lg px-8 py-10 sm:px-12 sm:py-12 text-center"
+  >
+    <h1 class="text-[28px] font-extrabold leading-tight text-[#4A5CF6]">
+      Bitte bestätige deine E-Mail-Adresse
+    </h1>
+
+    <p class="mt-4 text-sm sm:text-base text-slate-600">
+      Wir haben dir eine Bestätigungs-E-Mail an deine E-Mail-Adresse @if (currentEmail) {
+      <span class="font-semibold">{{ currentEmail }}</span>
+      } gesendet.
+    </p>
+
+    <p class="mt-2 text-sm sm:text-base text-slate-500">
+      Öffne die E-Mail und klicke auf den Bestätigungslink, um dein Konto zu aktivieren.
+    </p>
+  </div>
+</section>
