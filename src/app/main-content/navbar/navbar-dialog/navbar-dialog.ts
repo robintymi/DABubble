@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { OverlayService } from '../../../services/overlay.service';
 import { ProfileMenu } from '../profile-menu/profile-menu';
+import { AuthService } from '../../../services/auth';
 
 @Component({
   selector: 'app-navbar-dialog',
@@ -12,13 +13,20 @@ export class NavbarDialog {
   private overlayService = inject(OverlayService);
   originTarget!: HTMLElement;
 
+  constructor(private authService: AuthService) {}
+
   openProfileDialog(event: Event) {
     this.overlayService.open(ProfileMenu, {
       target: this.originTarget,
-      offsetX: -380,
+      offsetX: -400,
       offsetY: 10,
-      backdropOpacity: 0.6,
-      data: { originTarget: this.originTarget }
+      data: { originTarget: this.originTarget },
     });
+  }
+
+  logOut() {
+    this.authService.signOut();
+    console.log('User logged out');
+    this.overlayService.closeLast();
   }
 }

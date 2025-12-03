@@ -17,9 +17,8 @@ export class ProfileMenu {
     this.overlayService.closeLast();
     this.overlayService.open(ProfileMenuEdit, {
       target: this.originTarget,
-      offsetX: -380,
+      offsetX: -400,
       offsetY: 10,
-      backdropOpacity: 0.6,
     });
 
     console.log('Edit Profile clicked');

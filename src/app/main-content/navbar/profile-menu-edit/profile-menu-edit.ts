@@ -13,4 +13,8 @@ export class ProfileMenuEdit {
   closeOverlay() {
     this.overlayService.closeLast();
   }
+
+  updateName() {
+    console.log('Name updated');
+  }
 }

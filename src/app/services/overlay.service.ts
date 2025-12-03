@@ -4,16 +4,49 @@ import { OverlayRef, OverlayConfig } from '../classes/overlay.class';
 @Injectable({ providedIn: 'root' })
 export class OverlayService {
   private appRef = inject(ApplicationRef);
-  private overlays: OverlayRef<object>[] = [];
   private envInjector = inject(EnvironmentInjector);
 
+  private overlays: OverlayRef<object>[] = [];
+  private backdrop!: HTMLElement;
+
+  constructor() {
+    this.createBackdrop();
+  }
+
+  private createBackdrop() {
+    this.backdrop = document.createElement('div');
+
+    Object.assign(this.backdrop.style, {
+      position: 'fixed',
+      inset: '0',
+      background: 'rgba(0,0,0,0.4)',
+      zIndex: '999',
+      display: 'none',
+    });
+
+    this.backdrop.addEventListener('click', () => this.closeLast());
+
+    document.body.appendChild(this.backdrop);
+  }
+
   open<T extends object>(component: Type<T>, config?: OverlayConfig<T>) {
-    const overlayRef = new OverlayRef<T>(component, config, this.appRef, this.envInjector);
+    this.backdrop.style.display = 'block';
+
+    const overlayRef = new OverlayRef<T>(
+      component,
+      config,
+      this.appRef,
+      this.envInjector
+    );
 
     this.overlays.push(overlayRef as OverlayRef<object>);
 
     overlayRef.onClose(() => {
-      this.overlays = this.overlays.filter((o) => o !== overlayRef);
+      this.overlays = this.overlays.filter(o => o !== overlayRef);
+
+      if (this.overlays.length === 0) {
+        this.backdrop.style.display = 'none';
+      }
     });
 
     overlayRef.open();
@@ -26,7 +59,8 @@ export class OverlayService {
   }
 
   closeAll() {
-    this.overlays.forEach((o) => o.close());
+    this.overlays.forEach(o => o.close());
     this.overlays = [];
+    this.backdrop.style.display = 'none';
   }
 }

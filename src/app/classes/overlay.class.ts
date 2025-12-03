@@ -18,7 +18,9 @@ export interface OverlayConfig<T = any> {
 export class OverlayRef<T extends object = any> {
   private componentRef!: ComponentRef<T>;
   private overlayContainer!: HTMLElement;
-  private backdrop!: HTMLElement;
+
+  private _updateBound!: () => void;
+  private _escListener!: (e: KeyboardEvent) => void;
 
   constructor(
     private component: Type<T>,
@@ -28,22 +30,10 @@ export class OverlayRef<T extends object = any> {
   ) {}
 
   open() {
-    this.backdrop = document.createElement('div');
-    Object.assign(this.backdrop.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100%',
-      height: '100%',
-      background: `rgba(0,0,0,${this.config.backdropOpacity ?? 0.4})`,
-      zIndex: '999'
-    });
-    document.body.appendChild(this.backdrop);
-
     this.overlayContainer = document.createElement('div');
     Object.assign(this.overlayContainer.style, {
       position: 'fixed',
-      zIndex: '1000'
+      zIndex: '1000',
     });
     document.body.appendChild(this.overlayContainer);
 
@@ -58,19 +48,21 @@ export class OverlayRef<T extends object = any> {
     this.appRef.attachView(this.componentRef.hostView);
     const domElem = (this.componentRef.hostView as EmbeddedViewRef<any>)
       .rootNodes[0] as HTMLElement;
+
     this.overlayContainer.appendChild(domElem);
 
     this.updatePosition();
 
-    // Correct bindings
-    this.backdrop.addEventListener('click', this.close);
     this._updateBound = this.updatePosition.bind(this);
 
     window.addEventListener('resize', this._updateBound);
     window.addEventListener('scroll', this._updateBound);
-  }
 
-  private _updateBound!: () => void;
+    this._escListener = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') this.close();
+    };
+    window.addEventListener('keydown', this._escListener);
+  }
 
   private updatePosition() {
     if (!this.config.target) return;
@@ -84,20 +76,21 @@ export class OverlayRef<T extends object = any> {
   }
 
   close = () => {
-    this.backdrop.removeEventListener('click', this.close);
+    window.removeEventListener('keydown', this._escListener);
     window.removeEventListener('resize', this._updateBound);
     window.removeEventListener('scroll', this._updateBound);
 
     this.appRef.detachView(this.componentRef.hostView);
     this.componentRef.destroy();
-
     this.overlayContainer.remove();
-    this.backdrop.remove();
 
     this.onCloseCallback?.();
+
+    (document.activeElement as HTMLElement)?.blur();
   };
 
   private onCloseCallback?: () => void;
+
   onClose(cb: () => void) {
     this.onCloseCallback = cb;
   }
