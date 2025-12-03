@@ -4,7 +4,7 @@ import { AuthService } from '../../services/auth';
 import { NOTIFICATIONS } from '../../notifications';
 import { RegistrationStateService } from '../../services/registration-state';
 import { Router } from '@angular/router';
-import { AuthenticationResult, ProfilePicture, ProfilePictureKey } from '../../types';
+import { ProfilePicture, ProfilePictureKey } from '../../types';
 
 export const PROFILE_PICTURE_URLS = {
   default: 'imgs/default-profile-picture.png',
@@ -83,25 +83,18 @@ export class SetProfilePicture implements OnInit {
     this.updateErrorMessage = '';
 
     try {
-      const { data } = await this.authService.signUpWithEmailAndPassword(
+      const userCredential = await this.authService.signUpWithEmailAndPassword(
         registrationData.emailAddress,
         registrationData.password
       );
 
       await this.authService.updateUserProfile(registrationData.fullName, this.profilePicture.path);
-
-      await this.authService.sendEmailVerificationLink(data!.user);
+      await this.authService.sendEmailVerificationLink(userCredential.user);
 
       this.registrationStateService.clearRegistrationData();
       await this.router.navigate(['/verify-email']);
     } catch (error: any) {
-      if (error && typeof error === 'object' && 'success' in error) {
-        const authenticationResultError = error as AuthenticationResult<unknown>;
-        this.updateErrorMessage =
-          authenticationResultError.errorMessage ?? NOTIFICATIONS.SIGNUP_ERROR;
-      } else {
-        this.updateErrorMessage = error?.message ?? NOTIFICATIONS.SIGNUP_ERROR;
-      }
+      this.updateErrorMessage = error?.message ?? NOTIFICATIONS.SIGNUP_ERROR;
     } finally {
       this.isSubmitting = false;
     }

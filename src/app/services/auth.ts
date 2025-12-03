@@ -7,8 +7,8 @@ import {
   user,
   createUserWithEmailAndPassword,
   idToken,
-  signInWithEmailAndPassword,
-  signOut,
+  signInWithEmailAndPassword as firebaseSignInWithEmailAndPassword,
+  signOut as firebaseSignOut,
   AuthErrorCodes,
   validatePassword,
   updateProfile,
@@ -19,7 +19,7 @@ import {
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { AuthenticationResult, PasswordValidationResult } from '../types';
+import { PasswordValidationResult } from '../types';
 import { NOTIFICATIONS } from '../notifications';
 
 @Injectable({
@@ -46,94 +46,59 @@ export class AuthService {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  private processError<T>(error: any): never {
-    const mappedErrorMessage = this.mapFirebaseError(error);
-    if (mappedErrorMessage) {
-      const authenticationResult: AuthenticationResult<T> = {
-        success: false,
-        errorMessage: mappedErrorMessage,
-      };
-      throw authenticationResult;
+  private throwMappedError(error: any): never {
+    const mappedMessage = this.mapFirebaseError(error);
+    if (mappedMessage) {
+      throw new Error(mappedMessage);
     }
     throw error;
   }
 
-  async signUpWithEmailAndPassword(
-    email: string,
-    password: string
-  ): Promise<AuthenticationResult<UserCredential>> {
+  async signUpWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
     try {
-      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
-      return {
-        success: true,
-        data: userCredential,
-      };
+      return await createUserWithEmailAndPassword(this.auth, email, password);
     } catch (error: any) {
-      this.processError<UserCredential>(error);
+      this.throwMappedError(error);
     }
   }
 
-  async signInWithEmailAndPassword(
-    email: string,
-    password: string
-  ): Promise<AuthenticationResult<UserCredential>> {
+  async signInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
     try {
-      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-      return {
-        success: true,
-        data: userCredential,
-      };
+      return await firebaseSignInWithEmailAndPassword(this.auth, email, password);
     } catch (error: any) {
-      this.processError<UserCredential>(error);
+      this.throwMappedError(error);
     }
   }
 
-  async signInWithGoogle(): Promise<AuthenticationResult<UserCredential>> {
+  async signInWithGoogle(): Promise<UserCredential> {
     try {
       const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(this.auth, provider);
-      return {
-        success: true,
-        data: userCredential,
-      };
+      return await signInWithPopup(this.auth, provider);
     } catch (error: any) {
-      this.processError<UserCredential>(error);
+      this.throwMappedError(error);
     }
   }
 
-  async signInAsGuest(): Promise<AuthenticationResult<UserCredential>> {
+  async signInAsGuest(): Promise<UserCredential> {
     try {
-      const userCredential = await signInAnonymously(this.auth);
-      return {
-        success: true,
-        data: userCredential,
-      };
+      return await signInAnonymously(this.auth);
     } catch (error: any) {
-      this.processError<UserCredential>(error);
+      this.throwMappedError(error);
     }
   }
 
-  async signOut(): Promise<AuthenticationResult<void>> {
+  async signOut(): Promise<void> {
     try {
-      await signOut(this.auth);
-      return {
-        success: true,
-      };
+      await firebaseSignOut(this.auth);
     } catch (error: any) {
-      this.processError<void>(error);
+      this.throwMappedError(error);
     }
   }
 
-  async updateUserProfile(
-    displayName?: string | null,
-    photoURL?: string | null
-  ): Promise<AuthenticationResult<User>> {
+  async updateUserProfile(displayName?: string | null, photoURL?: string | null): Promise<User> {
     const currentUser = this.auth.currentUser;
     if (!currentUser) {
-      return {
-        success: false,
-        errorMessage: NOTIFICATIONS.NO_USER_LOGGED_IN,
-      };
+      throw new Error(NOTIFICATIONS.NO_USER_LOGGED_IN);
     }
 
     try {
@@ -142,21 +107,15 @@ export class AuthService {
         photoURL: photoURL ?? currentUser.photoURL ?? undefined,
       });
 
-      return {
-        success: true,
-        data: currentUser,
-      };
+      return currentUser;
     } catch (error: any) {
-      this.processError<User>(error);
+      this.throwMappedError(error);
     }
   }
 
-  async sendEmailVerificationLink(user: User | null): Promise<AuthenticationResult<void>> {
+  async sendEmailVerificationLink(user: User | null): Promise<void> {
     if (!user) {
-      throw {
-        success: false,
-        errorMessage: NOTIFICATIONS.NO_USER_LOGGED_IN,
-      };
+      throw new Error(NOTIFICATIONS.NO_USER_LOGGED_IN);
     }
 
     try {
@@ -164,11 +123,8 @@ export class AuthService {
         url: `${window.location.origin}/email-confirmed`,
         handleCodeInApp: false,
       });
-      return {
-        success: true,
-      };
     } catch (error: any) {
-      this.processError<void>(error);
+      this.throwMappedError(error);
     }
   }
 

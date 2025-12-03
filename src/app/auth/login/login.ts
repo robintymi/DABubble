@@ -4,7 +4,6 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { NOTIFICATIONS } from '../../notifications';
-import { AuthenticationResult } from '../../types';
 import { UserCredential } from 'firebase/auth';
 
 @Component({
@@ -23,18 +22,7 @@ export class Login {
   isSubmitting = false;
   errorMessage: string | null = null;
 
-  private handleError(error: any) {
-    if (error && typeof error === 'object' && 'success' in error) {
-      const authenticationResultError = error as AuthenticationResult<unknown>;
-      this.errorMessage = authenticationResultError.errorMessage ?? NOTIFICATIONS.SIGNUP_ERROR;
-    } else {
-      this.errorMessage = error?.message ?? NOTIFICATIONS.SIGNUP_ERROR;
-    }
-  }
-
-  private async executeLogin(
-    loginAction: () => Promise<AuthenticationResult<UserCredential>>
-  ): Promise<void> {
+  private async executeLogin(loginAction: () => Promise<UserCredential>) {
     if (this.isSubmitting) {
       return;
     }
@@ -46,7 +34,7 @@ export class Login {
       await loginAction();
       this.router.navigate(['/main']);
     } catch (error: any) {
-      this.handleError(error);
+      this.errorMessage = error?.message ?? NOTIFICATIONS.SIGNUP_ERROR;
     } finally {
       this.isSubmitting = false;
     }

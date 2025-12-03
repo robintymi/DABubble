@@ -1,11 +1,5 @@
 import { PROFILE_PICTURE_URLS } from './auth/set-profile-picture/set-profile-picture';
 
-export interface AuthenticationResult<T> {
-  success: boolean;
-  data?: T;
-  errorMessage?: string;
-}
-
 export interface PasswordValidationResult {
   isValid: boolean;
   unmetCriteria: {
