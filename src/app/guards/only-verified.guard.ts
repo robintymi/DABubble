@@ -7,7 +7,7 @@ import {
 } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
-import { AuthService } from '../services/auth';
+import { AuthService } from '../services/auth.service';
 
 export const onlyVerifiedGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,

@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { OverlayService } from '../../../services/overlay.service';
 import { ProfileMenu } from '../profile-menu/profile-menu';
-import { AuthService } from '../../../services/auth';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-navbar-dialog',

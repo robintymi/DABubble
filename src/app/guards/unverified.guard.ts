@@ -6,7 +6,7 @@ import {
   RouterStateSnapshot,
 } from '@angular/router';
 import { map } from 'rxjs/operators';
-import { AuthService } from '../services/auth';
+import { AuthService } from '../services/auth.service';
 import { combineLatest } from 'rxjs';
 
 export const unverifiedGuard: CanActivateFn = (

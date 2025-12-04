@@ -7,7 +7,7 @@ import {
 } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthService } from '../services/auth';
+import { AuthService } from '../services/auth.service';
 
 export const emailConfirmedGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,

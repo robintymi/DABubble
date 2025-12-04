@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { User } from '@angular/fire/auth';
 
-import { AuthService } from '../../services/auth';
+import { AuthService } from '../../services/auth.service';
 import { NOTIFICATIONS } from '../../notifications';
 
 @Component({
