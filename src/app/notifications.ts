@@ -17,6 +17,7 @@ export const NOTIFICATIONS = {
   FIREBASE_INVALID_OOB_CODE:
     'Der Link ist ungültig oder wurde bereits verwendet. Bitte fordere eine neue E-Mail an.',
   FIREBASE_TOO_MANY_REQUESTS: 'Bitte warte einen Moment und versuche es dann erneut.',
+  FIREBASE_REQUIRES_RECENT_LOGIN: 'Bitte melde dich aus Sicherheitsgründen erneut an.',
 
   PASSWORD_RESET_EMAIL_SENT:
     'Wenn ein Konto mit dieser E-Mail-Adresse existiert, haben wir dir eine E-Mail zum Zurücksetzen des Passworts geschickt.',
@@ -28,4 +29,6 @@ export const NOTIFICATIONS = {
   EMAIL_VERIFICATION_STATUS_REFRESH_ERROR:
     'Der Status konnte nicht aktualisiert werden. Bitte versuche es erneut oder melde dich neu an.',
   EMAIL_VERIFICATION_RESENT_SUCCESS: 'Wir haben dir die Bestätigungs-E-Mail erneut gesendet.',
+
+  ACCOUNT_DELETION_SUCCESS: 'Dein Konto wurde dauerhaft gelöscht.',
 } as const;

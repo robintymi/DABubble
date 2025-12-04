@@ -20,6 +20,10 @@ import {
   applyActionCode,
   confirmPasswordReset as firebaseConfirmPasswordReset,
   verifyPasswordResetCode as firebaseVerifyPasswordResetCode,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  EmailAuthProvider,
+  deleteUser,
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
@@ -56,7 +60,9 @@ export class AuthService {
   private throwMappedError(error: any): never {
     const mappedMessage = this.mapFirebaseError(error);
     if (mappedMessage) {
-      throw new Error(mappedMessage);
+      const mappedError = new Error(mappedMessage) as any;
+      mappedError.code = error.code;
+      throw mappedError;
     }
     throw error;
   }
@@ -171,6 +177,73 @@ export class AuthService {
     }
   }
 
+  async reauthenticateWithPassword(password: string): Promise<User> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser || !currentUser.email) {
+      throw new Error(NOTIFICATIONS.NO_USER_LOGGED_IN);
+    }
+
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email, password);
+      const result = await reauthenticateWithCredential(currentUser, credential);
+      return result.user;
+    } catch (error: any) {
+      this.throwMappedError(error);
+    }
+  }
+
+  async reauthenticateWithGoogle(): Promise<User> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      throw new Error(NOTIFICATIONS.NO_USER_LOGGED_IN);
+    }
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await reauthenticateWithPopup(currentUser, provider);
+      return result.user;
+    } catch (error: any) {
+      this.throwMappedError(error);
+    }
+  }
+
+  async deleteCurrentUser(): Promise<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      throw new Error(NOTIFICATIONS.NO_USER_LOGGED_IN);
+    }
+
+    try {
+      await deleteUser(currentUser);
+      await this.router.navigate(['/login']);
+    } catch (error: any) {
+      this.throwMappedError(error);
+    }
+  }
+
+  getCurrentUserSignInProvider(): 'password' | 'google' | 'anonymous' | 'other' | null {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      return null;
+    }
+
+    if (currentUser.isAnonymous) {
+      return 'anonymous';
+    }
+
+    const primaryProviderId = currentUser.providerData[0]?.providerId;
+
+    if (primaryProviderId === 'password') {
+      return 'password';
+    }
+
+    if (primaryProviderId === 'google.com') {
+      return 'google';
+    }
+
+    return 'other';
+  }
+
   private readonly firebaseErrorMessages: Record<string, string> = {
     [AuthErrorCodes.INVALID_EMAIL]: NOTIFICATIONS.FIREBASE_INVALID_EMAIL,
     [AuthErrorCodes.USER_DISABLED]: NOTIFICATIONS.FIREBASE_USER_DISABLED,
@@ -183,6 +256,7 @@ export class AuthService {
     [AuthErrorCodes.EXPIRED_OOB_CODE]: NOTIFICATIONS.FIREBASE_EXPIRED_OOB_CODE,
     [AuthErrorCodes.INVALID_OOB_CODE]: NOTIFICATIONS.FIREBASE_INVALID_OOB_CODE,
     [AuthErrorCodes.TOO_MANY_ATTEMPTS_TRY_LATER]: NOTIFICATIONS.FIREBASE_TOO_MANY_REQUESTS,
+    [AuthErrorCodes.CREDENTIAL_TOO_OLD_LOGIN_AGAIN]: NOTIFICATIONS.FIREBASE_REQUIRES_RECENT_LOGIN,
   };
 
   private mapFirebaseError(error: any): string | undefined {

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -16,6 +16,9 @@ export class Login {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  mode = input<'login' | 'reauth'>('login');
+  completed = output<'login' | 'reauth'>();
+
   email = '';
   password = '';
 
@@ -24,20 +27,65 @@ export class Login {
   infoMessage: string | null = null;
   isResetMode = false;
 
+  private get isReauthMode(): boolean {
+    return this.mode() === 'reauth';
+  }
+
+  private resetMessages() {
+    this.errorMessage = null;
+    this.infoMessage = null;
+  }
+
   private async executeLogin(loginAction: () => Promise<UserCredential>) {
     if (this.isSubmitting) {
       return;
     }
 
     this.isSubmitting = true;
-    this.errorMessage = null;
-    this.infoMessage = null;
+    this.resetMessages();
 
     try {
       await loginAction();
-      this.router.navigate(['/main']);
+      await this.router.navigate(['/main']);
+      this.completed.emit('login');
     } catch (error: any) {
       this.errorMessage = error?.message ?? NOTIFICATIONS.SIGNUP_ERROR;
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  private async handleReauthWithPassword() {
+    if (this.isSubmitting) {
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.resetMessages();
+
+    try {
+      await this.authService.reauthenticateWithPassword(this.password);
+      this.completed.emit('reauth');
+    } catch (error: any) {
+      this.errorMessage = error?.message ?? NOTIFICATIONS.GENERAL_ERROR;
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  private async handleReauthWithGoogle() {
+    if (this.isSubmitting) {
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.resetMessages();
+
+    try {
+      await this.authService.reauthenticateWithGoogle();
+      this.completed.emit('reauth');
+    } catch (error: any) {
+      this.errorMessage = error?.message ?? NOTIFICATIONS.GENERAL_ERROR;
     } finally {
       this.isSubmitting = false;
     }
@@ -48,26 +96,39 @@ export class Login {
       return;
     }
 
+    if (this.isReauthMode) {
+      await this.handleReauthWithPassword();
+      return;
+    }
+
     await this.executeLogin(() =>
       this.authService.signInWithEmailAndPassword(this.email, this.password)
     );
   }
 
   async onLoginWithGoogle() {
+    if (this.isReauthMode) {
+      await this.handleReauthWithGoogle();
+      return;
+    }
+
     await this.executeLogin(() => this.authService.signInWithGoogle());
   }
 
   async onGuestLogin() {
+    if (this.isReauthMode) {
+      return;
+    }
+
     await this.executeLogin(() => this.authService.signInAsGuest());
   }
 
   onStartPasswordReset() {
-    if (this.isSubmitting) {
+    if (this.isSubmitting || this.isReauthMode) {
       return;
     }
 
-    this.errorMessage = null;
-    this.infoMessage = null;
+    this.resetMessages();
     this.isResetMode = true;
   }
 
@@ -76,8 +137,7 @@ export class Login {
       return;
     }
 
-    this.errorMessage = null;
-    this.infoMessage = null;
+    this.resetMessages();
     this.isResetMode = false;
   }
 
@@ -86,8 +146,7 @@ export class Login {
       return;
     }
 
-    this.errorMessage = null;
-    this.infoMessage = null;
+    this.resetMessages();
 
     if (!this.email) {
       this.errorMessage = NOTIFICATIONS.EMAIL_FORMAT_ERROR;

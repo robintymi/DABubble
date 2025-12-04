@@ -4,17 +4,23 @@
   >
     @if (!isResetMode) {
     <header class="mb-8">
+      @if (mode() === 'login') {
       <div class="mb-4 flex justify-end text-xs sm:text-sm text-slate-500">
         <span>Neu bei DABubble?</span>
         <a routerLink="/signup" class="ml-1 font-semibold text-[#4A5CF6] hover:underline">
           Konto erstellen
         </a>
       </div>
+      }
 
-      <h1 class="text-center text-[32px] font-extrabold leading-tight text-[#4A5CF6]">Anmeldung</h1>
+      <h1 class="text-center text-[32px] font-extrabold leading-tight text-[#4A5CF6]">
+        @if (mode() === 'login') { Anmeldung } @else { Erneut anmelden }
+      </h1>
 
       <p class="mt-3 text-center text-sm sm:text-base text-slate-500">
-        Wir empfehlen dir, die E-Mail-Adresse zu nutzen, die du bei der Arbeit verwendest.
+        @if (mode() === 'login') { Wir empfehlen dir, die E-Mail-Adresse zu nutzen, die du bei der
+        Arbeit verwendest. } @else { Bitte bestätige deine Anmeldung, um mit einer sensiblen Aktion
+        fortzufahren. }
       </p>
     </header>
 
@@ -63,6 +69,7 @@
         </div>
       </div>
 
+      @if (mode() === 'login') {
       <div class="flex justify-center">
         <button
           type="button"
@@ -73,6 +80,7 @@
           Passwort vergessen?
         </button>
       </div>
+      }
 
       <div class="flex items-center gap-4 text-xs sm:text-sm text-slate-400">
         <span class="h-px flex-1 bg-slate-200"></span>
@@ -92,10 +100,13 @@
           >
             G
           </span>
-          <span>Anmelden mit Google</span>
+          <span>
+            @if (mode() === 'login') { Anmelden mit Google } @else { Erneut anmelden mit Google }
+          </span>
         </button>
       </div>
 
+      @if (mode() === 'login') {
       <div class="mt-4 flex justify-center gap-4">
         <button
           type="submit"
@@ -114,6 +125,17 @@
           Gäste-Login
         </button>
       </div>
+      } @else {
+      <div class="mt-4 flex justify-center">
+        <button
+          type="submit"
+          [disabled]="isSubmitting || loginForm.invalid"
+          class="rounded-full bg-[#4A5CF6] px-8 py-3 text-sm font-semibold text-white shadow-md hover:bg-[#3c4ad1] disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {{ isSubmitting ? 'Bestätigen …' : 'Bestätigen' }}
+        </button>
+      </div>
+      }
     </form>
     } @else {
     <header class="mb-8">
