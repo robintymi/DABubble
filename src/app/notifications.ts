@@ -13,13 +13,19 @@ export const NOTIFICATIONS = {
   FIREBASE_WEAK_PASSWORD: 'Das Passwort ist zu schwach.',
   FIREBASE_INVALID_LOGIN_CREDENTIALS: 'Ungültige Anmeldedaten.',
   FIREBASE_POPUP_CLOSED_BY_USER: 'Popup geschlossen. Anmeldung abgebrochen.',
-
   FIREBASE_EXPIRED_OOB_CODE: 'Der Link ist abgelaufen. Bitte fordere eine neue E-Mail an.',
   FIREBASE_INVALID_OOB_CODE:
     'Der Link ist ungültig oder wurde bereits verwendet. Bitte fordere eine neue E-Mail an.',
+  FIREBASE_TOO_MANY_REQUESTS: 'Bitte warte einen Moment und versuche es dann erneut.',
 
   PASSWORD_RESET_EMAIL_SENT:
     'Wenn ein Konto mit dieser E-Mail-Adresse existiert, haben wir dir eine E-Mail zum Zurücksetzen des Passworts geschickt.',
   PASSWORD_RESET_PASSWORD_MISMATCH: 'Die eingegebenen Passwörter stimmen nicht überein.',
   PASSWORD_RESET_SUCCESS: 'Dein Passwort wurde erfolgreich geändert.',
+
+  EMAIL_VERIFICATION_NOT_YET_CONFIRMED:
+    'Email noch nicht bestätigt. Bitte prüfe deinen Spam-Ornder und klicke den Link in der Bestätigungs-E-Mail.',
+  EMAIL_VERIFICATION_STATUS_REFRESH_ERROR:
+    'Der Status konnte nicht aktualisiert werden. Bitte versuche es erneut oder melde dich neu an.',
+  EMAIL_VERIFICATION_RESENT_SUCCESS: 'Wir haben dir die Bestätigungs-E-Mail erneut gesendet.',
 } as const;
