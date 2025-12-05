@@ -20,10 +20,8 @@
   "useEditorConfig": true,
   "useTabs": false,
   "vueIndentScriptAndStyle": false,
-  "plugins": [
-    "prettier-plugin-tailwindcss"
-  ],
-  "tailwindStylesheet": "./src/styles/_tailwind.scss",
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "tailwindStylesheet": "./src/styles.css",
   "overrides": [
     {
       "files": "*.html",
