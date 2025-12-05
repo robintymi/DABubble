@@ -9,7 +9,7 @@ import { ChannelComponent } from './channel/channel';
 @Component({
   selector: 'app-main-content',
   standalone: true,
-  imports: [MatSidenavModule, Workspace, Navbar, Messages,ChannelComponent, Thread],
+  imports: [MatSidenavModule, Workspace, Navbar, Messages, ChannelComponent, Thread],
   templateUrl: './main-content.html',
   styleUrl: './main-content.scss',
 })
