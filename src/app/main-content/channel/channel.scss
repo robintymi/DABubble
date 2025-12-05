@@ -414,7 +414,12 @@
   font-weight: 700;
   box-shadow: 0 12px 28px rgba(79, 70, 229, 0.28);
 }
-
+.channel__empty {
+  margin: 16px 0;
+  text-align: center;
+  color: #64748b;
+  font-weight: 600;
+}
 .channel__send mat-icon {
   font-size: 18px;
 }
