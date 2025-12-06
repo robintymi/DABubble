@@ -2,13 +2,24 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { Observable, from, map, of, shareReplay, switchMap, take } from 'rxjs';
+import {
+  Observable,
+  combineLatest,
+  from,
+  map,
+  of,
+  shareReplay,
+  switchMap,
+  take,
+} from 'rxjs';
 import {
   Channel,
   ChannelAttachment,
   ChannelMessage,
   FirestoreService,
 } from '../../services/firestore.service';
+import { OverlayService } from '../../services/overlay.service';
+import { ChannelDescription } from '../messages/channel-description/channel-description';
 
 type ChannelDay = {
   label: string;
@@ -37,7 +48,7 @@ type ChannelMessageView = {
 })
 export class ChannelComponent {
   private readonly firestoreService = inject(FirestoreService);
-
+  private readonly overlayService = inject(OverlayService);
   protected readonly channelDefaults = {
     name: 'Entwicklerteam',
     summary:
@@ -196,5 +207,22 @@ export class ChannelComponent {
     });
 
     return `${formatter.format(date)} Uhr`;
+  }
+
+  protected openChannelDescription(event: Event): void {
+    const target = event.currentTarget as HTMLElement | null;
+
+    combineLatest([this.channelTitle$, this.channelDescription$])
+      .pipe(take(1))
+      .subscribe(([title, description]) => {
+        this.overlayService.open(ChannelDescription, {
+          target: target ?? undefined,
+          offsetY: 8,
+          data: {
+            title,
+            description,
+          },
+        });
+      });
   }
 }

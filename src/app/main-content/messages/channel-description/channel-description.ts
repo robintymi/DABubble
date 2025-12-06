@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { OverlayService } from '../../../services/overlay.service';
 
 @Component({
   selector: 'app-channel-description',
@@ -8,9 +9,14 @@ import { CommonModule } from '@angular/common';
   styleUrl: './channel-description.scss',
 })
 export class ChannelDescription {
-  @Output() readonly close = new EventEmitter<void>();
+  private readonly overlayService = inject(OverlayService);
+
+  @Input() title = '';
+  @Input() description = '';
+  @Input() createdBy = 'Team-Admins';
+  @Input() createdAt = 'Gerade eben';
 
   protected closeOverlay(): void {
-    this.close.emit();
+    this.overlayService.closeLast();
   }
 }

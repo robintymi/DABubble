@@ -1,10 +1,32 @@
-<div class="overlay" (click)="closeOverlay()">
-  <div>
-    <span>#</span>
-    <h1>Beispieltitle</h1>
-    <Button type="button" (click)="closeOverlay()">X</Button>
-  </div>  
-</div>
+<section class="channel-description">
+  <header class="channel-description__header">
+    <div class="channel-description__title">
+      <span class="channel-description__hash">#</span>
+      <div>
+        <p class="channel-description__label">Channel</p>
+        <h2>{{ title }}</h2>
+      </div>
+    </div>
 
-<!-- Whats next -->
- <!-- channel name section, description section, created from section , leave channel button-->
+    <button type="button" class="channel-description__close" aria-label="Overlay schließen" (click)="closeOverlay()">
+      ×
+    </button>
+  </header>
+
+  <p class="channel-description__summary">{{ description }}</p>
+
+  <div class="channel-description__meta">
+    <div>
+      <p class="channel-description__meta-label">Erstellt von</p>
+      <p class="channel-description__meta-value">{{ createdBy }}</p>
+    </div>
+    <div>
+      <p class="channel-description__meta-label">Erstellt am</p>
+      <p class="channel-description__meta-value">{{ createdAt }}</p>
+    </div>
+  </div>
+
+  <div class="channel-description__actions">
+    <button type="button" class="channel-description__primary" (click)="closeOverlay()">Schließen</button>
+  </div>
+</section>

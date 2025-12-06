@@ -1,7 +1,6 @@
 .channel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   background: #f6f8ff;
   padding: 16px;
   height: 100%;
@@ -43,67 +42,32 @@
   font-weight: 700;
 }
 
-
-.channel__summary {
-  margin: 0;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-
-.channel__actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.channel__member-stack {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.channel__icon-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
+.channel__description-trigger {
+  border: none;
+  background: transparent;
+  padding: 4px;
+  margin: -4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
   cursor: pointer;
-  color: #1f2937;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
 }
 
-.channel__icon-button:hover {
+.channel__description-trigger:hover {
   background: #eef2ff;
 }
 
-.channel__icon-button:active {
+.channel__description-trigger:active {
   transform: translateY(1px);
 }
 
-.channel__search {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  min-width: 240px;
-}
-
-.channel__search input {
-  border: none;
-  background: transparent;
-  outline: none;
-  width: 100%;
-  color: #0f172a;
+.channel__description-trigger img {
+  width: 24px;
+  height: 24px;
 }
 
 .channel__panel {
@@ -276,6 +240,30 @@
   gap: 8px;
 }
 
+.channel__icon-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1f2937;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.channel__icon-button:hover {
+  background: #eef2ff;
+}
+
+.channel__icon-button:active {
+  transform: translateY(1px);
+}
+
 .channel__reaction {
   width: 32px;
   height: 32px;
@@ -286,7 +274,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #1f2937;
 }
 
 .channel__reaction:hover {
@@ -358,14 +345,16 @@
   font-weight: 700;
   box-shadow: 0 12px 28px rgba(79, 70, 229, 0.28);
 }
+
+.channel__send mat-icon {
+  font-size: 18px;
+}
+
 .channel__empty {
   margin: 16px 0;
   text-align: center;
   color: #64748b;
   font-weight: 600;
-}
-.channel__send mat-icon {
-  font-size: 18px;
 }
 
 @media (max-width: 1024px) {

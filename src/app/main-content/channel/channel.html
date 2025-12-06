@@ -3,27 +3,14 @@
     <div class="channel__titles">
       <div class="channel__title-row">
         <h1># {{ (channelTitle$ | async) ?? channelDefaults.name }}</h1>
-        <img src="imgs/channel description/keyboard_arrow_down.svg" alt="">
-      </div>
-      <p class="channel__summary">
-        {{ (channelDescription$ | async) ?? channelDefaults.summary }}
-      </p>
-    </div>
-
-    <div class="channel__actions">
-      <div class="channel__member-stack" aria-label="Teilnehmerliste">
-        <button type="button" class="channel__icon-button" aria-label="Channel-Favorit">
-          <mat-icon>favorite_border</mat-icon>
-        </button>
-        <button type="button" class="channel__icon-button" aria-label="Benutzer stummschalten">
-          <mat-icon>notifications_off</mat-icon>
+        <button
+          type="button"
+          class="channel__description-trigger"
+          aria-label="Channel-Beschreibung öffnen"
+          (click)="openChannelDescription($event)">
+          <img src="imgs/channel description/keyboard_arrow_down.svg" alt="Channel-Beschreibung öffnen" />
         </button>
       </div>
-
-      <label class="channel__search" aria-label="Suche im Channel">
-        <mat-icon>search</mat-icon>
-        <input type="text" [placeholder]="'In #' + ((channelTitle$ | async) ?? channelDefaults.name) + ' suchen'" />
-      </label>
     </div>
   </header>
 

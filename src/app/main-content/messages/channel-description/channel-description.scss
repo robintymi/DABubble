@@ -1,5 +1,125 @@
-.overlay {
-    background: rgba(0,0,0,0.4);
-    display:flex;
-    z-index: 1000;
+:host {
+  display: block;
+  width: 360px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.channel-description {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #0f172a;
+}
+
+.channel-description__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.channel-description__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.channel-description__hash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 700;
+}
+
+.channel-description__label {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.channel-description h2 {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.channel-description__close {
+  border: none;
+  background: #f8fafc;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.channel-description__close:hover {
+  background: #e2e8f0;
+}
+
+.channel-description__summary {
+  margin: 0;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.channel-description__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.channel-description__meta-label {
+  margin: 0 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #94a3b8;
+}
+
+.channel-description__meta-value {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.channel-description__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.channel-description__primary {
+  border: none;
+  background: #4338ca;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.channel-description__primary:hover {
+  background: #3730a3;
+}
+
+.channel-description__primary:active {
+  transform: translateY(1px);
 }
