@@ -11,6 +11,7 @@ import {
   shareReplay,
   switchMap,
   take,
+  tap,
 } from 'rxjs';
 import {
   Channel,
@@ -20,6 +21,7 @@ import {
 } from '../../services/firestore.service';
 import { OverlayService } from '../../services/overlay.service';
 import { ChannelDescription } from '../messages/channel-description/channel-description';
+import { ChannelSelectionService } from '../../services/channel-selection.service';
 
 type ChannelDay = {
   label: string;
@@ -49,6 +51,7 @@ type ChannelMessageView = {
 export class ChannelComponent {
   private readonly firestoreService = inject(FirestoreService);
   private readonly overlayService = inject(OverlayService);
+  private readonly channelSelectionService = inject(ChannelSelectionService);
   protected readonly channelDefaults = {
     name: 'Entwicklerteam',
     summary:
@@ -66,18 +69,38 @@ export class ChannelComponent {
     name: 'Du',
     avatar: this.memberAvatars[0] ?? 'imgs/users/placeholder.svg',
   };
-
+  private readonly channels$ = this.firestoreService
+    .getChannels()
+    .pipe(shareReplay({ bufferSize: 1, refCount: true }));
   protected messageText = '';
   protected isSending = false;
 
-  protected readonly channel$: Observable<Channel | undefined> =
-    this.firestoreService
-      .getChannels()
-      .pipe(
-        // Ensure correct typing so 'channel' isn't inferred as {}
-        map((channels: Channel[]) => channels?.[0]),
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
+
+  protected readonly channel$: Observable<Channel | undefined> = combineLatest([
+    this.channelSelectionService.selectedChannelId$,
+    this.channels$,
+  ]).pipe(
+    tap(([selectedChannelId, channels]) => {
+      if (!selectedChannelId && channels.length > 0) {
+        const firstChannelId = channels[0]?.id;
+        this.channelSelectionService.selectChannel(firstChannelId);
+      }
+    }),
+    map(([selectedChannelId, channels]) => {
+      if (!channels.length) return undefined;
+      if (selectedChannelId) {
+        const activeChannel = channels.find(
+          (channel) => channel.id === selectedChannelId
+        );
+
+        if (activeChannel) return activeChannel;
+      }
+
+      return channels[0];
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+
 
   protected readonly channelTitle$: Observable<string> = this.channel$.pipe(
     map((channel) => channel?.title ?? this.channelDefaults.name)

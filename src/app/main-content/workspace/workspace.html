@@ -21,8 +21,7 @@
             type="button"
             (click)="toggleChannels()"
             [attr.aria-expanded]="!areChannelsCollapsed"
-            aria-controls="workspace-channels"
-          >
+            aria-controls="workspace-channels">
             {{ areChannelsCollapsed ? '▸' : '▾' }}
           </button>
           <img src="imgs/workspace/channellist img.png" alt="Kanäle" />
@@ -32,13 +31,18 @@
           class="workspace__icon-btn workspace__icon-btn--ghost"
           type="button"
           aria-label="Neuen Channel hinzufügen"
-          (click)="openCreateChannel()"
-        ></button>
+          (click)="openCreateChannel()"></button>
       </div>
       <ng-container *ngIf="!areChannelsCollapsed">
         <ul class="workspace__list" id="workspace-channels">
-          <li *ngFor="let channel of channels$ | async" class="workspace__list-item">
-            <span># {{ channel.title || 'Unbenannter Channel' }}</span>
+          <li *ngFor="let channel of channels$ | async">
+            <button
+              class="workspace__list-item"
+              type="button"
+              [class.workspace__list-item--active]="(selectedChannelId$ | async) === channel.id"
+              (click)="selectChannel(channel.id)">
+              <span># {{ channel.title || 'Unbenannter Channel' }}</span>
+            </button>
           </li>
         </ul>
         <button class="workspace__add-btn" type="button" (click)="openCreateChannel()">
@@ -55,8 +59,7 @@
             type="button"
             (click)="toggleDirectMessages()"
             [attr.aria-expanded]="!areDirectMessagesCollapsed"
-            aria-controls="workspace-direct-messages"
-          >
+            aria-controls="workspace-direct-messages">
             {{ areDirectMessagesCollapsed ? '▸' : '▾' }}
           </button>
           <img src="imgs/direktnachrichten img.svg" alt="Direktnachrichten" />
@@ -66,15 +69,13 @@
       <ul
         *ngIf="!areDirectMessagesCollapsed"
         class="workspace__list workspace__list--direct"
-        id="workspace-direct-messages"
-      >
+        id="workspace-direct-messages">
         <ng-container *ngIf="currentUser$ | async as user">
           <li class="workspace__list-item">
             <img
               class="workspace__avatar"
               [src]="user.photoURL || 'imgs/default-profile-picture.png'"
-              [alt]="user.displayName || user.email || 'Aktueller Nutzer'"
-            />
+              [alt]="user.displayName || user.email || 'Aktueller Nutzer'" />
             <span>{{ user.displayName || user.email || 'Aktueller Nutzer' }}</span>
           </li>
         </ng-container>
