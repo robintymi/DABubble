@@ -1,9 +1,5 @@
-<div class="overlay" role="dialog" aria-modal="true" aria-label="Channel erstellen" (click)="closeOverlay()">
-  <form
-    class="create-channel"
-    (ngSubmit)="createChannel(createChannelForm)"
-    (click)="$event.stopPropagation()"
-    #createChannelForm="ngForm">
+<div class="create-channel-overlay" role="dialog" aria-modal="true" aria-label="Channel erstellen">
+  <form class="create-channel" (ngSubmit)="createChannel(createChannelForm)" #createChannelForm="ngForm">
     <header class="create-channel__header">
       <div class="create-channel__titles">
         <p>

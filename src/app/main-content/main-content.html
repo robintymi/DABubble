@@ -5,20 +5,21 @@
     <mat-sidenav #leftSidenav opened mode="side"
       ><app-workspace (newMessage)="openNewMessagePanel()"></app-workspace
     ></mat-sidenav>
-    <mat-sidenav opened mode="side" position="end">
-      <ng-container *ngIf="showNewMessage; else threadView">
+    <mat-sidenav opened mode="side" position="end" *ngIf="!showNewMessage">
+      <app-thread></app-thread>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <ng-container *ngIf="showNewMessage; else channelView">
         <div class="new-message-panel">
           <app-new-message (close)="closeNewMessagePanel()"></app-new-message>
           <app-messages></app-messages>
         </div>
       </ng-container>
-      <ng-template #threadView>
-        <app-thread></app-thread>
+      <ng-template #channelView>
+        <app-channel></app-channel>
       </ng-template>
-    </mat-sidenav>
-    <!-- <app-workspace></app-workspace> -->
-    <!-- <app-messages></app-messages>  -->
-    <app-channel></app-channel>
+      </mat-sidenav-content>
   </mat-sidenav-container>
   <div class="absolute" *ngIf="leftSidenav.opened">
     <button
