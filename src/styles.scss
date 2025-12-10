@@ -1,5 +1,5 @@
-@use 'fonts';
-@use 'colors';
+@use './styles/fonts';
+@use './styles/colors';
 
 // Include theming for Angular Material with `mat.theme()`.
 // This Sass mixin will define CSS variables that are used for styling Angular Material
