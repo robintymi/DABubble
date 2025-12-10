@@ -2,7 +2,6 @@ import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { CreateChannel } from './create-channel/create-channel';
-import { OverlayService } from '../../services/overlay.service';
 
 import {
   Channel,
@@ -15,7 +14,7 @@ import { ChannelSelectionService } from '../../services/channel-selection.servic
 @Component({
   selector: 'app-workspace',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CreateChannel],
   templateUrl: './workspace.html',
   styleUrl: './workspace.scss',
 })
@@ -23,7 +22,6 @@ export class Workspace {
   private readonly firestoreService = inject(FirestoreService);
   private readonly authService = inject(AuthService);
   private readonly channelSelectionService = inject(ChannelSelectionService);
-  private readonly overlayService = inject(OverlayService);
   @Output() readonly newMessage = new EventEmitter<void>();
   protected readonly channels$: Observable<Channel[]> =
     this.firestoreService.getChannels();
@@ -34,11 +32,16 @@ export class Workspace {
     this.channelSelectionService.selectedChannelId$;
   protected areChannelsCollapsed = false;
   protected areDirectMessagesCollapsed = false;
+  protected isCreateChannelOpen = false;
   protected startNewMessage(): void {
     this.newMessage.emit();
   }
   protected openCreateChannel(): void {
-    this.overlayService.open(CreateChannel);
+    this.isCreateChannelOpen = true;
+  }
+
+  protected closeCreateChannel(): void {
+    this.isCreateChannelOpen = false;
   }
   protected toggleChannels(): void {
     this.areChannelsCollapsed = !this.areChannelsCollapsed;

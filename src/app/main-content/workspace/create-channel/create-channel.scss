@@ -1,12 +1,14 @@
 .create-channel-overlay {
-  width: 100vw;
-  height: 100vh;
+  position: fixed;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-    box-sizing: border-box;
-  pointer-events: none;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
 }
 
 .create-channel {
@@ -18,7 +20,6 @@
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-    pointer-events: auto;
 
   &__header {
     display: flex;

@@ -2,7 +2,6 @@ import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { FirestoreService } from '../../../services/firestore.service';
-import { OverlayService } from '../../../services/overlay.service';
 @Component({
   selector: 'app-create-channel',
   standalone: true,
@@ -16,7 +15,6 @@ export class CreateChannel {
   @Output() readonly close = new EventEmitter<void>();
 
   private readonly firestoreService = inject(FirestoreService);
-  private readonly overlayService = inject(OverlayService, { optional: true });
   protected title = '';
   protected description = '';
   protected isSubmitting = false;
@@ -26,7 +24,6 @@ export class CreateChannel {
       return;
     }
     this.close.emit();
-    this.overlayService?.closeLast();
   }
 
   protected async createChannel(form: NgForm): Promise<void> {
