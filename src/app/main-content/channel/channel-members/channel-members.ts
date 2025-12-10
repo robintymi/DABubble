@@ -1,0 +1,47 @@
+import { Component, Input, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { OverlayService } from '../../../services/overlay.service';
+import { trigger, transition, style, animate } from '@angular/animations';
+
+type ChannelMember = {
+  name: string;
+  avatar: string;
+  subtitle?: string;
+  isCurrentUser?: boolean;
+};
+
+@Component({
+  selector: 'app-channel-members',
+  standalone: true,
+  imports: [CommonModule, MatIconModule],
+  templateUrl: './channel-members.html',
+  styleUrl: './channel-members.scss',
+  animations: [
+    trigger('fadeScale', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-6px) scale(0.96)' }),
+        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0) scale(1)' })),
+      ]),
+      transition(':leave', [animate('180ms ease-in', style({ opacity: 0, transform: 'translateY(-4px) scale(0.96)' }))]),
+    ]),
+  ],
+})
+export class ChannelMembers {
+  private readonly overlayService = inject(OverlayService);
+
+  @Input() members: ChannelMember[] = [];
+  @Input() title = 'Mitglieder';
+
+  protected visible = true;
+
+  protected closeOverlay(): void {
+    this.visible = false;
+  }
+
+  protected onAnimationDone(): void {
+    if (!this.visible) {
+      this.overlayService.closeLast();
+    }
+  }
+}

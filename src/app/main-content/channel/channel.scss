@@ -19,6 +19,13 @@
   box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
 }
 
+.channel__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
 .channel__titles {
   display: flex;
   flex-direction: column;
@@ -92,7 +99,34 @@
   gap: 14px;
   border: 1px solid #e2e8f0;
 }
+.channel__members {
+  border: none;
+  background: linear-gradient(90deg, #4338ca, #6366f1);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
+}
 
+.channel__members mat-icon {
+  font-size: 20px;
+}
+
+.channel__members:hover {
+  transform: translateY(-1px);
+}
+
+.channel__members:active {
+  transform: translateY(1px);
+}
 .channel__day {
   text-align: center;
   font-weight: 700;
@@ -325,7 +359,6 @@
   align-items: center;
   gap: 12px;
 }
-
 
 .channel__send mat-icon {
   font-size: 18px;

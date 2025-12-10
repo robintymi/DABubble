@@ -22,6 +22,8 @@ import {
 import { OverlayService } from '../../services/overlay.service';
 import { ChannelDescription } from '../messages/channel-description/channel-description';
 import { ChannelSelectionService } from '../../services/channel-selection.service';
+import { UserService } from '../../services/user.service';
+import { ChannelMembers } from './channel-members/channel-members';
 
 type ChannelDay = {
   label: string;
@@ -39,7 +41,13 @@ type ChannelMessageView = {
   tag?: string;
   attachment?: ChannelAttachment;
 };
-
+type ChannelMember = {
+  id: string;
+  name: string;
+  avatar: string;
+  subtitle?: string;
+  isCurrentUser?: boolean;
+};
 @Component({
   selector: 'app-channel',
   standalone: true,
@@ -52,6 +60,7 @@ export class ChannelComponent {
   private readonly firestoreService = inject(FirestoreService);
   private readonly overlayService = inject(OverlayService);
   private readonly channelSelectionService = inject(ChannelSelectionService);
+  private readonly userService = inject(UserService);
   protected readonly channelDefaults = {
     name: 'Entwicklerteam',
     summary:
@@ -110,6 +119,21 @@ export class ChannelComponent {
     map((channel) => channel?.description ?? this.channelDefaults.summary)
   );
 
+  protected readonly members$: Observable<ChannelMember[]> = this.userService
+    .getAllUsers()
+    .pipe(
+      map((users) => {
+        const currentUserId = this.userService.currentUser()?.uid;
+
+        return users.map((user) => ({
+          id: user.uid,
+          name: user.name,
+          avatar: user.photoUrl || 'imgs/users/placeholder.svg',
+          subtitle: user.email ?? undefined,
+          isCurrentUser: user.uid === currentUserId,
+        }));
+      })
+    );
   protected readonly messagesByDay$: Observable<ChannelDay[]> = this.channel$.pipe(
     switchMap((channel) => {
       if (!channel?.id) {
@@ -249,6 +273,18 @@ export class ChannelComponent {
           title: resolvedChannel.title ?? this.channelDefaults.name,
           description: resolvedChannel.description ?? this.channelDefaults.summary,
         },
+      });
+    });
+  }
+
+  protected openChannelMembers(event: Event): void {
+    const target = event.currentTarget as HTMLElement | null;
+
+    this.members$.pipe(take(1)).subscribe((members) => {
+      this.overlayService.open(ChannelMembers, {
+        target: target ?? undefined,
+        offsetY: 8,
+        data: { members },
       });
     });
   }
