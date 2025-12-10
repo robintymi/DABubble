@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest, map } from 'rxjs';
 import { CreateChannel } from './create-channel/create-channel';
 
 import {
@@ -25,8 +25,14 @@ export class Workspace {
   @Output() readonly newMessage = new EventEmitter<void>();
   protected readonly channels$: Observable<Channel[]> =
     this.firestoreService.getChannels();
-  protected readonly directMessages$: Observable<DirectMessage[]> =
-    this.firestoreService.getDirectMessages();
+  protected readonly directMessages$: Observable<DirectMessage[]> = combineLatest([
+    this.firestoreService.getDirectMessages(),
+    this.authService.user$,
+  ]).pipe(
+    map(([directMessages, currentUser]) =>
+      directMessages.filter((directMessage) => directMessage.id !== currentUser?.uid)
+    )
+  );
   protected readonly currentUser$: Observable<User | null> = this.authService.user$;
   protected readonly selectedChannelId$ =
     this.channelSelectionService.selectedChannelId$;

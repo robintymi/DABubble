@@ -82,8 +82,14 @@
         </ng-container>
         <ng-container *ngIf="directMessages$ | async as directMessages">
           <li *ngFor="let directMessage of directMessages" class="workspace__list-item">
-            <img class="workspace__avatar" src="imgs/default-profile-picture.png" [alt]="directMessage.name" />
-            <span>{{ directMessage.name }}</span>
+            <img
+              class="workspace__avatar"
+              [src]="directMessage.photoUrl || 'imgs/default-profile-picture.png'"
+              [alt]="directMessage.name" />
+            <div class="workspace__user-details">
+              <span class="workspace__user-name">{{ directMessage.name }}</span>
+              <span class="workspace__user-email">{{ directMessage.email || 'Keine E-Mail hinterlegt' }}</span>
+            </div>
           </li>
         </ng-container>
       </ul>

@@ -36,7 +36,10 @@ export interface ChannelMessage {
 }
 
 export interface DirectMessage {
+  id: string;
   name: string;
+  email?: string | null;
+  photoUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -105,9 +108,14 @@ export class FirestoreService {
 
     return collectionData(usersCollection, { idField: 'id' }).pipe(
       map((users) =>
-        (users as Array<{ name?: string }>).map((user) => ({
-          name: user.name ?? 'Unbenannter Nutzer',
-        }))
+        (users as Array<{ name?: string; email?: string; photoUrl?: string }>).map(
+          (user) => ({
+            id: user['id'] as string,
+            name: user.name ?? 'Unbenannter Nutzer',
+            email: user.email,
+            photoUrl: user.photoUrl,
+          })
+        )
       )
     );
   }
