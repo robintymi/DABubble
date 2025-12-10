@@ -12,7 +12,11 @@
         </button>
       </div>
     </div>
-      <div class="channel__actions">
+    <div class="channel__actions">
+      <button type="button" class="channel__add-member" (click)="openAddToChannel($event)">
+        <img src="imgs/channels/person_add.svg" alt="Mitglied hinzufügen" />
+        Mitglied hinzufügen
+      </button>
       <button type="button" class="channel__members" (click)="openChannelMembers($event)">
         <mat-icon>group</mat-icon>
         Mitglieder
@@ -97,11 +101,8 @@
         [(ngModel)]="messageText"
         [placeholder]="'Nachricht an #' + ((channelTitle$ | async) ?? channelDefaults.name)"></textarea>
       <div class="channel__composer-actions">
-        <button
-          type="submit"
-          aria-label="Nachricht senden"
-          [disabled]="!messageText.trim() || isSending">
-         <img src="imgs/channels/send.svg" alt="">
+        <button type="submit" aria-label="Nachricht senden" [disabled]="!messageText.trim() || isSending">
+          <img src="imgs/channels/send.svg" alt="" />
         </button>
       </div>
     </form>

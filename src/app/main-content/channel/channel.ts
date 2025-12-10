@@ -24,6 +24,7 @@ import { ChannelDescription } from '../messages/channel-description/channel-desc
 import { ChannelSelectionService } from '../../services/channel-selection.service';
 import { UserService } from '../../services/user.service';
 import { ChannelMembers } from './channel-members/channel-members';
+import { AddToChannel } from './add-to-channel/add-to-channel';
 
 type ChannelDay = {
   label: string;
@@ -285,6 +286,18 @@ export class ChannelComponent {
         target: target ?? undefined,
         offsetY: 8,
         data: { members },
+      });
+    });
+  }
+
+  protected openAddToChannel(event: Event): void {
+    const target = event.currentTarget as HTMLElement | null;
+
+    this.channelTitle$.pipe(take(1)).subscribe((title) => {
+      this.overlayService.open(AddToChannel, {
+        target: target ?? undefined,
+        offsetY: 8,
+        data: { channelTitle: title },
       });
     });
   }

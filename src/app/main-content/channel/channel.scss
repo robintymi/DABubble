@@ -48,6 +48,40 @@
   font-size: 20px;
   font-weight: 700;
 }
+.channel__add-member {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 12px;
+  color: #4338ca;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(67, 56, 202, 0.12);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.channel__add-member img {
+  width: 20px;
+  height: 20px;
+}
+
+.channel__add-member:hover {
+  transform: translateY(-1px);
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  box-shadow: 0 10px 26px rgba(67, 56, 202, 0.16);
+}
+
+.channel__add-member:active {
+  transform: translateY(1px);
+}
 
 .channel__description-trigger {
   border: none;
