@@ -71,16 +71,15 @@
         *ngIf="!areDirectMessagesCollapsed"
         class="workspace__list workspace__list--direct"
         id="workspace-direct-messages">
-        
-        <ng-container *ngIf="directMessages$ | async as directMessages">
-          <li *ngFor="let directMessage of directMessages" class="workspace__list-item">
+        <ng-container *ngIf="users$ | async as users">
+          <li *ngFor="let user of users" class="workspace__list-item">
             <img
               class="workspace__avatar"
-              [src]="directMessage.photoUrl || 'imgs/default-profile-picture.png'"
-              [alt]="directMessage.name" />
+              [src]="user.photoUrl || 'imgs/default-profile-picture.png'"
+              [alt]="user.name" />
             <div class="workspace__user-details">
-              <span class="workspace__user-name">{{ directMessage.name }}</span>
-              <span class="workspace__user-email">{{ directMessage.email || 'Keine E-Mail hinterlegt' }}</span>
+              <span class="workspace__user-name">{{ user.name }}</span>
+              <span class="workspace__user-email">{{ user.email || 'Keine E-Mail hinterlegt' }}</span>
             </div>
           </li>
         </ng-container>

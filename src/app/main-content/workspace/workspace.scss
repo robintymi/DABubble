@@ -259,7 +259,8 @@
 }
 
 .workspace__list--direct {
-  max-height: none;
+  max-height: 220px;     /* oder 280px/40vh – wie du magst */
+  overflow-y: auto;
 }
 
 .workspace__status {

@@ -2,6 +2,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import {
   DocumentSnapshot,
   Firestore,
+  collection,
+  collectionData,
   doc,
   serverTimestamp,
   setDoc,
@@ -11,6 +13,7 @@ import {
 } from '@angular/fire/firestore';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { User as FirebaseUser } from 'firebase/auth';
+import { Observable, map } from 'rxjs';
 
 // Own User-Interface
 export interface AppUser {
@@ -169,4 +172,30 @@ export class UserService {
     const userRef = doc(this.firestore, `users/${user.uid}`);
     return updateDoc(userRef, data);
   }
+
+  /**
+   * Streams all users so they can be displayed (e.g., in the workspace menu).
+   */
+  getAllUsers(): Observable<AppUser[]> {
+    const usersCollection = collection(this.firestore, 'users');
+
+    return collectionData(usersCollection, { idField: 'uid' }).pipe(
+      map((users) => {
+        // 🔥 DEBUG: Alle User anzeigen, die aus Firestore kommen
+        console.log('🔥 [Firestore users] raw:', users);
+
+        return (users as Array<Partial<AppUser> & { uid?: string }>).map((user) => ({
+          uid: user.uid ?? 'unbekannt',
+          name: user.name ?? 'Unbenannter Nutzer',
+          email: user.email ?? null,
+          photoUrl: user.photoUrl || 'imgs/default-profile-picture.png',
+          onlineStatus: user.onlineStatus ?? false,
+          lastSeen: user.lastSeen,
+          updatedAt: user.updatedAt,
+          createdAt: user.createdAt,
+        }));
+      })
+    );
+  }
+
 }

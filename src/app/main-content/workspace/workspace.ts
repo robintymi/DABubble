@@ -3,12 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { CreateChannel } from './create-channel/create-channel';
 
-import {
-  Channel,
-  DirectMessage,
-  FirestoreService,
-} from '../../services/firestore.service';
+import { Channel, FirestoreService } from '../../services/firestore.service';
 import { ChannelSelectionService } from '../../services/channel-selection.service';
+import { AppUser, UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-workspace',
@@ -19,12 +16,13 @@ import { ChannelSelectionService } from '../../services/channel-selection.servic
 })
 export class Workspace {
   private readonly firestoreService = inject(FirestoreService);
+  private readonly userService = inject(UserService);
   private readonly channelSelectionService = inject(ChannelSelectionService);
   @Output() readonly newMessage = new EventEmitter<void>();
   protected readonly channels$: Observable<Channel[]> =
     this.firestoreService.getChannels();
-  protected readonly directMessages$: Observable<DirectMessage[]> =
-    this.firestoreService.getDirectMessages();
+  protected readonly users$: Observable<AppUser[]> =
+    this.userService.getAllUsers();
   protected readonly selectedChannelId$ =
     this.channelSelectionService.selectedChannelId$;
   protected areChannelsCollapsed = false;
