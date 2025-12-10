@@ -293,12 +293,14 @@ export class ChannelComponent {
   protected openAddToChannel(event: Event): void {
     const target = event.currentTarget as HTMLElement | null;
 
-    this.channelTitle$.pipe(take(1)).subscribe((title) => {
-      this.overlayService.open(AddToChannel, {
-        target: target ?? undefined,
-        offsetY: 8,
-        data: { channelTitle: title },
+    combineLatest([this.channelTitle$, this.members$])
+      .pipe(take(1))
+      .subscribe(([title, members]) => {
+        this.overlayService.open(AddToChannel, {
+          target: target ?? undefined,
+          offsetY: 8,
+          data: { channelTitle: title, members },
+        });
       });
-    });
   }
 }

@@ -1,21 +1,29 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { OverlayService } from '../../../services/overlay.service';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { FormsModule } from '@angular/forms';
+import { UserService } from '../../../services/user.service';
+import { take } from 'rxjs';
+
+type ChannelMember = {
+  id: string;
+  name: string;
+};
 
 type SuggestedMember = {
+  id: string;
   name: string;
-  role: string;
   avatar: string;
+  subtitle?: string;
   status?: 'online' | 'offline';
-  description?: string;
 };
 
 @Component({
   selector: 'app-add-to-channel',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, FormsModule],
   templateUrl: './add-to-channel.html',
   styleUrl: './add-to-channel.scss',
   animations: [
@@ -30,32 +38,59 @@ type SuggestedMember = {
     ]),
   ],
 })
-export class AddToChannel {
+export class AddToChannel implements OnInit {
   private readonly overlayService = inject(OverlayService);
+  private readonly userService = inject(UserService);
 
   @Input() channelTitle = 'Entwicklerteam';
+  @Input() members: ChannelMember[] = [];
 
   protected visible = true;
-  protected suggestedMembers: SuggestedMember[] = [
-    {
-      name: 'Noah Braun',
-      role: 'Backend Development',
-      avatar: 'imgs/users/Property 1=Noah Braun.svg',
-      status: 'online',
-      description: 'Welche Version ist aktuell im Channel?'
-    },
-    {
-      name: 'Maximilian Wolf',
-      role: 'UX Research',
-      avatar: 'imgs/users/Property 1=Maximilian Wolf.svg',
-    },
-    {
-      name: 'Lisa Krauss',
-      role: 'Marketing',
-      avatar: 'imgs/users/Property 1=Lisa Krauss.svg',
-      description: 'Neue Assets hochgeladen'
-    },
-  ];
+  protected searchTerm = '';
+  protected showSuggestions = false;
+  protected suggestedMembers: SuggestedMember[] = [];
+  protected filteredMembers: SuggestedMember[] = [];
+
+  ngOnInit(): void {
+    this.userService
+      .getAllUsers()
+      .pipe(take(1))
+      .subscribe((users) => {
+        this.suggestedMembers = users
+          .filter((user) => !this.members.some((member) => member.id === user.uid))
+          .map((user) => ({
+            id: user.uid,
+            name: user.name,
+            avatar: user.photoUrl || 'imgs/users/placeholder.svg',
+            subtitle: user.email ?? undefined,
+            status: user.onlineStatus ? 'online' : 'offline',
+          }));
+
+        this.filteredMembers = this.filterMembers(this.searchTerm);
+      });
+  }
+
+  protected onSearchFocus(): void {
+    this.showSuggestions = true;
+    this.filteredMembers = this.filterMembers(this.searchTerm);
+  }
+
+  protected onSearch(term: string): void {
+    this.searchTerm = term;
+    this.filteredMembers = this.filterMembers(term);
+  }
+
+  protected filterMembers(term: string): SuggestedMember[] {
+    const search = term.trim().toLowerCase();
+
+    if (!search) {
+      return [...this.suggestedMembers];
+    }
+
+    return this.suggestedMembers.filter((member) =>
+      member.name.toLowerCase().includes(search)
+    );
+  }
 
   protected closeOverlay(): void {
     this.visible = false;
