@@ -108,14 +108,19 @@ export class FirestoreService {
 
     return collectionData(usersCollection, { idField: 'id' }).pipe(
       map((users) =>
-        (users as Array<{ name?: string; email?: string; photoUrl?: string }>).map(
-          (user) => ({
-            id: user['id'] as string,
-            name: user.name ?? 'Unbenannter Nutzer',
-            email: user.email,
-            photoUrl: user.photoUrl,
-          })
-        )
+        (
+          users as Array<{
+            id?: string;
+            name?: string;
+            email?: string | null;
+            photoUrl?: string | null;
+          }>
+        ).map((user) => ({
+          id: user.id ?? 'unbekannt',
+          name: user.name ?? 'Unbenannter Nutzer',
+          email: user.email ?? null,
+          photoUrl: user.photoUrl ?? null,
+        }))
       )
     );
   }
