@@ -1,12 +1,13 @@
 import { Injectable, inject, signal } from '@angular/core';
 import {
+  DocumentSnapshot,
   Firestore,
   doc,
+  serverTimestamp,
   setDoc,
-  getDoc,
   updateDoc,
+  getDoc,
   onSnapshot,
-  DocumentSnapshot,
 } from '@angular/fire/firestore';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { User as FirebaseUser } from 'firebase/auth';
@@ -18,6 +19,9 @@ export interface AppUser {
   name: string;
   photoUrl: string;
   onlineStatus: boolean;
+  lastSeen?: unknown;
+  updatedAt?: unknown;
+  createdAt?: unknown;
   //   role?: 'moderator' | 'user';
 }
 
@@ -25,7 +29,7 @@ export interface AppUser {
 export class UserService {
   private firestore = inject(Firestore);
   private auth = inject(Auth);
-
+  private userSnapshotUnsubscribe?: () => void;
   /**
    * Signal for the currently logged-in user (AppUser).
    */
@@ -35,7 +39,7 @@ export class UserService {
   constructor() {
     onAuthStateChanged(this.auth, async (user) => {
       if (!user) {
-        this.currentUser.set(null);
+        await this.handleSignOutState();
         return;
       }
 
@@ -59,7 +63,12 @@ export class UserService {
       onlineStatus: true,
     };
 
-    return setDoc(userRef, newUser);
+    return setDoc(userRef, {
+      ...newUser,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastSeen: serverTimestamp(),
+    });
   }
 
   /**
@@ -90,11 +99,23 @@ export class UserService {
       onlineStatus: true,
     };
 
-    await setDoc(userRef, mirroredUser, { merge: true });
 
     if (!snap.exists()) {
+      await setDoc(userRef, {
+        ...mirroredUser,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastSeen: serverTimestamp(),
+      });
       this.currentUser.set(mirroredUser);
+      return;
     }
+    await updateDoc(userRef, {
+      onlineStatus: true,
+      lastSeen: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      ...(firebaseUser.photoURL ? { photoUrl: firebaseUser.photoURL } : {}),
+    });
   }
 
 
@@ -102,9 +123,10 @@ export class UserService {
    * The Firestore listener automatically updates `currentUser`.
    */
   private listenToUserDocument(uid: string): void {
+    this.unsubscribeFromUserDocument();
     const userRef = doc(this.firestore, `users/${uid}`);
 
-    onSnapshot(userRef, (snap: DocumentSnapshot<any>) => {
+    this.userSnapshotUnsubscribe = onSnapshot(userRef, (snap: DocumentSnapshot<any>) => {
       if (!snap.exists()) {
         this.currentUser.set(null);
         return;
@@ -112,6 +134,29 @@ export class UserService {
 
       this.currentUser.set(snap.data() as AppUser);
     });
+  }
+
+
+  private async handleSignOutState(): Promise<void> {
+    const prevUser = this.currentUser();
+    this.unsubscribeFromUserDocument();
+
+    if (prevUser) {
+      await updateDoc(doc(this.firestore, `users/${prevUser.uid}`), {
+        onlineStatus: false,
+        lastSeen: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }).catch(() => { });
+    }
+
+    this.currentUser.set(null);
+  }
+
+  private unsubscribeFromUserDocument(): void {
+    if (this.userSnapshotUnsubscribe) {
+      this.userSnapshotUnsubscribe();
+      this.userSnapshotUnsubscribe = undefined;
+    }
   }
 
   /**
