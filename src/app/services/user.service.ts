@@ -12,8 +12,10 @@ import {
   onSnapshot,
 } from '@angular/fire/firestore';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
-import { User as FirebaseUser } from 'firebase/auth';
+import { User as FirebaseUser, UserCredential } from 'firebase/auth';
 import { Observable, map } from 'rxjs';
+import { PROFILE_PICTURE_URLS } from '../auth/set-profile-picture/set-profile-picture';
+import { AuthService } from './auth.service';
 
 // Own User-Interface
 export interface AppUser {
@@ -30,6 +32,7 @@ export interface AppUser {
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
+  private authService = inject(AuthService);
   private firestore = inject(Firestore);
   private auth = inject(Auth);
   private userSnapshotUnsubscribe?: () => void;
@@ -88,8 +91,8 @@ export class UserService {
   }
 
   /**
-  * Ensures a Firestore user document mirrors the authenticated Firebase user.
-  */
+   * Ensures a Firestore user document mirrors the authenticated Firebase user.
+   */
   private async upsertUserFromAuth(firebaseUser: FirebaseUser): Promise<void> {
     const userRef = doc(this.firestore, `users/${firebaseUser.uid}`);
     const snap = await getDoc(userRef);
@@ -101,7 +104,6 @@ export class UserService {
       photoUrl: firebaseUser.photoURL || 'imgs/default-profile-picture.png',
       onlineStatus: true,
     };
-
 
     if (!snap.exists()) {
       await setDoc(userRef, {
@@ -121,7 +123,6 @@ export class UserService {
     });
   }
 
-
   /**
    * The Firestore listener automatically updates `currentUser`.
    */
@@ -139,7 +140,6 @@ export class UserService {
     });
   }
 
-
   private async handleSignOutState(): Promise<void> {
     const prevUser = this.currentUser();
     this.unsubscribeFromUserDocument();
@@ -149,7 +149,7 @@ export class UserService {
         onlineStatus: false,
         lastSeen: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      }).catch(() => { });
+      }).catch(() => {});
     }
 
     this.currentUser.set(null);
@@ -198,4 +198,28 @@ export class UserService {
     );
   }
 
+  /**
+   * Since Google Login registers a user, if not already present, we must ensure creation of user object in firestore
+   */
+  async ensureUserDocumentForCurrentUser(credential: UserCredential): Promise<void> {
+    const firebaseUser = credential.user;
+    if (!firebaseUser || firebaseUser.isAnonymous) {
+      return;
+    }
+
+    const existingAppUser = await this.getUserOnce(firebaseUser.uid);
+    if (existingAppUser) {
+      return;
+    }
+
+    const fallbackNameFromEmail = firebaseUser.email?.split('@')[0] ?? 'Neuer User';
+    const name = firebaseUser.displayName || fallbackNameFromEmail;
+    const photoUrl = firebaseUser.photoURL ?? PROFILE_PICTURE_URLS.default;
+
+    await this.authService.updateUserProfile(name, photoUrl);
+    await this.createUserDocument(firebaseUser, {
+      name,
+      photoUrl,
+    });
+  }
 }

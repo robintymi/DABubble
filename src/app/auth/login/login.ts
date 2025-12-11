@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NOTIFICATIONS } from '../../notifications';
 import { UserCredential } from 'firebase/auth';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ import { UserCredential } from 'firebase/auth';
 export class Login {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly userService = inject(UserService);
 
   mode = input<'login' | 'reauth'>('login');
   completed = output<'login' | 'reauth'>();
@@ -45,7 +47,8 @@ export class Login {
     this.resetMessages();
 
     try {
-      await loginAction();
+      const credential = await loginAction();
+      await this.userService.ensureUserDocumentForCurrentUser(credential);
       await this.router.navigate(['/main']);
       this.completed.emit('login');
     } catch (error: any) {
@@ -101,9 +104,7 @@ export class Login {
       return;
     }
 
-    await this.executeLogin(() =>
-      this.authService.signInWithEmailAndPassword(this.email, this.password)
-    );
+    await this.executeLogin(() => this.authService.signInWithEmailAndPassword(this.email, this.password));
   }
 
   async onLoginWithGoogle() {
