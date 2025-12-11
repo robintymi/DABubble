@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, inject } from '@angular/core'; 
+import { Component, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OverlayService } from '../../../services/overlay.service';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,7 @@ import { FirestoreService } from '../../../services/firestore.service';
   templateUrl: './channel-description.html',
   styleUrl: './channel-description.scss',
 })
-export class ChannelDescription implements OnChanges {
+export class ChannelDescription implements OnChanges, OnInit {
   private readonly overlayService = inject(OverlayService);
   private readonly firestoreService = inject(FirestoreService);
 
@@ -29,11 +29,13 @@ export class ChannelDescription implements OnChanges {
   protected isSavingDescription = false;
   protected errorMessage = '';
 
-  ngOnChanges(): void {
-    this.editableTitle = this.title;
-    this.editableDescription = this.description;
+  ngOnInit(): void {
+    this.syncEditableFields();
   }
 
+  ngOnChanges(_changes: SimpleChanges): void {
+    this.syncEditableFields();
+  }
   protected closeOverlay(): void {
     this.overlayService.closeLast();
   }
@@ -108,5 +110,9 @@ export class ChannelDescription implements OnChanges {
     } finally {
       this.isSavingDescription = false;
     }
+  }
+  private syncEditableFields(): void {
+    this.editableTitle = this.title ?? '';
+    this.editableDescription = this.description ?? '';
   }
 }
