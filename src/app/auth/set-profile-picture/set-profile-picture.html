@@ -1,6 +1,10 @@
 <section class="set-profile-picture">
   <div class="set-profile-picture-card">
     <header class="set-profile-picture-header">
+      <button type="button" class="set-profile-picture-back-button" aria-label="Zurück" (click)="onBackClick()">
+        ←
+      </button>
+
       <h1 class="set-profile-picture-title">Wähle deinen Avatar</h1>
     </header>
 
@@ -17,16 +21,27 @@
 
       <div class="set-profile-picture-options">
         @for (picture of profilePictureOptions; track picture.key) {
-        <button
-          type="button"
-          class="set-profile-picture-option-button"
-          [ngClass]="{ 'set-profile-picture-option-button-selected': isSelected(picture.key) }"
-          (click)="selectProfilePicture(picture.key)"
-        >
-          <img [src]="picture.path" [alt]="'Profilbild ' + ($index + 1)" />
-        </button>
+          <button
+            type="button"
+            class="set-profile-picture-option-button"
+            [ngClass]="{
+              'set-profile-picture-option-button-selected': isSelected(picture.key),
+            }"
+            (click)="selectProfilePicture(picture.key)">
+            <img [src]="picture.path" [alt]="'Profilbild ' + ($index + 1)" />
+          </button>
         }
       </div>
     </main>
+
+    <footer class="set-profile-picture-footer">
+      <button
+        type="button"
+        class="set-profile-picture-next-button"
+        [disabled]="isActionDisabled()"
+        (click)="onActionClick()">
+        {{ actionLabel() }}
+      </button>
+    </footer>
   </div>
 </section>

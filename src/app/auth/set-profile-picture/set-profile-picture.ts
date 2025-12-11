@@ -21,13 +21,13 @@ export const PROFILE_PICTURE_URLS = {
 export class SetProfilePicture {
   readonly displayName = input.required<string>();
   readonly selectedProfilePictureKey = input<ProfilePictureKey>('default');
+  readonly actionLabel = input<string>('Speichern');
+  readonly isActionDisabled = input<boolean>(false);
 
-  readonly profilePictureOptions: ProfilePicture[] = Object.entries(PROFILE_PICTURE_URLS).map(
-    ([key, path]) => ({
-      key: key as ProfilePictureKey,
-      path,
-    })
-  );
+  readonly profilePictureOptions: ProfilePicture[] = Object.entries(PROFILE_PICTURE_URLS).map(([key, path]) => ({
+    key: key as ProfilePictureKey,
+    path,
+  }));
 
   readonly selectedProfilePicture = computed<ProfilePicture>(() => {
     const key = this.selectedProfilePictureKey();
@@ -38,6 +38,8 @@ export class SetProfilePicture {
   });
 
   readonly profilePictureChange = output<ProfilePictureKey>();
+  readonly back = output<void>();
+  readonly action = output<void>();
 
   selectProfilePicture(key: ProfilePictureKey): void {
     this.profilePictureChange.emit(key);
@@ -45,5 +47,16 @@ export class SetProfilePicture {
 
   isSelected(key: ProfilePictureKey): boolean {
     return this.selectedProfilePictureKey() === key;
+  }
+
+  onBackClick(): void {
+    this.back.emit();
+  }
+
+  onActionClick(): void {
+    if (this.isActionDisabled()) {
+      return;
+    }
+    this.action.emit();
   }
 }

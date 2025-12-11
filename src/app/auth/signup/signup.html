@@ -1,157 +1,128 @@
-<section class="min-h-screen flex items-center justify-center px-4">
-  <div
-    class="relative w-full max-w-xl rounded-[32px] bg-white shadow-lg px-8 py-10 sm:px-12 sm:py-12"
-  >
+<section class="flex min-h-screen items-center justify-center px-4">
+  <div class="relative w-full max-w-xl rounded-[32px] bg-white px-8 py-10 shadow-lg sm:px-12 sm:py-12">
     @if (!isAvatarStep) {
-    <header class="mb-8">
-      <button
-        type="button"
-        aria-label="Zurück"
-        class="mb-6 inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
-        (click)="onBackToLogin()"
-      >
-        ←
-      </button>
-
-      <h1 class="text-center text-[32px] font-extrabold leading-tight text-[#4A5CF6]">
-        Konto erstellen
-      </h1>
-      <p class="mt-3 text-center text-sm sm:text-base text-slate-500">
-        Mit deinem Namen und deiner E-Mail-Adresse hast du dein neues DABubble-Konto.
-      </p>
-    </header>
-
-    <form #signupForm="ngForm" (ngSubmit)="onSubmit(signupForm)" novalidate class="space-y-5">
-      @if (errorMessage) {
-      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
-        {{ errorMessage }}
-      </p>
-      }
-
-      <div class="space-y-2">
-        <label for="fullName" class="sr-only">Name und Nachname</label>
-        <div class="flex items-center gap-3 rounded-full bg-[#ECEEFF] px-5 py-3">
-          <span class="text-lg text-slate-500">👤</span>
-          <input
-            id="fullName"
-            name="fullName"
-            type="text"
-            autocomplete="name"
-            required
-            placeholder="Name und Nachname"
-            [(ngModel)]="name"
-            class="w-full bg-transparent border-none outline-none text-sm text-slate-900 placeholder:text-slate-400"
-          />
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <label for="email" class="sr-only">E-Mail</label>
-        <div class="flex items-center gap-3 rounded-full bg-[#ECEEFF] px-5 py-3">
-          <span class="text-lg text-slate-500">✉️</span>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autocomplete="email"
-            pattern="^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$"
-            required
-            placeholder="beispielname@email.com"
-            [(ngModel)]="emailAddress"
-            class="w-full bg-transparent border-none outline-none text-sm text-slate-900 placeholder:text-slate-400"
-          />
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <label for="password" class="sr-only">Passwort</label>
-        <div class="flex items-center gap-3 rounded-full bg-[#ECEEFF] px-5 py-3">
-          <span class="text-lg text-slate-500">🔒</span>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autocomplete="new-password"
-            required
-            placeholder="Passwort"
-            [(ngModel)]="password"
-            class="w-full bg-transparent border-none outline-none text-sm text-slate-900 placeholder:text-slate-400"
-          />
-        </div>
-
-        @if (passwordValidationErrors.length > 0) {
-        <ul class="mt-2 space-y-1 text-xs text-red-600">
-          @for (message of passwordValidationErrors; track $index) {
-          <li class="flex gap-2">
-            <span>•</span>
-            <span>{{ message }}</span>
-          </li>
-          }
-        </ul>
-        }
-      </div>
-
-      <div class="mt-2 flex items-center gap-3 text-sm text-slate-600">
-        <input
-          id="privacy"
-          name="privacy"
-          type="checkbox"
-          required
-          [(ngModel)]="acceptedPrivacy"
-          class="size-4 rounded border-slate-300 text-[#4A5CF6] accent-[#4A5CF6]"
-        />
-        <label for="privacy" class="select-none">
-          Ich stimme der
-          <a href="#" class="text-[#4A5CF6] hover:underline">Datenschutzerklärung</a>
-          zu.
-        </label>
-      </div>
-
-      <footer class="mt-6 flex justify-end">
+      <header class="mb-8">
         <button
-          type="submit"
-          [disabled]="isSubmitting || signupForm.invalid"
-          class="rounded-full bg-[#4A5CF6] px-8 py-3 text-sm font-semibold text-white shadow-md hover:bg-[#3c4ad1] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Weiter
+          type="button"
+          aria-label="Zurück"
+          class="mb-6 inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+          (click)="onBackToLogin()">
+          ←
         </button>
-      </footer>
-    </form>
+
+        <h1 class="text-center text-[32px] leading-tight font-extrabold text-[#4A5CF6]">Konto erstellen</h1>
+        <p class="mt-3 text-center text-sm text-slate-500 sm:text-base">
+          Mit deinem Namen und deiner E-Mail-Adresse hast du dein neues DABubble-Konto.
+        </p>
+      </header>
+
+      <form #signupForm="ngForm" (ngSubmit)="onSubmit(signupForm)" novalidate class="space-y-5">
+        @if (errorMessage) {
+          <p class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {{ errorMessage }}
+          </p>
+        }
+
+        <div class="space-y-2">
+          <label for="fullName" class="sr-only">Name und Nachname</label>
+          <div class="flex items-center gap-3 rounded-full bg-[#ECEEFF] px-5 py-3">
+            <span class="text-lg text-slate-500">👤</span>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              autocomplete="name"
+              required
+              placeholder="Name und Nachname"
+              [(ngModel)]="name"
+              class="w-full border-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400" />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label for="email" class="sr-only">E-Mail</label>
+          <div class="flex items-center gap-3 rounded-full bg-[#ECEEFF] px-5 py-3">
+            <span class="text-lg text-slate-500">✉️</span>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              pattern="^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$"
+              required
+              placeholder="beispielname@email.com"
+              [(ngModel)]="emailAddress"
+              class="w-full border-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400" />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label for="password" class="sr-only">Passwort</label>
+          <div class="flex items-center gap-3 rounded-full bg-[#ECEEFF] px-5 py-3">
+            <span class="text-lg text-slate-500">🔒</span>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              required
+              placeholder="Passwort"
+              [(ngModel)]="password"
+              class="w-full border-none bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400" />
+          </div>
+
+          @if (passwordValidationErrors.length > 0) {
+            <ul class="mt-2 space-y-1 text-xs text-red-600">
+              @for (message of passwordValidationErrors; track $index) {
+                <li class="flex gap-2">
+                  <span>•</span>
+                  <span>{{ message }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="mt-2 flex items-center gap-3 text-sm text-slate-600">
+          <input
+            id="privacy"
+            name="privacy"
+            type="checkbox"
+            required
+            [(ngModel)]="acceptedPrivacy"
+            class="size-4 rounded border-slate-300 text-[#4A5CF6] accent-[#4A5CF6]" />
+          <label for="privacy" class="select-none">
+            Ich stimme der
+            <a href="#" class="text-[#4A5CF6] hover:underline">Datenschutzerklärung</a>
+            zu.
+          </label>
+        </div>
+
+        <footer class="mt-6 flex justify-end">
+          <button
+            type="submit"
+            [disabled]="isSubmitting || signupForm.invalid"
+            class="rounded-full bg-[#4A5CF6] px-8 py-3 text-sm font-semibold text-white shadow-md hover:bg-[#3c4ad1] disabled:cursor-not-allowed disabled:opacity-60">
+            Weiter
+          </button>
+        </footer>
+      </form>
     } @else {
+      <app-set-profile-picture
+        [displayName]="name"
+        [selectedProfilePictureKey]="selectedProfilePictureKey"
+        [actionLabel]="isSubmitting ? 'Konto wird erstellt …' : 'Konto jetzt erstellen'"
+        [isActionDisabled]="isSubmitting"
+        (profilePictureChange)="onProfilePictureChange($event)"
+        (back)="onBackFromAvatarStep()"
+        (action)="onCompleteSignup()">
+      </app-set-profile-picture>
 
-    <header class="mb-6">
-      <button
-        type="button"
-        aria-label="Zurück"
-        class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
-        (click)="onBackFromAvatarStep()"
-      >
-        ←
-      </button>
-    </header>
-
-    <app-set-profile-picture
-      [displayName]="name"
-      [selectedProfilePictureKey]="selectedProfilePictureKey"
-      (profilePictureChange)="onProfilePictureChange($event)"
-    ></app-set-profile-picture>
-
-    @if (errorMessage) {
-    <p class="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
-      {{ errorMessage }}
-    </p>
-    }
-
-    <footer class="mt-6 flex justify-end">
-      <button
-        type="button"
-        (click)="onCompleteSignup()"
-        [disabled]="isSubmitting"
-        class="rounded-full bg-[#4A5CF6] px-8 py-3 text-sm font-semibold text-white shadow-md hover:bg-[#3c4ad1] disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {{ isSubmitting ? 'Konto wird erstellt …' : 'Konto jetzt erstellen' }}
-      </button>
-    </footer>
+      @if (errorMessage) {
+        <p class="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {{ errorMessage }}
+        </p>
+      }
     }
   </div>
 </section>
