@@ -74,10 +74,14 @@ export class ChannelComponent {
     'imgs/users/Property 1=Elias Neumann.svg',
   ];
 
-  protected readonly currentUser = {
-    name: 'Du',
-    avatar: this.memberAvatars[0] ?? 'imgs/users/placeholder.svg',
-  };
+  protected get currentUser() {
+    const user = this.userService.currentUser();
+
+    return {
+      name: user?.name ?? 'Gast',
+      avatar: user?.photoUrl ?? 'imgs/default-profile-picture.png',
+    };
+  }
   private readonly channels$ = this.firestoreService
     .getChannels()
     .pipe(shareReplay({ bufferSize: 1, refCount: true }));
