@@ -14,19 +14,20 @@
     </div>
     <div class="channel__actions">
       <ng-container *ngIf="members$ | async as members">
-        <div class="channel__member-preview" aria-label="Mitgliederübersicht">
+        <button
+          type="button"
+          class="channel__member-preview"
+          aria-label="Mitgliederübersicht"
+          (click)="openChannelMembers($event)">
           <div class="channel__avatars" aria-hidden="true">
             <ng-container *ngFor="let member of members | slice: 0 : 3; let i = index">
               <img [src]="member.avatar" [alt]="member.name" [style.zIndex]="members.length - i" />
             </ng-container>
           </div>
           <span class="channel__member-count">{{ members.length }}</span>
-        </div>
+        </button>
       </ng-container>
-      <button type="button" class="channel__add-member" (click)="openAddToChannel($event)">
-        <img src="imgs/channels/person_add.svg" alt="Mitglied hinzufügen" />
-        Mitglied hinzufügen
-      </button>
+
       <button type="button" class="channel__members" (click)="openChannelMembers($event)">
         <mat-icon>group</mat-icon>
         Mitglieder

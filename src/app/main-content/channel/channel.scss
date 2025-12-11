@@ -33,6 +33,12 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
+  cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .channel__avatars {
@@ -55,6 +61,17 @@
 .channel__member-count {
   font-weight: 700;
   color: #0f172a;
+}
+
+.channel__member-preview:hover {
+  transform: translateY(-1px);
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  box-shadow: 0 8px 24px rgba(67, 56, 202, 0.12);
+}
+
+.channel__member-preview:active {
+  transform: translateY(1px);
 }
 
 .channel__titles {
@@ -164,34 +181,7 @@
   gap: 14px;
   border: 1px solid #e2e8f0;
 }
-.channel__members {
-  border: none;
-  background: linear-gradient(90deg, #4338ca, #6366f1);
-  color: #ffffff;
-  padding: 10px 14px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-  transition:
-    transform 0.1s ease,
-    box-shadow 0.2s ease;
-}
 
-.channel__members mat-icon {
-  font-size: 20px;
-}
-
-.channel__members:hover {
-  transform: translateY(-1px);
-}
-
-.channel__members:active {
-  transform: translateY(1px);
-}
 .channel__day {
   text-align: center;
   font-weight: 700;
