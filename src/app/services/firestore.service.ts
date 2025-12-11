@@ -9,6 +9,9 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  increment,
+  orderBy,
+  query,
 } from '@angular/fire/firestore';
 import { Observable, map } from 'rxjs';
 
@@ -24,6 +27,16 @@ export interface ChannelAttachment {
   linkHref?: string;
   badgeLabel?: string;
 }
+
+export interface ThreadReply {
+  id?: string;
+  author?: string;
+  avatar?: string;
+  text?: string;
+  createdAt?: Timestamp;
+  isOwn?: boolean;
+}
+
 
 export interface ChannelMessage {
   id?: string;
@@ -204,5 +217,55 @@ export class FirestoreService {
       },
       { merge: true }
     );
+  }
+
+  getThreadReplies(
+    channelId: string,
+    messageId: string
+  ): Observable<ThreadReply[]> {
+    const repliesCollection = collection(
+      this.firestore,
+      `channels/${channelId}/messages/${messageId}/threads`
+    );
+
+    const repliesQuery = query(repliesCollection, orderBy('createdAt', 'asc'));
+
+    return collectionData(repliesQuery, { idField: 'id' }).pipe(
+      map((replies) =>
+        (replies as Array<Record<string, unknown>>).map((reply) => ({
+          id: reply['id'] as string,
+          author: reply['author'] as string,
+          avatar: reply['avatar'] as string,
+          text: reply['text'] as string,
+          createdAt: reply['createdAt'] as Timestamp,
+          isOwn: reply['isOwn'] as boolean,
+        }))
+      )
+    );
+  }
+
+  async addThreadReply(
+    channelId: string,
+    messageId: string,
+    reply: Pick<ThreadReply, 'author' | 'avatar' | 'text' | 'isOwn'>
+  ): Promise<void> {
+    const repliesCollection = collection(
+      this.firestore,
+      `channels/${channelId}/messages/${messageId}/threads`
+    );
+
+    await addDoc(repliesCollection, {
+      ...reply,
+      createdAt: serverTimestamp(),
+    });
+
+    const messageDoc = doc(
+      this.firestore,
+      `channels/${channelId}/messages/${messageId}`
+    );
+
+    await updateDoc(messageDoc, {
+      replies: increment(1),
+    });
   }
 }

@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, Observable, map, of, switchMap } from 'rxjs';
+import { FirestoreService, ThreadReply as FirestoreThreadReply } from './firestore.service';
 
 export interface ThreadMessage {
     id: string;
@@ -11,12 +12,16 @@ export interface ThreadMessage {
 }
 
 export interface ThreadContext {
+    channelId: string;
+    channelTitle: string;
     root: ThreadMessage;
     replies: ThreadMessage[];
 }
 
 export interface ThreadSource {
     id?: string;
+    channelId: string;
+    channelTitle: string;
     author: string;
     avatar: string;
     time: string;
@@ -25,14 +30,28 @@ export interface ThreadSource {
 
 @Injectable({ providedIn: 'root' })
 export class ThreadService {
+    private readonly firestoreService = inject(FirestoreService);
     private readonly threadSubject = new BehaviorSubject<ThreadContext | null>(null);
-    readonly thread$ = this.threadSubject.asObservable();
+    readonly thread$: Observable<ThreadContext | null> = this.threadSubject.pipe(
+        switchMap((context) => {
+            if (!context?.channelId || !context.root.id) return of(null);
 
-
+            return this.firestoreService
+                .getThreadReplies(context.channelId, context.root.id)
+                .pipe(
+                    map((replies) => ({
+                        ...context,
+                        replies: replies.map((reply) => this.toThreadMessage(reply)),
+                    }))
+                );
+        })
+    );
 
     openThread(source: ThreadSource): void {
         const id = this.generateId();
-        const thread: ThreadContext = {
+        this.threadSubject.next({
+            channelId: source.channelId,
+            channelTitle: source.channelTitle,
             root: {
                 id: source.id ?? id,
                 author: source.author,
@@ -41,32 +60,49 @@ export class ThreadService {
                 text: source.text,
             },
             replies: [],
-        };
-
-        this.threadSubject.next(thread);
+        });
     }
 
     addReply(reply: Omit<ThreadMessage, 'id' | 'timestamp'>): void {
         const current = this.threadSubject.value;
-        if (!current) return;
+        if (!current?.root.id) return;
 
-        const timestamp = new Date();
+        void this.firestoreService.addThreadReply(current.channelId, current.root.id, {
+            ...reply,
+        });
+    }
+
+    reset(): void {
+        this.threadSubject.next(null);
+    }
+
+    private toThreadMessage(reply: FirestoreThreadReply): ThreadMessage {
+        const createdAt = this.resolveTimestamp(reply);
+        return {
+            id: reply.id ?? this.generateId(),
+            author: reply.author ?? 'Unbekannter Nutzer',
+            avatar: reply.avatar ?? 'imgs/users/placeholder.svg',
+            timestamp: this.formatTime(createdAt),
+            text: reply.text ?? '',
+            isOwn: reply.isOwn,
+        };
+    }
+
+    private resolveTimestamp(message: FirestoreThreadReply): Date {
+        if (message.createdAt && 'toDate' in message.createdAt) {
+            return (message.createdAt as unknown as { toDate: () => Date }).toDate();
+        }
+
+        return new Date();
+    }
+
+    private formatTime(date: Date): string {
         const formatter = new Intl.DateTimeFormat('de-DE', {
             hour: '2-digit',
             minute: '2-digit',
         });
 
-        const nextReply: ThreadMessage = {
-            ...reply,
-            id: this.generateId(),
-            timestamp: formatter.format(timestamp),
-        };
-
-        this.threadSubject.next({ ...current, replies: [...current.replies, nextReply] });
-    }
-
-    reset(): void {
-        this.threadSubject.next(null);
+        return formatter.format(date);
     }
 
     private generateId(): string {

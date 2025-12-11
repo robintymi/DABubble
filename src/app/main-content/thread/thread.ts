@@ -21,7 +21,6 @@ export class Thread {
     name: 'Frederik Beck',
     avatar: 'imgs/users/Property 1=Frederik Beck.svg',
   };
-  protected readonly activeChannelTitle = '# Entwicklerteam';
   protected draftReply = '';
 
   protected sendReply(): void {

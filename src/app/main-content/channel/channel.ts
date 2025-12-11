@@ -285,12 +285,18 @@ export class ChannelComponent {
     });
   }
   protected openThread(message: ChannelMessageView): void {
-    this.threadService.openThread({
-      id: message.id,
-      author: message.author,
-      avatar: message.avatar,
-      time: message.time,
-      text: message.text,
+    this.channel$.pipe(take(1)).subscribe((channel) => {
+      if (!channel?.id || !message.id) return;
+
+      this.threadService.openThread({
+        id: message.id,
+        channelId: channel.id,
+        channelTitle: channel.title ?? this.channelDefaults.name,
+        author: message.author,
+        avatar: message.avatar,
+        time: message.time,
+        text: message.text,
+      });
     });
   }
 
