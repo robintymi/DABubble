@@ -28,22 +28,7 @@ export class ThreadService {
     private readonly threadSubject = new BehaviorSubject<ThreadContext | null>(null);
     readonly thread$ = this.threadSubject.asObservable();
 
-    private readonly demoReplies: ThreadMessage[] = [
-        {
-            id: 'reply-1',
-            author: 'Noah Braun',
-            avatar: 'imgs/users/Property 1=Noah Braun.svg',
-            timestamp: '10:15',
-            text: 'Wir haben gerade die Angular-Version auf 13.2.2 aktualisiert.',
-        },
-        {
-            id: 'reply-2',
-            author: 'Sofia Müller',
-            avatar: 'imgs/users/Property 1=Sofia Müller.svg',
-            timestamp: '10:22',
-            text: 'Und ich habe auch das allgemeine Angular-Update durchgeführt.',
-        },
-    ];
+
 
     openThread(source: ThreadSource): void {
         const id = this.generateId();
@@ -55,7 +40,7 @@ export class ThreadService {
                 timestamp: source.time,
                 text: source.text,
             },
-            replies: [...this.demoReplies],
+            replies: [],
         };
 
         this.threadSubject.next(thread);
