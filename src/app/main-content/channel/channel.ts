@@ -42,6 +42,8 @@ export type ChannelMessageView = {
   time: string;
   text: string;
   replies?: number;
+  lastReplyAt?: Date;
+  lastReplyTime?: string;
   tag?: string;
   attachment?: ChannelAttachment;
 };
@@ -216,8 +218,8 @@ export class ChannelComponent {
   }
 
   private toViewMessage(message: ChannelMessage): ChannelMessageView {
-    const createdAt = this.resolveTimestamp(message);
-
+    const createdAt = this.timestampToDate(message.createdAt) ?? new Date();
+    const lastReplyAt = this.timestampToDate(message.lastReplyAt);
     return {
       id: message.id,
       author: message.author ?? 'Unbekannter Nutzer',
@@ -226,19 +228,30 @@ export class ChannelComponent {
       createdAt,
       time: this.formatTime(createdAt),
       text: message.text ?? '',
-      replies: message.replies,
-      tag: message.tag,
+      replies: message.replies ?? 0,
+      lastReplyAt: lastReplyAt,
+      lastReplyTime: lastReplyAt ? this.formatTime(lastReplyAt) : undefined, tag: message.tag,
       attachment: message.attachment,
     };
   }
 
-  private resolveTimestamp(message: ChannelMessage): Date {
-    if (message.createdAt && 'toDate' in (message.createdAt as any)) {
-      return (message.createdAt as any).toDate();
-    }
-    return new Date();
-  }
 
+
+  private timestampToDate(value: unknown): Date | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    if (value instanceof Date) {
+      return value;
+    }
+
+    if (typeof value === 'object' && value !== null && 'toDate' in value) {
+      return (value as { toDate: () => Date }).toDate();
+    }
+
+    return undefined;
+  }
   private buildDayLabel(date: Date): string {
     const today = new Date();
     const isToday =

@@ -95,6 +95,20 @@
                   </div>
                 </ng-container>
 
+                <button
+                  *ngIf="message.replies"
+                  type="button"
+                  class="channel__thread-summary"
+                  (click)="openThread(message)">
+                  <div class="channel__thread-count">
+                    {{ message.replies }} Antwort{{ message.replies === 1 ? '' : 'en' }}
+                  </div>
+                  <div *ngIf="message.lastReplyTime" class="channel__thread-meta">
+                    Letzte Antwort {{ message.lastReplyTime }}
+                  </div>
+                </button>
+
+
                
               </div>
             </article>

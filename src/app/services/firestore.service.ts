@@ -54,6 +54,7 @@ export interface ChannelMessage {
   createdAt?: Timestamp;
   text?: string;
   replies?: number;
+  lastReplyAt?: Timestamp;
   tag?: string;
   attachment?: ChannelAttachment;
 }
@@ -114,6 +115,7 @@ export class FirestoreService {
           createdAt: message['createdAt'] as Timestamp,
           text: (message['text'] as string) ?? '',
           replies: (message['replies'] as number) ?? 0,
+          lastReplyAt: message['lastReplyAt'] as Timestamp,
           tag: message['tag'] as string,
           attachment: message['attachment'] as ChannelAttachment,
         }))
@@ -169,7 +171,7 @@ export class FirestoreService {
     );
   }
 
-   getDirectConversationMessages(
+  getDirectConversationMessages(
     currentUserId: string,
     otherUserId: string
   ): Observable<DirectMessageEntry[]> {
@@ -198,7 +200,7 @@ export class FirestoreService {
 
   async sendDirectMessage(
     currentUser: Pick<DirectMessageEntry, 'authorId' | 'authorName' | 'authorAvatar'> &
-      { text: string },
+    { text: string },
     recipientId: string
   ): Promise<void> {
     const conversationId = this.buildConversationId(
@@ -347,6 +349,7 @@ export class FirestoreService {
 
     await updateDoc(messageDoc, {
       replies: increment(1),
+      lastReplyAt: serverTimestamp(),
     });
   }
 
