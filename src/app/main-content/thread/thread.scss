@@ -15,6 +15,12 @@
   gap: 12px;
 }
 
+.thread__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .thread__eyebrow {
   margin: 0;
   font-size: 13px;
@@ -37,6 +43,30 @@
   font-weight: 700;
 }
 
+.thread__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
+}
+
+.thread__close:hover,
+.thread__close:focus-visible {
+  background: #eef2ff;
+  color: #4338ca;
+  box-shadow: 0 10px 26px rgba(79, 70, 229, 0.2);
+}
 .thread__root,
 .thread__reply {
   display: grid;

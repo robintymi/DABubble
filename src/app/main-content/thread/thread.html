@@ -4,7 +4,12 @@
       <p class="thread__eyebrow">Thread</p>
       <h2 class="thread__title"># {{ thread.channelTitle }}</h2>
     </div>
-    <span class="thread__badge">{{ thread.replies.length }} Antworten</span>
+    <div class="thread__header-actions">
+      <span class="thread__badge">{{ thread.replies.length }} Antworten</span>
+      <button type="button" class="thread__close" aria-label="Thread schließen" (click)="closeThread()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
   </header>
 
   <article class="thread__root">
@@ -17,16 +22,16 @@
         <button
           type="button"
           class="thread__bubble-action"
-          aria-label="Daumen hoch geben"
-          (click)="react(thread.root.id, '👍')">
-          <mat-icon>thumb_up</mat-icon>
+          aria-label="Grünen Haken setzen"
+          (click)="react(thread.root.id, '✅')">
+          <mat-icon>check_circle</mat-icon>
         </button>
         <button
           type="button"
           class="thread__bubble-action"
-          aria-label="Grünen Haken setzen"
-          (click)="react(thread.root.id, '✅')">
-          <mat-icon>check_circle</mat-icon>
+          aria-label="Daumen hoch geben"
+          (click)="react(thread.root.id, '👍')">
+          <mat-icon>thumb_up</mat-icon>
         </button>
         <button
           type="button"
@@ -35,7 +40,15 @@
           (click)="toggleEmojiPicker(thread.root.id)">
           <mat-icon>add_reaction</mat-icon>
         </button>
-        <button type="button" class="thread__bubble-action" aria-label="Weitere Aktionen">
+        <button type="button" class="thread__bubble-action" aria-label="Antwort verfassen" (click)="focusComposer()">
+          <mat-icon>chat_bubble</mat-icon>
+        </button>
+        <button
+          *ngIf="thread.root.isOwn"
+          type="button"
+          class="thread__bubble-action"
+          aria-label="Weitere Aktionen"
+          (click)="openEditOverlay($event, thread.root, true)">
           <mat-icon>more_vert</mat-icon>
         </button>
 
@@ -76,16 +89,16 @@
           <button
             type="button"
             class="thread__bubble-action"
-            aria-label="Daumen hoch geben"
-            (click)="react(reply.id, '👍')">
-            <mat-icon>thumb_up</mat-icon>
+            aria-label="Grünen Haken setzen"
+            (click)="react(reply.id, '✅')">
+            <mat-icon>check_circle</mat-icon>
           </button>
           <button
             type="button"
             class="thread__bubble-action"
-            aria-label="Grünen Haken setzen"
-            (click)="react(reply.id, '✅')">
-            <mat-icon>check_circle</mat-icon>
+            aria-label="Daumen hoch geben"
+            (click)="react(reply.id, '👍')">
+            <mat-icon>thumb_up</mat-icon>
           </button>
           <button
             type="button"
@@ -94,7 +107,15 @@
             (click)="toggleEmojiPicker(reply.id)">
             <mat-icon>add_reaction</mat-icon>
           </button>
-          <button type="button" class="thread__bubble-action" aria-label="Weitere Aktionen">
+          <button type="button" class="thread__bubble-action" aria-label="Antwort verfassen" (click)="focusComposer()">
+            <mat-icon>chat_bubble</mat-icon>
+          </button>
+          <button
+            *ngIf="reply.isOwn"
+            type="button"
+            class="thread__bubble-action"
+            aria-label="Weitere Aktionen"
+            (click)="openEditOverlay($event, reply)">
             <mat-icon>more_vert</mat-icon>
           </button>
 
@@ -126,6 +147,7 @@
       name="reply"
       required
       [(ngModel)]="draftReply"
+      #replyTextarea
       placeholder="Antworten"
       aria-label="Antwort zum Thread schreiben"></textarea>
     <button type="submit" [disabled]="replyForm.invalid">

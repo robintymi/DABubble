@@ -27,7 +27,7 @@ import { UserService } from '../../services/user.service';
 import { ChannelMembers } from './channel-members/channel-members';
 import { AddToChannel } from './add-to-channel/add-to-channel';
 import { ThreadService } from '../../services/thread.service';
-
+import { MessageEditor } from '../shared/message-editor/message-editor';
 type ChannelDay = {
   label: string;
   sortKey: number;
@@ -46,6 +46,7 @@ export type ChannelMessageView = {
   lastReplyTime?: string;
   tag?: string;
   attachment?: ChannelAttachment;
+  isOwn?: boolean;
 };
 type ChannelMemberView = ChannelMember & { isCurrentUser?: boolean };
 
@@ -54,7 +55,6 @@ type ChannelMemberView = ChannelMember & { isCurrentUser?: boolean };
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './channel.html',
-  // Angular prefers the plural key
   styleUrls: ['./channel.scss'],
 })
 export class ChannelComponent {
@@ -223,6 +223,7 @@ export class ChannelComponent {
   private toViewMessage(message: ChannelMessage): ChannelMessageView {
     const createdAt = this.timestampToDate(message.createdAt) ?? new Date();
     const lastReplyAt = this.timestampToDate(message.lastReplyAt);
+    const currentUserName = this.currentUser.name;
     return {
       id: message.id,
       author: message.author ?? 'Unbekannter Nutzer',
@@ -233,8 +234,10 @@ export class ChannelComponent {
       text: message.text ?? '',
       replies: message.replies ?? 0,
       lastReplyAt: lastReplyAt,
-      lastReplyTime: lastReplyAt ? this.formatTime(lastReplyAt) : undefined, tag: message.tag,
+      lastReplyTime: lastReplyAt ? this.formatTime(lastReplyAt) : undefined,
+      tag: message.tag,
       attachment: message.attachment,
+      isOwn: (message.author ?? '').trim() === currentUserName,
     };
   }
 
@@ -316,6 +319,29 @@ export class ChannelComponent {
         avatar: message.avatar,
         time: message.time,
         text: message.text,
+        isOwn: message.isOwn,
+      });
+    });
+  }
+
+  protected openEditMessage(event: Event, message: ChannelMessageView): void {
+    const trigger = event.currentTarget as HTMLElement | null;
+
+    this.channel$.pipe(take(1)).subscribe((channel) => {
+      if (!channel?.id || !message.id) return;
+
+      this.overlayService.open(MessageEditor, {
+        target: trigger ?? undefined,
+        offsetY: 8,
+        data: {
+          title: 'Nachricht bearbeiten',
+          initialText: message.text,
+          onSave: async (newText: string) => {
+            await this.firestoreService.updateChannelMessage(channel.id!, message.id!, {
+              text: newText,
+            });
+          },
+        },
       });
     });
   }

@@ -30,6 +30,7 @@ export interface ThreadSource {
     avatar: string;
     time: string;
     text: string;
+    isOwn?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -65,6 +66,7 @@ export class ThreadService {
                 avatar: source.avatar,
                 timestamp: source.time,
                 text: source.text,
+                isOwn: source.isOwn,
             },
             replies: [],
         };
@@ -91,6 +93,32 @@ export class ThreadService {
     reset(): void {
         this.threadSubject.next(null);
     }
+    async updateRootMessage(text: string): Promise<void> {
+        const current = this.threadSubject.value;
+        if (!current?.channelId || !current.root.id) return;
+
+        await Promise.all([
+            this.firestoreService.updateChannelMessage(current.channelId, current.root.id, { text }),
+            this.firestoreService.updateThreadMeta(current.channelId, current.root.id, { text }),
+        ]);
+
+        this.threadSubject.next({
+            ...current,
+            root: {
+                ...current.root,
+                text,
+            },
+        });
+    }
+
+    async updateReply(replyId: string, text: string): Promise<void> {
+        const current = this.threadSubject.value;
+        if (!current?.channelId || !current.root.id || !replyId) return;
+
+        await this.firestoreService.updateThreadReply(current.channelId, current.root.id, replyId, {
+            text,
+        });
+    }
 
 
     private toRootMessage(context: ThreadContext, storedThread: ThreadDocument | null): ThreadMessage {
@@ -101,6 +129,7 @@ export class ThreadService {
             avatar: storedThread?.avatar ?? context.root.avatar,
             timestamp: storedThread?.createdAt ? this.formatTime(createdAt) : context.root.timestamp,
             text: storedThread?.text ?? context.root.text,
+            isOwn: context.root.isOwn,
         };
     }
     private toThreadMessage(reply: FirestoreThreadReply): ThreadMessage {

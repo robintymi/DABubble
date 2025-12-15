@@ -140,6 +140,23 @@ export class FirestoreService {
     });
   }
 
+  async updateChannelMessage(
+    channelId: string,
+    messageId: string,
+    payload: Partial<Pick<ChannelMessage, 'text'>>
+  ): Promise<void> {
+    const messageDoc = doc(
+      this.firestore,
+      `channels/${channelId}/messages/${messageId}`
+    );
+
+    await updateDoc(messageDoc, {
+      ...payload,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+
   getFirstChannelTitle(): Observable<string> {
     return this.getChannels().pipe(
       map((channels) => {
@@ -352,6 +369,22 @@ export class FirestoreService {
       lastReplyAt: serverTimestamp(),
     });
   }
+  async updateThreadReply(
+    channelId: string,
+    messageId: string,
+    replyId: string,
+    payload: Partial<Pick<ThreadReply, 'text'>>
+  ): Promise<void> {
+    const replyDoc = doc(
+      this.firestore,
+      `channels/${channelId}/messages/${messageId}/threads/${replyId}`
+    );
+
+    await updateDoc(replyDoc, {
+      ...payload,
+      updatedAt: serverTimestamp(),
+    });
+  }
 
   async saveThread(
     channelId: string,
@@ -371,6 +404,22 @@ export class FirestoreService {
       },
       { merge: true }
     );
+  }
+
+  async updateThreadMeta(
+    channelId: string,
+    messageId: string,
+    payload: Partial<Pick<ThreadDocument, 'text' | 'channelTitle'>>
+  ): Promise<void> {
+    const threadDoc = doc(
+      this.firestore,
+      `channels/${channelId}/messages/${messageId}/thread/${FirestoreService.THREAD_DOC_ID}`
+    );
+
+    await updateDoc(threadDoc, {
+      ...payload,
+      updatedAt: serverTimestamp(),
+    });
   }
 
   getThread(

@@ -58,16 +58,16 @@
                   <button
                     type="button"
                     class="channel__message-action"
-                    aria-label="Daumen hoch geben"
-                    (click)="react(message.id, '👍')">
-                    <mat-icon>thumb_up</mat-icon>
+                    aria-label="Grünen Haken setzen"
+                    (click)="react(message.id, '✅')">
+                    <mat-icon>check_circle</mat-icon>
                   </button>
                   <button
                     type="button"
                     class="channel__message-action"
-                    aria-label="Grünen Haken setzen"
-                    (click)="react(message.id, '✅')">
-                    <mat-icon>check_circle</mat-icon>
+                    aria-label="Daumen hoch geben"
+                    (click)="react(message.id, '👍')">
+                    <mat-icon>thumb_up</mat-icon>
                   </button>
                   <button
                     type="button"
@@ -81,9 +81,14 @@
                     class="channel__message-action"
                     aria-label="Thread öffnen"
                     (click)="openThread(message)">
-                    <mat-icon>reply</mat-icon>
+                    <mat-icon>chat_bubble</mat-icon>
                   </button>
-                  <button type="button" class="channel__message-action" aria-label="Weitere Aktionen">
+                  <button
+                    *ngIf="message.isOwn"
+                    type="button"
+                    class="channel__message-action"
+                    aria-label="Weitere Aktionen"
+                    (click)="openEditMessage($event, message)">
                     <mat-icon>more_vert</mat-icon>
                   </button>
                   <div class="channel__emoji-picker" *ngIf="openEmojiPickerFor === message.id">

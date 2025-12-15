@@ -1,0 +1,34 @@
+<section class="message-editor" [@fadeScale]="visible">
+  <header class="message-editor__header">
+    <div>
+      <p class="message-editor__eyebrow">Aktion</p>
+      <h3 class="message-editor__title">{{ title }}</h3>
+    </div>
+    <button type="button" class="message-editor__close" aria-label="Overlay schließen" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <form class="message-editor__body" (ngSubmit)="save()">
+    <label class="message-editor__label" for="message-edit-input">Nachricht</label>
+    <textarea
+      id="message-edit-input"
+      [(ngModel)]="editedText"
+      name="editedText"
+      rows="4"
+      placeholder="Nachricht bearbeiten"
+      [disabled]="isSaving"></textarea>
+
+    <p *ngIf="error" class="message-editor__error">{{ error }}</p>
+
+    <div class="message-editor__actions">
+      <button type="button" class="message-editor__button message-editor__button--ghost" (click)="close()">
+        Abbrechen
+      </button>
+      <button type="submit" class="message-editor__button" [disabled]="isSaving">
+        <mat-icon *ngIf="isSaving" class="message-editor__spinner">autorenew</mat-icon>
+        {{ isSaving ? 'Speichern…' : 'Speichern' }}
+      </button>
+    </div>
+  </form>
+</section>
