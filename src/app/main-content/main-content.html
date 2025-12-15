@@ -3,7 +3,7 @@
 
   <mat-sidenav-container class="relative h-[calc(100vh-124px)]">
     <mat-sidenav #leftSidenav opened mode="side"
-      ><app-workspace (newMessage)="openNewMessagePanel()"></app-workspace
+      ><app-workspace (newMessage)="openNewMessagePanel()" (channelSelected)="closeNewMessagePanel()"></app-workspace
     ></mat-sidenav>
     <mat-sidenav opened mode="side" position="end" *ngIf="!showNewMessage">
       <app-thread></app-thread>
@@ -19,7 +19,7 @@
       <ng-template #channelView>
         <app-channel></app-channel>
       </ng-template>
-      </mat-sidenav-content>
+    </mat-sidenav-content>
   </mat-sidenav-container>
   <div class="absolute" *ngIf="leftSidenav.opened">
     <button

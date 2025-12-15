@@ -23,6 +23,7 @@ export class Workspace {
     DirectMessageSelectionService
   );
   @Output() readonly newMessage = new EventEmitter<void>();
+  @Output() readonly channelSelected = new EventEmitter<void>();
   protected readonly channels$: Observable<Channel[]> =
     this.firestoreService.getChannels();
   protected readonly users$: Observable<AppUser[]> =
@@ -50,6 +51,8 @@ export class Workspace {
 
   protected selectChannel(channelId?: string | null): void {
     this.channelSelectionService.selectChannel(channelId);
+    this.directMessageSelectionService.selectUser(null);
+    this.channelSelected.emit();
   }
 
   protected toggleDirectMessages(): void {
