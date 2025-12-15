@@ -156,11 +156,22 @@
     </div>
 
     <form class="channel__composer" aria-label="Neue Nachricht verfassen" (ngSubmit)="sendMessage()">
-      <textarea
-        rows="3"
-        name="message"
-        [(ngModel)]="messageText"
-        [placeholder]="'Nachricht an #' + ((channelTitle$ | async) ?? channelDefaults.name)"></textarea>
+      <div class="channel__composer-input">
+        <textarea
+          #messageTextarea
+          rows="3"
+          name="message"
+          [(ngModel)]="messageText"
+          (input)="onMessageInput($event)"
+          (click)="onMessageInput($event)"
+          [placeholder]="'Nachricht an #' + ((channelTitle$ | async) ?? channelDefaults.name)"></textarea>
+        <div *ngIf="isMentionListVisible" class="channel__mention-suggestions">
+          <button type="button" *ngFor="let member of mentionSuggestions" (click)="insertMention(member)">
+            <img [src]="member.avatar" [alt]="member.name" />
+            <span>{{ member.name }}</span>
+          </button>
+        </div>
+      </div>
       <div class="channel__composer-actions">
         <button type="submit" aria-label="Nachricht senden" [disabled]="!messageText.trim() || isSending">
           <img src="imgs/channels/send.svg" alt="" />

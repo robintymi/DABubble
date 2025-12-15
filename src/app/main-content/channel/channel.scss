@@ -444,19 +444,17 @@
 .channel__message-reaction {
   display: inline-flex;
   align-items: center;
-   gap: 6px;
+  gap: 6px;
   margin-top: 8px;
   padding: 6px 10px;
 
-
   background: #eef2ff;
   color: #4338ca;
-   border-radius: 999px;
+  border-radius: 999px;
   font-weight: 700;
   border: 1px solid #c7d2fe;
   width: fit-content;
 }
-
 
 .channel__composer {
   display: grid;
@@ -469,6 +467,11 @@
   padding: 10px 12px;
 }
 
+.channel__composer-input {
+  position: relative;
+  width: 100%;
+}
+
 .channel__composer textarea {
   border: none;
   resize: none;
@@ -478,6 +481,54 @@
   color: #0f172a;
   width: 100%;
   height: 100%;
+}
+
+.channel__mention-suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  z-index: 10;
+}
+
+.channel__mention-suggestions button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.channel__mention-suggestions button:hover,
+.channel__mention-suggestions button:focus-visible {
+  background: #f8fafc;
+  transform: translateX(2px);
+}
+
+.channel__mention-suggestions img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.channel__mention-suggestions span {
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .channel__composer-button {

@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { CreateChannel } from './create-channel/create-channel';
 
 import { Channel, FirestoreService } from '../../services/firestore.service';
 import { ChannelSelectionService } from '../../services/channel-selection.service';
 import { AppUser, UserService } from '../../services/user.service';
 import { DirectMessageSelectionService } from '../../services/direct-message-selection.service';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-workspace',
@@ -22,10 +23,14 @@ export class Workspace {
   private readonly directMessageSelectionService = inject(
     DirectMessageSelectionService
   );
+  private readonly currentUser$ = toObservable(this.userService.currentUser);
   @Output() readonly newMessage = new EventEmitter<void>();
   @Output() readonly channelSelected = new EventEmitter<void>();
-  protected readonly channels$: Observable<Channel[]> =
-    this.firestoreService.getChannels();
+  protected readonly channels$: Observable<Channel[]> = this.currentUser$.pipe(
+    switchMap((user) =>
+      user ? this.firestoreService.getChannelsForUser(user.uid) : of([])
+    )
+  );
   protected readonly users$: Observable<AppUser[]> =
     this.userService.getAllUsers();
   protected readonly selectedChannelId$ =

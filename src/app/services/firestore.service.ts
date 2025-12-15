@@ -14,8 +14,14 @@ import {
   orderBy,
   query,
 } from '@angular/fire/firestore';
-import { Observable, catchError, map, of } from 'rxjs';
-
+import {
+  Observable,
+  catchError,
+  combineLatest,
+  map,
+  of,
+  switchMap,
+} from 'rxjs';
 export interface Channel {
   id?: string;
   title?: string;
@@ -95,6 +101,40 @@ export class FirestoreService {
 
     return collectionData(channelsCollection, { idField: 'id' }).pipe(
       map((channels) => channels as Channel[])
+    );
+  }
+
+  getChannelsForUser(userId: string): Observable<Channel[]> {
+    return this.getChannels().pipe(
+      switchMap((channels) => {
+        if (!channels.length) {
+          return of<Channel[]>([]);
+        }
+
+        const channelsWithMembers$ = channels
+          .filter((channel): channel is Channel & { id: string } => !!channel.id)
+          .map((channel) =>
+            this.getChannelMembers(channel.id).pipe(
+              map((members) => ({ channel, members }))
+            )
+          );
+
+        if (!channelsWithMembers$.length) {
+          return of<Channel[]>([]);
+        }
+
+        return combineLatest(channelsWithMembers$).pipe(
+          map((results) =>
+            results
+              .filter(
+                ({ members }) =>
+                  members.length > 0 &&
+                  members.some((member) => member.id === userId)
+              )
+              .map(({ channel }) => channel)
+          )
+        );
+      })
     );
   }
 
@@ -241,7 +281,7 @@ export class FirestoreService {
   }
 
 
-  async createChannel(title: string, description?: string): Promise<void> {
+  async createChannel(title: string, description?: string): Promise<string> {
     const trimmedTitle = title.trim();
     const trimmedDescription = description?.trim();
 
@@ -255,7 +295,9 @@ export class FirestoreService {
     }
 
     const channelsCollection = collection(this.firestore, 'channels');
-    await addDoc(channelsCollection, channelPayload);
+    const newChannel = await addDoc(channelsCollection, channelPayload);
+
+    return newChannel.id;
   }
 
   async updateChannel(

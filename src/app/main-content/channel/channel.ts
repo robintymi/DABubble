@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +28,7 @@ import { ChannelMembers } from './channel-members/channel-members';
 import { AddToChannel } from './add-to-channel/add-to-channel';
 import { ThreadService } from '../../services/thread.service';
 import { MessageEditor } from '../shared/message-editor/message-editor';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 type ChannelDay = {
   label: string;
   sortKey: number;
@@ -63,6 +64,9 @@ export class ChannelComponent {
   private readonly channelSelectionService = inject(ChannelSelectionService);
   private readonly userService = inject(UserService);
   private readonly threadService = inject(ThreadService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly currentUser$ = toObservable(this.userService.currentUser);
+  @ViewChild('messageTextarea') private messageTextarea?: ElementRef<HTMLTextAreaElement>;
   protected readonly channelDefaults = {
     name: 'Entwicklerteam',
     summary:
@@ -84,19 +88,30 @@ export class ChannelComponent {
       avatar: user?.photoUrl ?? 'imgs/default-profile-picture.png',
     };
   }
-  private readonly channels$ = this.firestoreService
-    .getChannels()
-    .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  private readonly channels$ = this.currentUser$.pipe(
+    switchMap((user) =>
+      user ? this.firestoreService.getChannelsForUser(user.uid) : of([])
+    ),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
   protected messageText = '';
   protected isSending = false;
-
+  private cachedMembers: ChannelMemberView[] = [];
+  protected mentionSuggestions: ChannelMemberView[] = [];
+  protected isMentionListVisible = false;
+  private mentionTriggerIndex: number | null = null;
+  private mentionCaretIndex: number | null = null;
 
   protected readonly channel$: Observable<Channel | undefined> = combineLatest([
     this.channelSelectionService.selectedChannelId$,
     this.channels$,
   ]).pipe(
     tap(([selectedChannelId, channels]) => {
-      if (!selectedChannelId && channels.length > 0) {
+      const activeSelectionExists = channels.some(
+        (channel) => channel.id === selectedChannelId
+      );
+
+      if ((!selectedChannelId || !activeSelectionExists) && channels.length > 0) {
         const firstChannelId = channels[0]?.id;
         this.channelSelectionService.selectChannel(firstChannelId);
       }
@@ -161,6 +176,14 @@ export class ChannelComponent {
     })
   );
 
+  constructor() {
+    this.members$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((members) => {
+        this.cachedMembers = members;
+        this.updateMentionSuggestions();
+      });
+  }
   private groupMessagesByDay(messages: ChannelMessage[]): ChannelDay[] {
     const grouped = new Map<string, ChannelDay>();
 
@@ -185,6 +208,75 @@ export class ChannelComponent {
     return Array.from(grouped.values()).sort((a, b) => a.sortKey - b.sortKey);
   }
 
+  protected onMessageInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement | null;
+    this.messageText = textarea?.value ?? this.messageText;
+    this.mentionCaretIndex = textarea?.selectionStart ?? null;
+    this.updateMentionSuggestions();
+  }
+
+  protected insertMention(member: ChannelMemberView): void {
+    if (this.mentionTriggerIndex === null) return;
+
+    const caret = this.mentionCaretIndex ?? this.messageText.length;
+    const before = this.messageText.slice(0, this.mentionTriggerIndex);
+    const after = this.messageText.slice(caret);
+    const mentionText = `@${member.name} `;
+
+    this.messageText = `${before}${mentionText}${after}`;
+    const newCaret = before.length + mentionText.length;
+
+    queueMicrotask(() => {
+      const textarea = this.messageTextarea?.nativeElement;
+      if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(newCaret, newCaret);
+      }
+    });
+
+    this.resetMentionSuggestions();
+  }
+
+  private updateMentionSuggestions(): void {
+    const caret = this.mentionCaretIndex ?? this.messageText.length;
+    const textUpToCaret = this.messageText.slice(0, caret);
+    const atIndex = textUpToCaret.lastIndexOf('@');
+
+    if (atIndex === -1) {
+      this.resetMentionSuggestions();
+      return;
+    }
+
+    if (atIndex > 0) {
+      const charBefore = textUpToCaret[atIndex - 1];
+      if (!/\s/.test(charBefore)) {
+        this.resetMentionSuggestions();
+        return;
+      }
+    }
+
+    const query = textUpToCaret.slice(atIndex + 1);
+
+    if (/\s/.test(query)) {
+      this.resetMentionSuggestions();
+      return;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+
+    this.mentionTriggerIndex = atIndex;
+    this.mentionSuggestions = this.cachedMembers.filter((member) =>
+      member.name.toLowerCase().includes(normalizedQuery)
+    );
+    this.isMentionListVisible = this.mentionSuggestions.length > 0;
+  }
+
+  private resetMentionSuggestions(): void {
+    this.isMentionListVisible = false;
+    this.mentionSuggestions = [];
+    this.mentionTriggerIndex = null;
+    this.mentionCaretIndex = null;
+  }
   protected sendMessage(): void {
     const text = this.messageText.trim();
     if (!text || this.isSending) return;
@@ -210,6 +302,7 @@ export class ChannelComponent {
       .subscribe({
         next: () => {
           this.messageText = '';
+          this.resetMentionSuggestions();
         },
         error: (error: unknown) => {
           console.error('Fehler beim Senden der Nachricht', error);

@@ -53,7 +53,10 @@
   background: #fff;
   padding: 0;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.1s ease;
 }
 
 .workspace__icon-btn img {
@@ -75,6 +78,7 @@
   background: transparent;
   color: #0f172a;
   font-size: 22px;
+  font-weight: 700;
 }
 
 .workspace__nav {
@@ -104,7 +108,9 @@
   border-radius: 10px;
   color: #0f172a;
   font-weight: 600;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .workspace__menu-item:hover {
@@ -152,7 +158,9 @@
   justify-content: center;
   color: #0f172a;
   border-radius: 8px;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .workspace__chevron:hover,
@@ -197,7 +205,9 @@
   border-radius: 10px;
   color: #0f172a;
   font-weight: 500;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .workspace__list-item:hover {
@@ -245,7 +255,9 @@
   padding: 10px 12px;
   border-radius: 12px;
   cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .workspace__add-btn:hover {
@@ -259,7 +271,7 @@
 }
 
 .workspace__list--direct {
-  max-height: 220px;     /* oder 280px/40vh – wie du magst */
+  max-height: 220px; /* oder 280px/40vh – wie du magst */
   overflow-y: auto;
 }
 
