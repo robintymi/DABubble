@@ -18,7 +18,14 @@
   </div>
   <div class="flex items-center gap-4">
     <p class="font-nunito">{{ currentUser()?.name || 'Gast' }}</p>
-    <img class="size-16 rounded-full" [src]="currentUser()?.photoUrl || 'imgs/default-profile-picture.png'" />
+    <div class="relative">
+      <img class="size-16 rounded-full" [src]="currentUser()?.photoUrl || 'imgs/default-profile-picture.png'" />
+      <span
+        class="absolute right-0 bottom-0 size-4 rounded-full border-2 border-white"
+        [ngClass]="currentUser()?.onlineStatus ? 'bg-green-500' : 'bg-gray-400'"
+        title="{{ currentUser()?.onlineStatus ? 'Online' : 'Offline' }}">
+      </span>
+    </div>
     <button #menuBtn class="size-12" matIconButton (click)="openUserMenu($event)">
       <mat-icon>keyboard_arrow_down</mat-icon>
     </button>
