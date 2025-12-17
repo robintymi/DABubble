@@ -1,9 +1,4 @@
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  Component,
-  inject,
-} from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { Workspace } from './workspace/workspace';
 import { Navbar } from './navbar/navbar';
@@ -19,17 +14,13 @@ import { ThreadService } from '../services/thread.service';
   templateUrl: './main-content.html',
   styleUrl: './main-content.scss',
 })
-export class MainContent implements AfterViewInit {
+export class MainContent {
   private readonly threadService = inject(ThreadService);
+
   protected readonly thread$ = this.threadService.thread$;
   protected showNewMessage = false;
   protected isCloseWorkspaceButtonHovered = false;
   protected isOpenWorkspaceButtonHovered = false;
-
-  public ngAfterViewInit(): void {
-    this.changeDetectorRef.detectChanges();
-  }
-
 
   protected openNewMessagePanel(): void {
     this.showNewMessage = true;
