@@ -1,5 +1,5 @@
 <div class="absolute right-0 left-12 top-8 z-50 max-h-[400px] max-w-[360px] bg-white shadow-xl box-border"
-     *ngIf="searchTerm">
+     *ngIf="(searchTerm.length >= 3)">
   <ng-container *ngIf="isUserSearch">
     <ng-container *ngIf="users.length; else noUsers">
       <div class="px-10 py-2 overflow-y-auto max-h-[400px] pr-2 pb-2">
