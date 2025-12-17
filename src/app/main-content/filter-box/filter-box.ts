@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { SearchResult } from '../../classes/search-result.class';
 import { MatDialog } from '@angular/material/dialog';
 import { MemberDialog } from '../member-dialog/member-dialog';
-import { UserService } from '../../services/user.service';
+import { AppUser, UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-filter-box',
@@ -66,16 +66,21 @@ export class FilterBox implements OnChanges {
 
   choose(item: SearchResult) {
     if (item.collection === 'users') {
+      const user: AppUser = {
+        uid: item.id,
+        name: item.data.name,
+        email: item.data.email ?? null,
+        photoUrl: item.data.photoUrl ?? 'imgs/default-profile-picture.png',
+        onlineStatus: item.data.onlineStatus ?? false,
+        lastSeen: item.data.lastSeen,
+        createdAt: item.data.createdAt,
+        updatedAt: item.data.updatedAt,
+      };
+
       this.dialog.open(MemberDialog, {
-        data: {
-          user: {
-            name: item.data.name,
-            photoUrl: item.data.photoUrl,
-            email: item.data.email,
-            onlineStatus: item.data.onlineStatus,
-          },
-        },
+        data: { user },
       });
+
       this.close.emit();
     } else {
       this.selectItem.emit(item);
