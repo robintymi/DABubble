@@ -1,1 +1,32 @@
-<p>member-dialog works!</p>
+<section
+  class="flex h-140 w-100 flex-col items-center justify-center gap-4 rounded-tl-2xl rounded-br-2xl rounded-bl-2xl bg-white p-6 shadow-xl">
+  <div class="flex w-full items-center justify-between">
+    <h2>Profil</h2>
+    <mat-icon class="cursor-pointer close" (click)="close()">close</mat-icon>
+  </div>
+
+  <img class="size-40 rounded-full" [src]="data.user.photoUrl || 'imgs/default-profile-picture.png'" />
+
+  <div class="flex w-full flex-col gap-2">
+    <div class="flex items-center justify-between">
+      <h3>{{ data.user.name || 'Gast' }}</h3>
+    </div>
+
+    <div class="flex items-center gap-2" *ngIf="data.user.onlineStatus">
+      <button class="status"></button>
+      <p class="status-text">{{ data.user.onlineStatus }}</p>
+    </div>
+  </div>
+
+  <div class="mt-2 flex w-full gap-4" *ngIf="data.user.email">
+    <mat-icon>mail_outline</mat-icon>
+    <div class="flex flex-col gap-1">
+      <h4>E-Mail-Adresse</h4>
+      <p class="mail">{{ data.user.email }}</p>
+    </div>
+  </div>
+
+  <div class="mt-4 flex w-full justify-center">
+    <button mat-raised-button color="primary" class="w-full" (click)="openDirectMessage()">Nachricht senden</button>
+  </div>
+</section>

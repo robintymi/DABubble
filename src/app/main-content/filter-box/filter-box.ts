@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { SearchService } from '../../services/search.service';
 import { CommonModule } from '@angular/common';
 import { SearchResult } from '../../classes/search-result.class';
+import { MatDialog } from '@angular/material/dialog';
+import { MemberDialog } from '../member-dialog/member-dialog';
 
 @Component({
   selector: 'app-filter-box',
@@ -14,7 +16,10 @@ export class FilterBox implements OnChanges {
   @Output() selectItem = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
 
-  constructor(private searchService: SearchService) {}
+  constructor(
+    private searchService: SearchService,
+    private dialog: MatDialog
+  ) {}
 
   results: SearchResult[] = [];
 
@@ -30,9 +35,22 @@ export class FilterBox implements OnChanges {
     }
   }
 
-  choose(item: any) {
-    this.selectItem.emit(item);
-    this.close.emit();
+  choose(item: SearchResult) {
+    if (item.collection === 'users') {
+      this.dialog.open(MemberDialog, {
+        data: {
+          user: {
+            name: item.data.name,
+            photoUrl: item.data.photoUrl,
+            email: item.data.email,
+            onlineStatus: item.data.onlineStatus,
+          },
+        },
+      });
+    } else {
+      this.selectItem.emit(item);
+      this.close.emit();
+    }
   }
 
   get users() {
