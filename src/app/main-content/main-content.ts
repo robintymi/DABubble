@@ -1,4 +1,9 @@
-import { Component, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  inject,
+} from '@angular/core';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { Workspace } from './workspace/workspace';
 import { Navbar } from './navbar/navbar';
@@ -24,17 +29,23 @@ import { DirectMessageSelectionService } from '../services/direct-message-select
   ], templateUrl: './main-content.html',
   styleUrl: './main-content.scss',
 })
-export class MainContent {
+export class MainContent implements AfterViewInit {
   private readonly threadService = inject(ThreadService);
   private readonly directMessageSelectionService = inject(
     DirectMessageSelectionService
   );
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
   protected readonly thread$ = this.threadService.thread$;
   protected readonly selectedDirectMessageUser$ =
     this.directMessageSelectionService.selectedUser$;
   protected showNewMessage = false;
   protected isCloseWorkspaceButtonHovered = false;
   protected isOpenWorkspaceButtonHovered = false;
+
+  public ngAfterViewInit(): void {
+    this.changeDetectorRef.detectChanges();
+  }
+
 
   protected openNewMessagePanel(): void {
     this.showNewMessage = true;
