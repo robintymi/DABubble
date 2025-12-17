@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, combineLatest, map, of, switchMap } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { CreateChannel } from './create-channel/create-channel';
 
 import { Channel, FirestoreService } from '../../services/firestore.service';
@@ -23,7 +23,7 @@ export class Workspace {
   private readonly directMessageSelectionService = inject(
     DirectMessageSelectionService
   );
-  protected readonly currentUser$ = toObservable(this.userService.currentUser);
+  private readonly currentUser$ = toObservable(this.userService.currentUser);
   @Output() readonly newMessage = new EventEmitter<void>();
   @Output() readonly channelSelected = new EventEmitter<void>();
   protected readonly channels$: Observable<Channel[]> = this.currentUser$.pipe(
@@ -31,20 +31,8 @@ export class Workspace {
       user ? this.firestoreService.getChannelsForUser(user.uid) : of([])
     )
   );
-  protected readonly users$: Observable<AppUser[]> = combineLatest([
-    this.currentUser$,
-    this.userService.getAllUsers(),
-  ]).pipe(
-    map(([currentUser, users]) => {
-      if (!currentUser) {
-        return users;
-      }
-
-      const otherUsers = users.filter((user) => user.uid !== currentUser.uid);
-
-      return [currentUser, ...otherUsers];
-    })
-  );
+  protected readonly users$: Observable<AppUser[]> =
+    this.userService.getAllUsers();
   protected readonly selectedChannelId$ =
     this.channelSelectionService.selectedChannelId$;
   protected readonly selectedDirectMessageUser$ =
@@ -81,8 +69,7 @@ export class Workspace {
 
   protected openDirectMessage(user: AppUser): void {
     this.directMessageSelectionService.selectUser(user);
-    this.channelSelectionService.selectChannel(null);
-    this.channelSelected.emit();
+    this.startNewMessage();
   }
 
 
