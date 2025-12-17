@@ -168,8 +168,6 @@ export class UserService {
 
     return collectionData(usersCollection, { idField: 'uid' }).pipe(
       map((users) => {
-        // 🔥 DEBUG: Alle User anzeigen, die aus Firestore kommen
-        console.log('🔥 [Firestore users] raw:', users);
 
         return (users as Array<Partial<AppUser> & { uid?: string }>).map((user) => ({
           uid: user.uid ?? 'unbekannt',

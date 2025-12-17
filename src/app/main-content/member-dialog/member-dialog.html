@@ -1,8 +1,8 @@
 <section
-  class="flex h-140 w-100 flex-col items-center justify-center gap-4 rounded-tl-2xl rounded-br-2xl rounded-bl-2xl bg-white p-6 shadow-xl">
+  class="flex h-140 w-100 flex-col items-center justify-center gap-8 rounded-tl-2xl rounded-br-2xl rounded-bl-2xl bg-white p-6 shadow-xl">
   <div class="flex w-full items-center justify-between">
     <h2>Profil</h2>
-    <mat-icon class="cursor-pointer close" (click)="close()">close</mat-icon>
+    <mat-icon class="close cursor-pointer" (click)="close()">close</mat-icon>
   </div>
 
   <img class="size-40 rounded-full" [src]="data.user.photoUrl || 'imgs/default-profile-picture.png'" />
@@ -13,8 +13,11 @@
     </div>
 
     <div class="flex items-center gap-2" *ngIf="data.user.onlineStatus">
-      <button class="status"></button>
-      <p class="status-text">{{ data.user.onlineStatus }}</p>
+      <button [ngClass]="data.user.onlineStatus ? 'status-online' : 'status-offline'"></button>
+
+      <p [ngClass]="data.user.onlineStatus ? 'status-text-online' : 'status-text-offline'">
+        {{ data.user.onlineStatus ? 'Aktiv' : 'Abwesend' }}
+      </p>
     </div>
   </div>
 
@@ -27,6 +30,6 @@
   </div>
 
   <div class="mt-4 flex w-full justify-center">
-    <button mat-raised-button color="primary" class="w-full" (click)="openDirectMessage()">Nachricht senden</button>
+    <button class="message-button" (click)="openDirectMessage()"><img src="/imgs/member dialog/message_icon.png">Nachricht</button>
   </div>
 </section>
