@@ -17,11 +17,11 @@ export class SearchService {
     if (!term) return [];
 
     if (this.isUserSearch(term)) {
-      return this.searchByText('users', term.substring(1), (r) => r.data.name);
+      return this.searchByText('users', term.substring(1).trim(), (r) => r.data.name);
     }
 
     if (this.isChannelSearch(term)) {
-      return this.searchByText('channels', term.substring(1), (r) => r.data.title);
+      return this.searchByText('channels', term.substring(1).trim(), (r) => r.data.title);
     }
 
     if (term.length < 4) return [];
