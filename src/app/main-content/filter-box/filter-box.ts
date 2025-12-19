@@ -111,4 +111,14 @@ export class FilterBox implements OnChanges {
   get hasResults(): boolean {
     return this.results.length > 0;
   }
+
+  get shouldShowResults(): boolean {
+  const term = this.searchTerm.trim();
+
+  if (term.startsWith('@') || term.startsWith('#')) {
+    return term.length >= 1;
+  }
+
+  return term.length >= 3;
+}
 }
