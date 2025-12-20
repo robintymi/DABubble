@@ -28,7 +28,7 @@
           }
         </h1>
 
-        <p class="text-center text-base sm:text-lg">
+        <p class="paragraph-20">
           @if (mode() === 'login') {
             Wir empfehlen dir, die E-Mail-Adresse zu nutzen, die du bei der Arbeit verwendest.
           } @else if (mode() === 'reauth') {
@@ -108,7 +108,7 @@
           (click)="onLoginWithGoogle()"
           [disabled]="isSubmitting"
           type="button"
-          class="gap- flex w-full items-center justify-center gap-2 rounded-full border border-transparent bg-dab-bg px-4 py-2 text-dab-purple-1 hover:border-dab-purple-1 hover:font-bold active:border-dab-gray active:font-medium sm:px-8">
+          class="gap- flex w-full items-center justify-center gap-2 rounded-full border border-transparent bg-dab-bg px-4 py-2 text-dab-purple-1 outline-none hover:border-dab-purple-1 hover:font-bold focus-visible:border-dab-purple-1 focus-visible:font-bold active:border-dab-gray active:font-medium sm:px-8">
           <img src="imgs/google.svg" alt="" class="size-7" />
           <span>
             @if (mode() === 'login') {
@@ -141,15 +141,15 @@
       <button
         type="button"
         aria-label="Zurück zur Anmeldung"
-        class="dab-ui-item back-btn leading-0"
+        class="dab-ui-item back-btn"
         (click)="onBackToLoginView()">
         <span class="material-icons">arrow_back</span>
       </button>
 
-      <header class="mb-10">
+      <div class="mb-10">
         <h1>Passwort zurücksetzen</h1>
-        <p class="text-center text-base sm:text-lg">Bitte gib deine E-Mail-Adresse ein.</p>
-      </header>
+        <p class="paragraph-20">Bitte gib deine E-Mail-Adresse ein.</p>
+      </div>
 
       <form #resetForm="ngForm" (ngSubmit)="onSendPasswordReset(resetForm)" novalidate class="dab-form">
         <!-- @if (errorMessage) {

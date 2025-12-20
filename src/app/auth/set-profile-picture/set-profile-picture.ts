@@ -4,12 +4,12 @@ import { ProfilePicture, ProfilePictureKey } from '../../types';
 
 export const PROFILE_PICTURE_URLS = {
   default: 'imgs/default-profile-picture.png',
-  m1: 'imgs/m1.png',
-  m2: 'imgs/m2.png',
-  m3: 'imgs/m3.png',
-  m4: 'imgs/m4.png',
-  f1: 'imgs/f1.png',
-  f2: 'imgs/f2.png',
+  female1: 'imgs/f1.png',
+  male1: 'imgs/m1.png',
+  male4: 'imgs/m4.png',
+  male3: 'imgs/m3.png',
+  female2: 'imgs/f2.png',
+  male2: 'imgs/m2.png',
 } as const;
 
 @Component({

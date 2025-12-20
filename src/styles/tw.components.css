@@ -8,7 +8,7 @@
     --tw-shadow-color: rgb(0 0 0 / 5%);
 
     h1 {
-      @apply mb-6 text-center text-4xl font-bold text-dab-purple-1;
+      @apply mb-6 text-center text-3xl font-bold text-dab-purple-1 sm:text-4xl;
     }
 
     &:has(.back-btn) {
@@ -118,14 +118,22 @@
   }
 
   .dab-ui-item {
-    @apply rounded-full p-2 transition;
+    @apply rounded-full p-2 leading-0 transition;
 
     &:is(:hover, :focus-visible) {
       @apply bg-dab-bg text-dab-purple-3 outline-none;
     }
 
-    &:is(:hover, :focus-visible) .material-icons {
+    &:is(:hover, :focus-visible) :is(.material-icons, mat-icon) {
       font-weight: bold !important;
     }
+  }
+
+  .dab-avatar-img {
+    @apply rounded-full object-cover;
+  }
+
+  .paragraph-20 {
+    @apply text-center text-base sm:text-lg;
   }
 }

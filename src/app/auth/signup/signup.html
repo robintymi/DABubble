@@ -13,20 +13,16 @@
 
   <div card>
     @if (!isAvatarStep) {
-      <button
-        type="button"
-        aria-label="Zurück zur Anmeldung"
-        class="dab-ui-item back-btn leading-0"
-        (click)="onBackToLogin()">
+      <button type="button" aria-label="Zurück zur Anmeldung" class="dab-ui-item back-btn" (click)="onBackToLogin()">
         <span class="material-icons">arrow_back</span>
       </button>
 
-      <header class="mb-10">
+      <div class="mb-10">
         <h1>Konto erstellen</h1>
-        <p class="text-center text-base sm:text-lg">
+        <p class="paragraph-20">
           Registriere dich mit Namen und E-Mail-Adresse oder nutze den <a routerLink="/login">Google Login</a>.
         </p>
-      </header>
+      </div>
 
       <form #signupForm="ngForm" (ngSubmit)="onSubmit(signupForm)" novalidate class="dab-form">
         <!-- @if (false && errorMessage) {
@@ -105,7 +101,12 @@
         </div>
 
         <div>
-          <mat-checkbox required [(ngModel)]="privacyAccepted" #privacyModel="ngModel" class="custom-checkbox">
+          <mat-checkbox
+            required
+            name="privacy"
+            [(ngModel)]="privacyAccepted"
+            #privacyModel="ngModel"
+            class="custom-checkbox">
             Ich stimme der
             <a routerLink="/privacy-policy" class="dab-anchor-on-white-inline">Datenschutzerklärung</a>
             zu.

@@ -5,18 +5,18 @@ import { Component, input } from '@angular/core';
   standalone: true,
   template: `
     <section class="max-width m-auto grid min-h-full grid-rows-[1fr_auto_1fr]">
-      <div>
+      <header>
         @if (showCardSurroundings()) {
           <div class="flex h-full items-start justify-between px-8 pt-8 sm:px-12 sm:pt-12">
             <ng-content select="[topLeft]"></ng-content>
             <ng-content select="[topRight]"></ng-content>
           </div>
         }
-      </div>
+      </header>
 
-      <div class="dab-page-card">
+      <main class="dab-page-card">
         <ng-content select="[card]"></ng-content>
-      </div>
+      </main>
 
       <div>
         @if (showCardSurroundings()) {
