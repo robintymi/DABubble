@@ -1,15 +1,18 @@
 import { Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-logo',
-  imports: [],
+  imports: [RouterLink],
   template: `
-    <div class="flex items-center gap-3">
-      <img src="imgs/logo.svg" alt="DABubble Logo" class="block" />
-      @if (withText()) {
-        <span class="text-2xl font-bold sm:text-3xl">DABubble</span>
-      }
-    </div>
+    <a routerLink="/main">
+      <div class="flex items-center gap-3">
+        <img src="imgs/logo.svg" alt="DABubble Logo" class="block" />
+        @if (withText()) {
+          <span class="text-2xl font-bold sm:text-3xl">DABubble</span>
+        }
+      </div>
+    </a>
   `,
   styles: `
     :host {
