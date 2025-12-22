@@ -15,14 +15,14 @@ import { RouterLink } from '@angular/router';
     </a>
   `,
   styles: `
-    :host {
+    :host img {
       display: block;
       height: 70px;
       width: 70px;
     }
 
     @media (min-width: 40rem) {
-      :host {
+      :host img {
         height: 80px;
         width: 80px;
       }
