@@ -20,6 +20,7 @@ export class Login {
   private readonly userService = inject(UserService);
 
   mode = input<'login' | 'reauth'>('login');
+  embedded = input(false);
   completed = output<'login' | 'reauth'>();
 
   email = '';
