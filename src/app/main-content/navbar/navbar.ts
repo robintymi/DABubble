@@ -43,14 +43,6 @@ export class Navbar {
 
   onFocus() {}
 
-  onSelect(item: any) {
-    console.log('Ausgewählt:', item);
-
-    this.dropdownOpen = false;
-
-    // this.searchTerm = '';
-  }
-
   openUserMenu(event: Event) {
     const target = event.currentTarget as HTMLElement;
 

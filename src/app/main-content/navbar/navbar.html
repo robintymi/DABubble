@@ -13,8 +13,7 @@
     <app-filter-box
       *ngIf="dropdownOpen"
       [searchTerm]="searchTerm"
-      (selectItem)="onSelect($event)"
-      (close)="dropdownOpen = false"></app-filter-box>
+      (close)="closeDropdown()"></app-filter-box>
   </div>
   <div class="hover-me flex items-center gap-4" (click)="openUserMenu($event)">
     <p class="font-nunito text-3xl font-bold">{{ currentUser()?.name || 'Gast' }}</p>
