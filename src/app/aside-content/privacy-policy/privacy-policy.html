@@ -1,4 +1,4 @@
-<app-aside-content-wrapper>
+<app-aside-content-wrapper [showCardSurroundings]="!embedded()">
   <div card>
     <button type="button" aria-label="Eine Seite zurück" class="dab-ui-item back-btn" (click)="backInHistory()">
       <span class="material-icons">arrow_back</span>

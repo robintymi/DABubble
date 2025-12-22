@@ -1,7 +1,7 @@
-import { Component, input } from '@angular/core';
+import { Component, input, OnDestroy, signal } from '@angular/core';
 import { Logo } from './logo';
 import { RouterLink } from '@angular/router';
-import { NgClass, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 
 @Component({
   selector: 'app-aside-content-wrapper',
@@ -14,34 +14,85 @@ import { NgClass, NgTemplateOutlet } from '@angular/common';
       </main>
     </ng-template>
 
+    <ng-template #top>
+      <ng-content select="[topRight]"></ng-content>
+    </ng-template>
+
+    <ng-template #footer>
+      <footer>
+        <div class="flex h-full items-end justify-center px-8 pt-4 pb-6 sm:px-10 sm:pb-10">
+          <div class="flex flex-wrap justify-center gap-4">
+            <a routerLink="/legal-notice" class="dab-anchor-on-bg">Impressum</a>
+            <a routerLink="/privacy-policy" class="dab-anchor-on-bg">Datenschutz</a>
+          </div>
+        </div>
+      </footer>
+    </ng-template>
+
     @if (showCardSurroundings()) {
-      <section class="max-width m-auto grid min-h-full grid-rows-[1fr_auto_1fr]">
-        <header>
-          <div class="flex h-full items-start justify-between px-8 pt-8 sm:px-12 sm:pt-12">
-            <app-logo></app-logo>
-            <ng-content select="[topRight]"></ng-content>
-          </div>
-        </header>
-
-        <ng-container [ngTemplateOutlet]="main"></ng-container>
-
-        <footer>
-          <div class="flex h-full items-end justify-center px-8 pb-8 sm:px-12 sm:pb-12">
-            <div class="flex justify-between gap-4">
-              <a routerLink="/legal-notice" class="dab-anchor-on-bg">Impressum</a>
-              <a routerLink="/privacy-policy" class="dab-anchor-on-bg">Datenschutz</a>
+      @if (isSmallScreen()) {
+        <section class="max-width m-auto grid min-h-full grid-rows-[1fr_auto_1fr] px-4">
+          <header>
+            <div class="flex h-full justify-center px-8 pt-6 pb-4 sm:px-10 sm:pt-10">
+              <app-logo></app-logo>
             </div>
+          </header>
+
+          <ng-container [ngTemplateOutlet]="main"></ng-container>
+
+          <div class="top-above-footer flex items-end justify-center">
+            <ng-container [ngTemplateOutlet]="top"></ng-container>
           </div>
-        </footer>
-      </section>
+
+          <ng-container [ngTemplateOutlet]="footer"></ng-container>
+        </section>
+      } @else {
+        <section class="max-width m-auto grid min-h-full grid-rows-[1fr_auto_1fr] px-4">
+          <header>
+            <div class="flex h-full items-start justify-between px-8 pt-6 pb-4 sm:px-10 sm:pt-10">
+              <app-logo></app-logo>
+              <ng-container [ngTemplateOutlet]="top"></ng-container>
+            </div>
+          </header>
+
+          <ng-container [ngTemplateOutlet]="main"></ng-container>
+
+          <ng-container [ngTemplateOutlet]="footer"></ng-container>
+        </section>
+      }
     } @else {
       <ng-container [ngTemplateOutlet]="main"></ng-container>
     }
   `,
+  styles: `
+    .top-above-footer ::ng-deep [topright] {
+      align-items: center;
+
+      a {
+        margin-right: 0;
+      }
+    }
+  `,
 })
-export class AsideContentWrapperComponent {
+export class AsideContentWrapperComponent implements OnDestroy {
   /**
    * Set to false if the content is only the card, e.g. in an overlay for reauth.
    */
   showCardSurroundings = input(true);
+
+  isSmallScreen = signal(false);
+  mediaQueryListener: MediaQueryList;
+  matchQuery: () => void;
+
+  constructor() {
+    this.mediaQueryListener = matchMedia('(max-width: 40rem)');
+    this.matchQuery = () => this.isSmallScreen.set(this.mediaQueryListener.matches);
+
+    this.matchQuery();
+    this.mediaQueryListener.addEventListener('change', this.matchQuery);
+  }
+
+  ngOnDestroy(): void {
+    this.mediaQueryListener.removeEventListener('change', this.matchQuery);
+  }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { AsideContentWrapperComponent } from '../aside-content-wrapper';
 
 @Component({
@@ -8,6 +8,8 @@ import { AsideContentWrapperComponent } from '../aside-content-wrapper';
   styleUrl: './privacy-policy.scss',
 })
 export class PrivacyPolicy {
+  embedded = input(false);
+
   backInHistory() {
     window.history.back();
   }

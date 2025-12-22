@@ -1,5 +1,5 @@
-<app-aside-content-wrapper [showCardSurroundings]="mode() === 'login'">
-  @if (mode() === 'login') {
+<app-aside-content-wrapper [showCardSurroundings]="!embedded()">
+  @if (!embedded()) {
     <div topRight class="flex flex-col items-end gap-2">
       <p>Neu bei DABubble?</p>
       <a routerLink="/signup" class="dab-anchor-on-bg -mr-4">Konto erstellen</a>
