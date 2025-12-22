@@ -16,8 +16,8 @@
       (selectItem)="onSelect($event)"
       (close)="dropdownOpen = false"></app-filter-box>
   </div>
-  <div class="flex items-center gap-4">
-    <p class="font-nunito">{{ currentUser()?.name || 'Gast' }}</p>
+  <div class="hover-me flex items-center gap-4" (click)="openUserMenu($event)">
+    <p class="font-nunito text-3xl font-bold">{{ currentUser()?.name || 'Gast' }}</p>
     <div class="relative">
       <img class="size-16 rounded-full" [src]="currentUser()?.photoUrl || 'imgs/default-profile-picture.png'" />
       <span
@@ -26,7 +26,7 @@
         title="{{ currentUser()?.onlineStatus ? 'Online' : 'Offline' }}">
       </span>
     </div>
-    <button #menuBtn class="size-12" matIconButton (click)="openUserMenu($event)">
+    <button #menuBtn class="size-6" matIconButton>
       <mat-icon>keyboard_arrow_down</mat-icon>
     </button>
   </div>

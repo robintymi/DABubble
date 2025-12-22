@@ -56,8 +56,8 @@ export class Navbar {
 
     this.overlayService.open(NavbarDialog, {
       target,
-      offsetX: -200,
-      offsetY: 10,
+      offsetX: -10,
+      offsetY: 20,
       data: { originTarget: target },
     });
   }

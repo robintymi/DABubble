@@ -1,3 +1,10 @@
 input:focus::placeholder {
   color: transparent;
 }
+
+.hover-me{
+  cursor: pointer;
+  &:hover {
+    color: #797EF3;
+  }
+}
