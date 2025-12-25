@@ -67,8 +67,8 @@
             <div class="message-board__bubble-author">
               <img class="message-board__bubble-avatar" [src]="message.avatar" [alt]="message.author" />
               <strong>{{ message.author }}</strong>
+              <time class="message-board__bubble-time">{{ formatTimestamp(message.timestamp) }}</time>
             </div>
-            <time class="message-board__bubble-time">{{ formatTimestamp(message.timestamp) }}</time>
           </div>
           <p class="message-board__bubble-text">{{ message.content }}</p>
           <ng-container *ngIf="message.id as messageId">

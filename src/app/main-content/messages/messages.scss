@@ -63,10 +63,12 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 16px;
   min-height: 220px;
   flex: 1;
   box-shadow: none;
+  overflow-y: auto;
 }
 .message-board__divider {
   position: relative;
@@ -90,6 +92,25 @@
 .message-board__divider::before {
   left: 0;
 }
+.message-board__bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #eceefe;
+  max-width: min(70%, 640px);
+  width: fit-content;
+}
+
+.message-board__bubble--own {
+  align-self: flex-end;
+  background: #797ef3;
+  color: #ffffff;
+}
+
 
 .message-board__bubble--own .message-board__bubble-header,
 .message-board__bubble--own .message-board__bubble-author {
@@ -114,6 +135,9 @@
   gap: 8px;
   color: #0f172a;
 }
+.message-board__bubble--own .message-board__bubble-author {
+  color: #ffffff;
+}
 
 .message-board__bubble-avatar {
   width: 36px;
@@ -127,11 +151,19 @@
   color: #94a3b8;
 }
 
+.message-board__bubble--own .message-board__bubble-time {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .message-board__bubble-text {
   color: #111827;
   line-height: 1.5;
   margin: 0;
 }
+.message-board__bubble--own .message-board__bubble-text {
+  color: #ffffff;
+}
+
 
 .message-board__bubble-actions {
   position: absolute;

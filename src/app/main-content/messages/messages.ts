@@ -145,7 +145,7 @@ export class Messages {
     const isOwn = message.authorId === currentUser.uid;
     return {
       id: message.id,
-      author: isOwn ? 'DU' : message.authorName ?? 'Unbekannter Nutzer',
+      author: isOwn ? 'Du' : message.authorName ?? 'Unbekannter Nutzer',
       avatar: message.authorAvatar ?? 'imgs/default-profile-picture.png',
       content: message.text ?? '',
       timestamp: message.createdAt,
