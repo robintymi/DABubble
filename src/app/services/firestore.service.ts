@@ -74,6 +74,11 @@ export interface DirectMessageEntry {
   text?: string;
   createdAt?: Timestamp;
 }
+export interface DirectMessageReadStatus {
+  userId: string;
+  lastReadAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
 export interface ChannelMember {
   id: string;
   name: string;
@@ -230,6 +235,32 @@ export class FirestoreService {
       catchError(() => of([]))
     );
   }
+
+  getDirectMessageReadStatus(currentUserId: string, otherUserId: string): Observable<Timestamp | null> {
+    const conversationId = this.buildConversationId(currentUserId, otherUserId);
+    const readDoc = doc(this.firestore, `directMessages/${conversationId}/readStatus/${currentUserId}`);
+
+    return docData(readDoc).pipe(
+      map((data) => (data as DirectMessageReadStatus | undefined)?.lastReadAt ?? null),
+      catchError(() => of(null))
+    );
+  }
+
+  async updateDirectMessageReadStatus(currentUserId: string, otherUserId: string): Promise<void> {
+    const conversationId = this.buildConversationId(currentUserId, otherUserId);
+    const readDoc = doc(this.firestore, `directMessages/${conversationId}/readStatus/${currentUserId}`);
+
+    await setDoc(
+      readDoc,
+      {
+        userId: currentUserId,
+        lastReadAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  }
+
 
   async sendDirectMessage(
     currentUser: Pick<DirectMessageEntry, 'authorId' | 'authorName' | 'authorAvatar'> & { text: string },

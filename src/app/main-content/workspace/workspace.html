@@ -101,6 +101,11 @@
             [class.workspace__section-label--active]="isDirectMessagesHeaderHovered">
             Direktnachrichten
           </span>
+          <ng-container *ngIf="directMessageUnreadTotal$ | async as unreadTotal">
+            <span class="workspace__section-badge workspace__section-badge--active" *ngIf="unreadTotal > 0">
+              {{ unreadTotal }}
+            </span>
+          </ng-container>
         </button>
       </div>
       <ul
@@ -108,7 +113,10 @@
         class="workspace__list workspace__list--direct"
         id="workspace-direct-messages">
         <ng-container *ngIf="directMessageUsers$ | async as users">
-          <li *ngFor="let user of users" class="workspace__list-item">
+          <li
+            *ngFor="let user of users"
+            class="workspace__list-item"
+            [class.workspace__list-item--unread]="user.unreadCount > 0">
             <button
               type="button"
               class="workspace__list-item workspace__list-item--direct"
@@ -127,6 +135,7 @@
               <div class="workspace__user-details">
                 <span class="workspace__user-name">{{ user.displayName }}</span>
               </div>
+              <span *ngIf="user.unreadCount > 0" class="workspace__unread-badge">{{ user.unreadCount }}</span>
             </button>
           </li>
         </ng-container>

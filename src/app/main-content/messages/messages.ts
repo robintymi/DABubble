@@ -73,6 +73,15 @@ export class Messages {
     this.selectedRecipient$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((recipient) => (this.selectedRecipient = recipient));
+    combineLatest([this.currentUser$, this.selectedRecipient$])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(([currentUser, recipient]) => {
+        if (!currentUser || !recipient) return;
+        this.firestoreService.updateDirectMessageReadStatus(
+          currentUser.uid,
+          recipient.uid
+        );
+      });
   }
 
   protected sendMessage(): void {

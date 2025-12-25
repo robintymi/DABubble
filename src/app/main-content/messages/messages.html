@@ -63,19 +63,23 @@
             </div>
           </div>
 
-          <div class="message-board__bubble-header">
-            <div class="message-board__bubble-author">
-              <img class="message-board__bubble-avatar" [src]="message.avatar" [alt]="message.author" />
-              <strong>{{ message.author }}</strong>
-              <time class="message-board__bubble-time">{{ formatTimestamp(message.timestamp) }}</time>
+          <div class="message-board__bubble-main">
+            <img class="message-board__bubble-avatar" [src]="message.avatar" [alt]="message.author" />
+            <div class="message-board__bubble-body">
+              <div class="message-board__bubble-header">
+                <strong class="message-board__bubble-author">{{ message.author }}</strong>
+                <time class="message-board__bubble-time">{{ formatTimestamp(message.timestamp) }}</time>
+              </div>
+              <div class="message-board__bubble-content">
+                <p class="message-board__bubble-text">{{ message.content }}</p>
+              </div>
+              <ng-container *ngIf="message.id as messageId">
+                <div class="message-board__bubble-reaction" *ngIf="messageReactions[messageId] as reaction">
+                  {{ reaction }}
+                </div>
+              </ng-container>
             </div>
           </div>
-          <p class="message-board__bubble-text">{{ message.content }}</p>
-          <ng-container *ngIf="message.id as messageId">
-            <div class="message-board__bubble-reaction" *ngIf="messageReactions[messageId] as reaction">
-              {{ reaction }}
-            </div>
-          </ng-container>
         </article>
       </ng-container>
     </section>

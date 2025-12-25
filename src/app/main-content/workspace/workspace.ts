@@ -9,7 +9,7 @@ import { AppUser, UserService } from '../../services/user.service';
 import { DirectMessageSelectionService } from '../../services/direct-message-selection.service';
 import { toObservable } from '@angular/core/rxjs-interop';
 
-type DirectMessageUser = AppUser & { displayName: string };
+type DirectMessageUser = AppUser & { displayName: string; unreadCount: number };
 
 @Component({
   selector: 'app-workspace',
@@ -35,27 +35,40 @@ export class Workspace {
   );
   protected readonly directMessageUsers$: Observable<DirectMessageUser[]> =
     combineLatest([this.userService.getAllUsers(), this.currentUser$]).pipe(
-      map(([users, currentUser]) => {
-        const enhancedUsers = users.map((user) => ({
-          ...user,
-          displayName:
-            currentUser && user.uid === currentUser.uid
-              ? `${user.name} (Du)`
-              : user.name,
-        }));
+      switchMap(([users, currentUser]) => {
+        if (!currentUser) {
+          return of([]);
+        }
 
-        enhancedUsers.sort((a, b) => {
-          if (currentUser) {
-            if (a.uid === currentUser.uid) return -1;
-            if (b.uid === currentUser.uid) return 1;
-          }
+        const directMessageUsers$ = users.map((user) =>
+          this.buildDirectMessageUser(user, currentUser)
+        );
 
-          return a.name.localeCompare(b.name);
-        });
+        if (!directMessageUsers$.length) {
+          return of([]);
+        }
 
-        return enhancedUsers;
+        return combineLatest(directMessageUsers$).pipe(
+          map((directMessageUsers) =>
+            [...directMessageUsers].sort((a, b) => {
+              if (a.unreadCount !== b.unreadCount) {
+                return b.unreadCount - a.unreadCount;
+              }
+
+              if (a.uid === currentUser.uid) return -1;
+              if (b.uid === currentUser.uid) return 1;
+
+              return a.name.localeCompare(b.name);
+            })
+          )
+        );
       })
     );
+  protected readonly directMessageUnreadTotal$ = this.directMessageUsers$.pipe(
+    map((users) =>
+      users.reduce((total, user) => total + (user.unreadCount ?? 0), 0)
+    )
+  );
   protected readonly selectedChannelId$ =
     this.channelSelectionService.selectedChannelId$;
   protected readonly selectedDirectMessageUser$ =
@@ -94,5 +107,38 @@ export class Workspace {
     this.directMessageSelectionService.selectUser(user);
   }
 
+  private buildDirectMessageUser(
+    user: AppUser,
+    currentUser: AppUser
+  ): Observable<DirectMessageUser> {
+    const displayName =
+      user.uid === currentUser.uid ? `${user.name} (Du)` : user.name;
 
+    if (user.uid === currentUser.uid) {
+      return of({ ...user, displayName, unreadCount: 0 });
+    }
+
+    return combineLatest([
+      this.firestoreService.getDirectConversationMessages(
+        currentUser.uid,
+        user.uid
+      ),
+      this.firestoreService.getDirectMessageReadStatus(
+        currentUser.uid,
+        user.uid
+      ),
+    ]).pipe(
+      map(([messages, lastReadAt]) => {
+        const lastReadMs = lastReadAt?.toMillis() ?? 0;
+        const unreadCount = messages.filter((message) => {
+          const createdAtMs = message.createdAt?.toMillis() ?? 0;
+          return (
+            message.authorId !== currentUser.uid && createdAtMs > lastReadMs
+          );
+        }).length;
+
+        return { ...user, displayName, unreadCount };
+      })
+    );
+  }
 }
