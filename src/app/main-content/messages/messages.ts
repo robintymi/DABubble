@@ -59,9 +59,6 @@ export class Messages {
   protected selectedRecipient: AppUser | null = null;
   protected currentUser: AppUser | null = null;
 
-  protected readonly helperText =
-    'Beginne damit, jemanden zu einem oder mehreren deiner Channels hinzuzufügen. ' +
-    'Du kannst hier, in einer Nachricht, @erwähnungen nutzen, um Personen zu benachrichtigen.';
   protected draftMessage = '';
   protected isSending = false;
   protected messageReactions: Record<string, string> = {};
@@ -109,17 +106,50 @@ export class Messages {
     }).format(date);
   }
 
+  protected formatDateLabel(timestamp?: Timestamp): string {
+    if (!timestamp) return '';
+
+    const date = timestamp.toDate();
+    const today = new Date();
+    if (this.isSameDay(date, today)) {
+      return 'Heute';
+    }
+
+    return new Intl.DateTimeFormat('de-DE', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+    }).format(date);
+  }
+
+  protected shouldShowDateDivider(
+    messages: MessageBubble[],
+    index: number
+  ): boolean {
+    const current = messages[index];
+    if (!current?.timestamp) return false;
+    if (index === 0) return true;
+
+    const previous = messages[index - 1];
+    if (!previous?.timestamp) return true;
+
+    return (
+      this.getDateKey(current.timestamp) !==
+      this.getDateKey(previous.timestamp)
+    );
+  }
   private mapMessage(
     message: DirectMessageEntry,
     currentUser: AppUser
   ): MessageBubble {
+    const isOwn = message.authorId === currentUser.uid;
     return {
       id: message.id,
-      author: message.authorName ?? 'Unbekannter Nutzer',
+      author: isOwn ? 'DU' : message.authorName ?? 'Unbekannter Nutzer',
       avatar: message.authorAvatar ?? 'imgs/default-profile-picture.png',
       content: message.text ?? '',
       timestamp: message.createdAt,
-      isOwn: message.authorId === currentUser.uid,
+      isOwn,
     };
   }
 
@@ -140,5 +170,17 @@ export class Messages {
       this.openEmojiPickerFor === messageId ? null : messageId;
   }
 
+  private getDateKey(timestamp?: Timestamp): string {
+    if (!timestamp) return '';
+    const date = timestamp.toDate();
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  }
 
+  private isSameDay(left: Date, right: Date): boolean {
+    return (
+      left.getFullYear() === right.getFullYear() &&
+      left.getMonth() === right.getMonth() &&
+      left.getDate() === right.getDate()
+    );
+  }
 }

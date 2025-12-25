@@ -7,92 +7,90 @@
         [src]="recipient.photoUrl || 'imgs/default-profile-picture.png'"
         [alt]="recipient.name" />
       <div>
-        <h1>{{ recipient.name }}</h1>
+        <div class="message-board__name-row">
+          <h1>{{ recipient.name }}</h1>
+          <span class="message-board__status-dot" aria-hidden="true"></span>
+        </div>
         <p>{{ recipient.email || 'Direktnachricht' }}</p>
       </div>
     </div>
-    <div class="message-board__meta">
-      <span class="message-board__badge">Neue Nachricht</span>
-      <span class="message-board__hint">Direktnachricht an {{ recipient.name }}</span>
-    </div>
   </header>
-  <p class="message-board__subtitle">Diese Unterhaltung findet nur zwischen dir und {{ recipient.name }} statt.</p>
 
-  <!-- Intro card that mirrors the helper text from the mockup. -->
-  <article class="message-board__card">
-    <div class="message-board__card-header">
+  <ng-container *ngIf="messages$ | async as messages">
+    <!-- Scrollable conversation stream. -->
+    <section class="message-board__stream" aria-live="polite" *ngIf="messages.length">
+      <ng-container *ngFor="let message of messages; let i = index">
+        <div class="message-board__divider" *ngIf="shouldShowDateDivider(messages, i)">
+          <span>{{ formatDateLabel(message.timestamp) }}</span>
+        </div>
+        <article class="message-board__bubble" [class.message-board__bubble--own]="message.isOwn">
+          <div
+            class="message-board__bubble-actions"
+            [class.message-board__bubble-actions--visible]="openEmojiPickerFor === message.id">
+            <button
+              type="button"
+              class="message-board__bubble-action"
+              aria-label="Daumen hoch geben"
+              (click)="react(message.id, '👍')">
+              <mat-icon>thump_up</mat-icon>
+            </button>
+            <button
+              type="button"
+              class="message-board__bubble-action"
+              aria-label="Grünen Haken setzen"
+              (click)="react(message.id, '✅')">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button
+              type="button"
+              class="message-board__bubble-action"
+              aria-label="Emoji-Auswahl öffnen"
+              (click)="toggleEmojiPicker(message.id)">
+              <mat-icon>add_reaction</mat-icon>
+            </button>
+            <button type="button" class="message-board__bubble-action" aria-label="Weitere Optionen">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <div class="message-board__emoji-picker" *ngIf="openEmojiPickerFor === message.id">
+              <button
+                type="button"
+                *ngFor="let emoji of emojiChoices"
+                (click)="react(message.id, emoji)"
+                aria-label="Emoji auswählen">
+                {{ emoji }}
+              </button>
+            </div>
+          </div>
+
+          <div class="message-board__bubble-header">
+            <div class="message-board__bubble-author">
+              <img class="message-board__bubble-avatar" [src]="message.avatar" [alt]="message.author" />
+              <strong>{{ message.author }}</strong>
+            </div>
+            <time class="message-board__bubble-time">{{ formatTimestamp(message.timestamp) }}</time>
+          </div>
+          <p class="message-board__bubble-text">{{ message.content }}</p>
+          <ng-container *ngIf="message.id as messageId">
+            <div class="message-board__bubble-reaction" *ngIf="messageReactions[messageId] as reaction">
+              {{ reaction }}
+            </div>
+          </ng-container>
+        </article>
+      </ng-container>
+    </section>
+
+    <div class="message-board__intro" *ngIf="!messages.length">
       <img
-        class="message-board__avatar"
+        class="message-board__intro-avatar"
         [src]="recipient.photoUrl || 'imgs/default-profile-picture.png'"
         [alt]="recipient.name" />
-      <div>
-        <p class="message-board__recipient-name">{{ recipient.name }}</p>
-        <p class="message-board__recipient-role">{{ recipient.email || 'Direktnachricht' }}</p>
+      <div class="message-board__intro-text">
+        <p class="message-board__intro-name">{{ recipient.name }}</p>
+        <p>Diese Unterhaltung findet nur zwischen {{ recipient.name }} und dir statt.</p>
       </div>
     </div>
-    <p class="message-board__card-text">{{ helperText }}</p>
-  </article>
-
-  <!-- Scrollable conversation stream. -->
-  <section class="message-board__stream" aria-live="polite" *ngIf="messages$ | async as messages">
-    <article
-      *ngFor="let message of messages"
-      class="message-board__bubble"
-      [class.message-board__bubble--own]="message.isOwn">
-      <div
-        class="message-board__bubble-actions"
-        [class.message-board__bubble-actions--visible]="openEmojiPickerFor === message.id">
-        <button
-          type="button"
-          class="message-board__bubble-action"
-          aria-label="Daumen hoch geben"
-          (click)="react(message.id, '👍')">
-          <mat-icon>thump_up</mat-icon>
-        </button>
-        <button
-          type="button"
-          class="message-board__bubble-action"
-          aria-label="Grünen Haken setzen"
-          (click)="react(message.id, '✅')">
-          <mat-icon>check_circle</mat-icon>
-        </button>
-        <button
-          type="button"
-          class="message-board__bubble-action"
-          aria-label="Emoji-Auswahl öffnen"
-          (click)="toggleEmojiPicker(message.id)">
-          <mat-icon>add_reaction</mat-icon>
-        </button>
-        <button type="button" class="message-board__bubble-action" aria-label="Weitere Optionen">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-
-        <div class="message-board__emoji-picker" *ngIf="openEmojiPickerFor === message.id">
-          <button
-            type="button"
-            *ngFor="let emoji of emojiChoices"
-            (click)="react(message.id, emoji)"
-            aria-label="Emoji auswählen">
-            {{ emoji }}
-          </button>
-        </div>
-      </div>
-
-      <div class="message-board__bubble-header">
-        <div class="message-board__bubble-author">
-          <img class="message-board__bubble-avatar" [src]="message.avatar" [alt]="message.author" />
-          <strong>{{ message.author }}</strong>
-        </div>
-        <time class="message-board__bubble-time">{{ formatTimestamp(message.timestamp) }}</time>
-      </div>
-      <p class="message-board__bubble-text">{{ message.content }}</p>
-      <ng-container *ngIf="message.id as messageId">
-        <div class="message-board__bubble-reaction" *ngIf="messageReactions[messageId] as reaction">
-          {{ reaction }}
-        </div>
-      </ng-container>
-    </article>
-  </section>
+  </ng-container>
 
   <!-- Message composer with icon-only helper buttons. -->
   <form class="message-board__composer" (ngSubmit)="sendMessage()" #messageForm="ngForm">

@@ -1,13 +1,13 @@
 .message-board {
-  background: #f3f6ff;
+  background: #ffffff;
   border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 10px 40px rgba(16, 24, 40, 0.08);
+  box-shadow: 0 10px 40px rgba(16, 24, 40, 0.06);
   height: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .message-board__header {
@@ -24,6 +24,19 @@
   gap: 12px;
 }
 
+.message-board__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-board__status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
 .message-board__avatar {
   width: 64px;
   height: 64px;
@@ -44,87 +57,48 @@
   color: #475569;
 }
 
-.message-board__meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.message-board__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #ebf1ff;
-  color: #27418b;
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.message-board__hint {
-  font-size: 14px;
-  color: #475569;
-}
-
-.message-board__subtitle {
-  font-size: 14px;
-}
-
-.message-board__card {
-  background: white;
-  border-radius: 20px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.04);
-}
-
-.message-board__card-header {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.message-board__recipient-name {
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.message-board__recipient-role {
-  color: #475569;
-}
-
-.message-board__card-text {
-  line-height: 1.5;
-}
-
 .message-board__stream {
-  background: #ffffff;
+  background: transparent;
   border-radius: 20px;
-  padding: 16px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   min-height: 220px;
   flex: 1;
-  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.04);
+  box-shadow: none;
 }
-
-.message-board__bubble {
-  background: #f8fafc;
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.2);
-  border: 1px solid #e2e8f0;
+.message-board__divider {
   position: relative;
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 0;
 }
 
-.message-board__bubble--own {
-  background: #f0f4ff;
-  border-color: #cbd5e1;
+.message-board__divider::before,
+.message-board__divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 44%;
+  height: 1px;
+  background: #d7dce7;
+}
+
+.message-board__divider::before {
+  left: 0;
+}
+
+.message-board__bubble--own .message-board__bubble-header,
+.message-board__bubble--own .message-board__bubble-author {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.message-board__bubble--own .message-board__bubble-author {
+  gap: 8px;
 }
 
 .message-board__bubble-header {
@@ -154,7 +128,7 @@
 }
 
 .message-board__bubble-text {
-  color: #1f2937;
+  color: #111827;
   line-height: 1.5;
   margin: 0;
 }
@@ -244,12 +218,44 @@
   gap: 6px;
   margin-top: 10px;
   padding: 6px 10px;
-  background: #eef2ff;
+  background: #ffffff;
   color: #4338ca;
   border-radius: 999px;
   font-weight: 700;
   border: 1px solid #c7d2fe;
   width: fit-content;
+}
+.message-board__bubble--own .message-board__bubble-reaction {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.message-board__intro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.message-board__intro-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.message-board__intro-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.message-board__intro-name {
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
 }
 
 .message-board__composer {
@@ -260,11 +266,10 @@
   border-radius: 16px;
   padding: 12px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 }
 
 .message-board__composer textarea {
-  min-height: 96px;
+  min-height: 72px;
   border: none;
   resize: vertical;
   background: transparent;
