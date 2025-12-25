@@ -9,7 +9,6 @@
   <header class="channel-members__header">
     <div class="channel-members__title-row">
       <h3>{{ title }}</h3>
-      <span class="channel-members__count">{{ members.length }}</span>
     </div>
     <button type="button" class="channel-members__close" aria-label="Overlay schließen" (click)="closeOverlay()">
       <mat-icon>close</mat-icon>
@@ -17,20 +16,29 @@
   </header>
 
   <ul class="channel-members__list">
-    <li *ngFor="let member of members" class="channel-members__item">
-      <img [src]="member.avatar" [alt]="member.name" class="channel-members__avatar" />
-      <div class="channel-members__meta">
-        <div class="channel-members__name-row">
-          <span class="channel-members__name">{{ member.name }}</span>
-          <span *ngIf="member.isCurrentUser" class="channel-members__pill">Du</span>
+    <li
+      *ngFor="let member of members"
+      class="channel-members__item"
+      [class.channel-members__item--clickable]="!member.isCurrentUser">
+      <button
+        type="button"
+        class="channel-members__item-button"
+        [disabled]="member.isCurrentUser"
+        (click)="openMemberProfile(member)">
+        <img [src]="member.avatar" [alt]="member.name" class="channel-members__avatar" />
+        <div class="channel-members__meta">
+          <div class="channel-members__name-row">
+            <span class="channel-members__name">{{ member.name }}</span>
+            <span *ngIf="member.isCurrentUser" class="channel-members__pill">Du</span>
+          </div>
+          <span *ngIf="member.subtitle" class="channel-members__subtitle">{{ member.subtitle }}</span>
         </div>
-        <span *ngIf="member.subtitle" class="channel-members__subtitle">{{ member.subtitle }}</span>
-      </div>
+      </button>
     </li>
   </ul>
 
   <button type="button" class="channel-members__add" (click)="openAddToChannel($event)">
-        <mat-icon>person_add</mat-icon>
+    <img src="imgs/channel-members/Add members button.svg" alt="" />
     Mitglieder hinzufügen
   </button>
 </section>

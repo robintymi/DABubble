@@ -33,7 +33,9 @@
         [(ngModel)]="editableTitle"
         aria-label="Channel-Name"
         class="channel-description__input"
-        [readonly]="!isEditingTitle" />
+        [readonly]="!isEditingTitle"
+        (keydown.enter)="saveTitle(); $event.preventDefault()"
+        #titleInput />
     </div>
   </div>
 

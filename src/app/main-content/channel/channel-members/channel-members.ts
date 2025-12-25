@@ -4,6 +4,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { OverlayService } from '../../../services/overlay.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AddToChannel } from '../add-to-channel/add-to-channel';
+import { MatDialog, matDialogAnimations } from '@angular/material/dialog';
+import { AppUser } from '../../../services/user.service';
+import { MemberDialog } from '../../member-dialog/member-dialog';
 
 type ChannelMember = {
   id: string;            // <-- hinzugefügt
@@ -11,6 +14,7 @@ type ChannelMember = {
   avatar: string;
   subtitle?: string;
   isCurrentUser?: boolean;
+  user?: AppUser;
 };
 
 @Component({
@@ -33,6 +37,7 @@ type ChannelMember = {
 })
 export class ChannelMembers {
   private readonly overlayService = inject(OverlayService);
+  private readonly dialog = inject(MatDialog);
 
   @Input() members: ChannelMember[] = [];
   @Input() title = 'Mitglieder';
@@ -57,6 +62,27 @@ export class ChannelMembers {
       target: target ?? undefined,
       offsetY: 8,
       data: { channelId: this.channelId, channelTitle: this.title, members: this.members },
+    });
+  }
+
+  protected openMemberProfile(member: ChannelMember): void {
+    if (member.isCurrentUser) {
+      return;
+    }
+
+    const fallbackUser: AppUser = member.user ?? {
+      uid: member.id,
+      name: member.name,
+      email: null,
+      photoUrl: member.avatar || 'imgs/default-profile-picture.png',
+      onlineStatus: false,
+      lastSeen: undefined,
+      updatedAt: undefined,
+      createdAt: undefined,
+    };
+
+    this.dialog.open(MemberDialog, {
+      data: { user: fallbackUser },
     });
   }
 }

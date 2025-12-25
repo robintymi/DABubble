@@ -39,7 +39,7 @@ export type ChannelMessageView = {
   attachment?: ChannelAttachment;
   isOwn?: boolean;
 };
-type ChannelMemberView = ChannelMember & { isCurrentUser?: boolean };
+type ChannelMemberView = ChannelMember & { isCurrentUser?: boolean; user?: AppUser };
 
 @Component({
   selector: 'app-channel',
@@ -131,37 +131,57 @@ export class ChannelComponent {
         return of<ChannelMemberView[]>([]);
       }
 
-      return this.firestoreService.getChannelMembers(channel.id).pipe(
-        map((members) => {
+      return combineLatest([
+        this.firestoreService.getChannelMembers(channel.id),
+        this.userService.getAllUsers(),
+      ]).pipe(
+        map(([members, users]) => {
           const currentUserId = this.userService.currentUser()?.uid;
+          const userMap = new Map(users.map((user) => [user.uid, user]));
 
-          return members.map((member) => ({
-            id: member.id,
-            name: member.name,
-            avatar: member.avatar || 'imgs/users/placeholder.svg',
-            subtitle: member.subtitle,
-            isCurrentUser: member.id === currentUserId,
-          }));
+          return members.map((member) => {
+            const user = userMap.get(member.id);
+            const avatar = user?.photoUrl ?? member.avatar ?? 'imgs/users/placeholder.svg';
+            const name = user?.name ?? member.name;
+
+            return {
+              id: member.id,
+              name,
+              avatar,
+              subtitle: member.subtitle,
+              isCurrentUser: member.id === currentUserId,
+              user: user ?? {
+                uid: member.id,
+                name,
+                email: null,
+                photoUrl: avatar,
+                onlineStatus: false,
+                lastSeen: undefined,
+                updatedAt: undefined,
+                createdAt: undefined,
+              },
+            };
+          });
         })
       );
     }),
     shareReplay({ bufferSize: 1, refCount: true })
   );
-  
-protected readonly messagesByDay$: Observable<ChannelDay[]> = this.channel$.pipe(
-  switchMap((channel) => {
-    if (!channel?.id) {
-      return of<ChannelDay[]>([]);
-    }
 
-    return this.firestoreService
-      .getChannelMessagesResolved(
-        channel.id,
-        this.userService.getAllUsers()
-      )
-      .pipe(map((messages) => this.groupMessagesByDay(messages)));
-  })
-);
+  protected readonly messagesByDay$: Observable<ChannelDay[]> = this.channel$.pipe(
+    switchMap((channel) => {
+      if (!channel?.id) {
+        return of<ChannelDay[]>([]);
+      }
+
+      return this.firestoreService
+        .getChannelMessagesResolved(
+          channel.id,
+          this.userService.getAllUsers()
+        )
+        .pipe(map((messages) => this.groupMessagesByDay(messages)));
+    })
+  );
 
   constructor() {
     this.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((members) => {
@@ -300,38 +320,38 @@ protected readonly messagesByDay$: Observable<ChannelDay[]> = this.channel$.pipe
       });
   }
 
-private toViewMessage(
-  message: ChannelMessage & { author?: AppUser }
-): ChannelMessageView {
-  const createdAt = this.timestampToDate(message.createdAt) ?? new Date();
-  const lastReplyAt = this.timestampToDate(message.lastReplyAt);
-  const currentUserId = this.userService.currentUser()?.uid;
+  private toViewMessage(
+    message: ChannelMessage & { author?: AppUser }
+  ): ChannelMessageView {
+    const createdAt = this.timestampToDate(message.createdAt) ?? new Date();
+    const lastReplyAt = this.timestampToDate(message.lastReplyAt);
+    const currentUserId = this.userService.currentUser()?.uid;
 
-  return {
-    id: message.id,
-    author: message.author?.name ?? 'Unbekannter Nutzer',
-    avatar:
-      message.author?.photoUrl ??
-      this.memberAvatars[0] ??
-      'imgs/users/placeholder.svg',
+    return {
+      id: message.id,
+      author: message.author?.name ?? 'Unbekannter Nutzer',
+      avatar:
+        message.author?.photoUrl ??
+        this.memberAvatars[0] ??
+        'imgs/users/placeholder.svg',
 
-    createdAt,
-    time: this.formatTime(createdAt),
+      createdAt,
+      time: this.formatTime(createdAt),
 
-    text: message.text ?? '',
-    replies: message.replies ?? 0,
+      text: message.text ?? '',
+      replies: message.replies ?? 0,
 
-    lastReplyAt,
-    lastReplyTime: lastReplyAt
-      ? this.formatTime(lastReplyAt)
-      : undefined,
+      lastReplyAt,
+      lastReplyTime: lastReplyAt
+        ? this.formatTime(lastReplyAt)
+        : undefined,
 
-    tag: message.tag,
-    attachment: message.attachment,
+      tag: message.tag,
+      attachment: message.attachment,
 
-    isOwn: message.authorId === currentUserId,
-  };
-}
+      isOwn: message.authorId === currentUserId,
+    };
+  }
 
   private timestampToDate(value: unknown): Date | undefined {
     if (!value) {

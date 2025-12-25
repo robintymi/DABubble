@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OverlayService } from '../../../services/overlay.service';
 import { FormsModule } from '@angular/forms';
@@ -20,7 +20,8 @@ export class ChannelDescription implements OnChanges, OnInit {
   @Input() createdBy = 'Team-Admins';
   @Input() createdAt = 'Gerade eben';
 
-
+  @ViewChild('titleInput') private titleInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('descriptionInput') private descriptionInput?: ElementRef<HTMLTextAreaElement>;
   protected editableTitle = '';
   protected editableDescription = '';
   protected isEditingTitle = false;
@@ -43,11 +44,13 @@ export class ChannelDescription implements OnChanges, OnInit {
   protected startEditTitle(): void {
     this.isEditingTitle = true;
     this.errorMessage = '';
+    this.focusTitleInput();
   }
 
   protected startEditDescription(): void {
     this.isEditingDescription = true;
     this.errorMessage = '';
+    this.focusDescriptionInput();
   }
 
   protected async saveTitle(): Promise<void> {
@@ -114,5 +117,20 @@ export class ChannelDescription implements OnChanges, OnInit {
   private syncEditableFields(): void {
     this.editableTitle = this.title ?? '';
     this.editableDescription = this.description ?? '';
+  }
+
+  private focusTitleInput(): void {
+    setTimeout(() => {
+      this.titleInput?.nativeElement.focus();
+      this.titleInput?.nativeElement.select();
+    });
+
+  }
+
+  private focusDescriptionInput(): void {
+    setTimeout(() => {
+      this.descriptionInput?.nativeElement.focus();
+      this.descriptionInput?.nativeElement.select();
+    })
   }
 }
