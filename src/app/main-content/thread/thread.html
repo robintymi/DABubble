@@ -12,7 +12,7 @@
     </div>
   </header>
 
-  <article class="thread__root">
+  <article class="thread__root" [class.thread__root--own]="thread.root.isOwn">
     <img class="thread__avatar" [src]="thread.root.avatar" [alt]="thread.root.author" />
     <div class="thread__body">
       <div

@@ -489,10 +489,15 @@ export class ChannelComponent {
   react(messageId: string | undefined, reaction: string): void {
     if (!messageId) return;
 
-    this.messageReactions = {
-      ...this.messageReactions,
-      [messageId]: reaction,
-    };
+    if (this.messageReactions[messageId] === reaction) {
+      const { [messageId]: _removed, ...rest } = this.messageReactions;
+      this.messageReactions = rest;
+    } else {
+      this.messageReactions = {
+        ...this.messageReactions,
+        [messageId]: reaction,
+      };
+    }
     this.openEmojiPickerFor = null;
   }
 

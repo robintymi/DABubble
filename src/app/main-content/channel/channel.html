@@ -47,7 +47,10 @@
               <span>{{ day.label }}</span>
             </div>
 
-            <article *ngFor="let message of day.messages" class="channel__message">
+            <article
+              *ngFor="let message of day.messages"
+              class="channel__message"
+              [class.channel__message--own]="message.isOwn">
               <img class="channel__message-avatar" [src]="message.avatar" [alt]="message.author" />
 
               <div class="channel__message-body">

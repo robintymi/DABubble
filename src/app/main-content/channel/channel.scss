@@ -1,22 +1,22 @@
 .channel {
   display: flex;
   flex-direction: column;
-  background: #f6f8ff;
-  padding: 16px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(16, 24, 40, 0.06);
   height: 100%;
+  flex: 1;
+  gap: 24px;
+  min-height: 0;
   box-sizing: border-box;
 }
 
 .channel__header {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 16px;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
 }
 
 .channel__actions {
@@ -160,26 +160,21 @@
 }
 
 .channel__panel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  height: calc(100vh - 220px);
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
 }
 
 .channel__messages {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  border-radius: 12px;
-  padding: 12px;
+  background: transparent;
+  padding: 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  border: 1px solid #e2e8f0;
+  gap: 16px;
+  min-height: 0;
 }
 
 .channel__day {
@@ -209,33 +204,37 @@
 }
 
 .channel__message {
-  display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 10px 8px;
-  border-radius: 12px;
-  transition: background-color 0.2s ease;
   position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  align-self: flex-start;
+  max-width: min(85%, 720px);
+  width: fit-content;
 }
 
-.channel__message:hover {
-  background: #f8fafc;
+.channel__message--own {
+  align-self: flex-end;
 }
 
 .channel__message-actions {
   position: absolute;
-  right: 8px;
-  top: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  right: 0;
+  top: -18px;
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.18);
   transform: translateY(-4px);
   opacity: 0;
   pointer-events: none;
   transition:
     opacity 0.2s ease,
     transform 0.2s ease;
+  z-index: 4;
 }
 
 .channel__message:hover .channel__message-actions,
@@ -252,34 +251,33 @@
 }
 
 .channel__message-action {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: none;
+  background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: #475569;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.2s ease;
 }
 
 .channel__message-action:hover,
 .channel__message-action:focus-visible {
   background: #eef2ff;
   color: #4338ca;
-  box-shadow: 0 10px 26px rgba(79, 70, 229, 0.2);
+  transform: translateY(-1px);
 }
 
 .channel__emoji-picker {
   position: absolute;
   top: 44px;
-  right: 0;
+  right: 8px;
   display: flex;
   gap: 6px;
   padding: 8px;
@@ -321,6 +319,13 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.channel__message--own .channel__message-body {
+  align-items: flex-end;
+  text-align: right;
 }
 
 .channel__message-header {
@@ -369,6 +374,19 @@
   margin: 0;
   color: #1f2937;
   line-height: 1.6;
+  background: #eceefe;
+  padding: 14px 18px;
+  border-radius: 20px;
+  display: inline-block;
+  width: fit-content;
+  max-width: min(85%, 640px);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.channel__message--own .channel__message-text {
+  background: #797ef3;
+  color: #ffffff;
 }
 
 .channel__attachment {
@@ -456,15 +474,20 @@
   width: fit-content;
 }
 
+.channel__message--own .channel__message-reaction {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 .channel__composer {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 10px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 10px 12px;
+  border-radius: 16px;
+  padding: 12px;
 }
 
 .channel__composer-input {
@@ -474,10 +497,10 @@
 
 .channel__composer textarea {
   border: none;
-  resize: none;
+  resize: vertical;
   outline: none;
   padding: 8px;
-  font-size: 14px;
+  font-size: 15px;
   color: #0f172a;
   width: 100%;
   height: 100%;
@@ -547,6 +570,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  justify-content: flex-end;
 }
 
 .channel__send mat-icon {
