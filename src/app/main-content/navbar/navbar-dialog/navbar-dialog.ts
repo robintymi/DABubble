@@ -35,6 +35,7 @@ export class NavbarDialog {
 
   @ViewChild('profileBtn', { read: ElementRef })
   profileBtn!: ElementRef<HTMLElement>;
+  activeItem: any;
 
   constructor(
     private authService: AuthService,

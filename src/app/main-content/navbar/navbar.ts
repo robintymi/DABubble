@@ -70,7 +70,7 @@ export class Navbar {
     this.overlayService.open(NavbarDialog, {
       target,
       offsetX: -225,
-      offsetY: 40,
+      offsetY: 43,
       mode: 'desktop',
     });
   }
