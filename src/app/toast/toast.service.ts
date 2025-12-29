@@ -38,7 +38,7 @@ export class ToastService {
       createdAtMs: Date.now(),
 
       durationMs: options.durationMs === undefined ? 5000 : options.durationMs,
-      showCloseButton: options.showCloseButton ?? false,
+      showCloseButton: options.showCloseButton ?? true,
       icon: options.icon !== null ? this.getDefaultIcon(variant) : options.icon,
       action: options.action ?? null,
 
