@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, combineLatest, map, of, switchMap } from 'rxjs';
+import { Observable, combineLatest, map, of, switchMap, tap, filter, distinctUntilChanged } from 'rxjs';
 import { FirestoreService } from '../../services/firestore.service';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -37,24 +37,25 @@ export class Messages {
     this.directMessageSelectionService.selectedUser$;
   private readonly currentUser$ = toObservable(this.userService.currentUser);
 
-  protected readonly messages$: Observable<MessageBubble[]> = combineLatest([
-    this.currentUser$,
-    this.selectedRecipient$,
-  ]).pipe(
-    switchMap(([currentUser, recipient]) => {
-      if (!currentUser || !recipient) {
-        return of([]);
-      }
+  protected readonly messages$ = combineLatest([
+  this.currentUser$,
+  this.selectedRecipient$,
+]).pipe(
+  switchMap(([currentUser, recipient]) => {
+    if (!currentUser || !recipient) {
+      return of([]);
+    }
 
-      return this.firestoreService
-        .getDirectConversationMessages(currentUser.uid, recipient.uid)
-        .pipe(
-          map((messages) =>
-            messages.map((message) => this.mapMessage(message, currentUser))
-          )
-        );
-    })
-  );
+    return this.firestoreService
+      .getDirectConversationMessages(currentUser.uid, recipient.uid)
+      .pipe(
+        map((messages) =>
+          messages.map((message) => this.mapMessage(message, currentUser))
+        )
+      );
+  }),
+  tap(() => this.scrollToBottom())
+);
 
   protected selectedRecipient: AppUser | null = null;
   protected currentUser: AppUser | null = null;
@@ -83,18 +84,23 @@ export class Messages {
     this.selectedRecipient$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((recipient) => (this.selectedRecipient = recipient));
-    combineLatest([this.currentUser$, this.selectedRecipient$])
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(([currentUser, recipient]) => {
-        if (!currentUser || !recipient) return;
-        this.firestoreService.updateDirectMessageReadStatus(
-          currentUser.uid,
-          recipient.uid
-        );
-      });
-    this.messages$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.scrollToBottom());
+combineLatest([this.currentUser$, this.selectedRecipient$])
+  .pipe(
+    takeUntilDestroyed(this.destroyRef),
+    filter(
+      ([currentUser, recipient]) => !!currentUser && !!recipient
+    ),
+    distinctUntilChanged(
+      ([u1, r1], [u2, r2]) =>
+        u1?.uid === u2?.uid && r1?.uid === r2?.uid
+    )
+  )
+  .subscribe(([currentUser, recipient]) => {
+    this.firestoreService.updateDirectMessageReadStatus(
+      currentUser!.uid,
+      recipient!.uid
+    );
+  });
   }
 
   protected sendMessage(): void {

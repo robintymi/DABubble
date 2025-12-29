@@ -1,6 +1,6 @@
 <section
   *ngIf="visible"
-  [@scaleAnimation]="visible ? 'enter' : 'leave'"
+  @scaleAnimation
   (@scaleAnimation.done)="onAnimationDone($event)"
   class="flex h-120 w-110 flex-col items-center justify-center gap-4 rounded-tl-2xl rounded-br-2xl rounded-bl-2xl bg-white shadow-xl">
   <div class="flex w-full items-center justify-between px-6">

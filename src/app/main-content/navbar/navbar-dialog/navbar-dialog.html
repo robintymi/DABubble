@@ -1,8 +1,10 @@
 <section
   *ngIf="visible"
-  [@slideFromRight]="visible ? 'enter' : 'leave'"
-  (@slideFromRight.done)="onAnimationDone($event)"
-  class="flex h-40 w-60 flex-col items-center justify-center gap-4 rounded-tl-2xl rounded-br-2xl rounded-bl-2xl bg-white shadow-xl">
-  <button class="h-10 w-48 rounded-full text-xl" (click)="openProfileDialog($event)">Profil</button>
+  [@slide]="mode"
+  (@slide.done)="onAnimationDone($event)"
+  class="navbar-dialog flex flex-col items-center justify-center gap-4 bg-white shadow-xl"
+  [class.mobile]="mode === 'mobile'">
+  <div class="bg-gray-300 w-16 h-2 rounded-full cursor-pointer lg:hidden" (click)="startCloseAnimation()"></div>
+  <button #profileBtn class="h-10 w-48 rounded-full text-xl" (click)="openProfileDialog()">Profil</button>
   <button class="h-10 w-48 rounded-full text-xl" (click)="logOut()">Log out</button>
 </section>

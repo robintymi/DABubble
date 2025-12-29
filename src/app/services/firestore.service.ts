@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { EnvironmentInjector, Injectable, inject, runInInjectionContext } from '@angular/core';
 import {
   Firestore,
   Timestamp,
@@ -14,7 +14,7 @@ import {
   orderBy,
   query,
 } from '@angular/fire/firestore';
-import { Observable, catchError, combineLatest, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
 import { AppUser } from './user.service';
 export interface Channel {
   id?: string;
@@ -89,16 +89,28 @@ export interface ChannelMember {
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
+  private directMessagesCache = new Map<string, Observable<DirectMessageEntry[]>>();
+  private readStatusCache = new Map<string, Observable<Timestamp | null>>();
+  private channelMessagesCache = new Map<string, Observable<ChannelMessage[]>>();
+  private channelMembersCache = new Map<string, Observable<ChannelMember[]>>();
+  private threadRepliesCache = new Map<string, Observable<ThreadReply[]>>();
+  private threadCache = new Map<string, Observable<ThreadDocument | null>>();
+
   private readonly firestore = inject(Firestore);
+  private readonly injector = inject(EnvironmentInjector);
 
   // Feste Dokument-ID für die Thread-Metadaten, damit der Pfad eine gerade Segmentzahl hat:
   // channels/{channelId}/messages/{messageId}/thread/{THREAD_DOC_ID}
   private static readonly THREAD_DOC_ID = 'meta';
 
   getChannels(): Observable<Channel[]> {
-    const channelsCollection = collection(this.firestore, 'channels');
-
-    return collectionData(channelsCollection, { idField: 'id' }).pipe(map((channels) => channels as Channel[]));
+    return runInInjectionContext(this.injector, () => {
+      const channelsCollection = collection(this.firestore, 'channels');
+      return collectionData(channelsCollection, { idField: 'id' }).pipe(
+        map((channels) => channels as Channel[]),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    });
   }
 
   getChannelsForUser(userId: string): Observable<Channel[]> {
@@ -128,23 +140,32 @@ export class FirestoreService {
   }
 
   getChannelMessages(channelId: string): Observable<ChannelMessage[]> {
-    const messagesCollection = collection(this.firestore, `channels/${channelId}/messages`);
+    if (!this.channelMessagesCache.has(channelId)) {
+      const stream$ = runInInjectionContext(this.injector, () => {
+        const messagesCollection = collection(this.firestore, `channels/${channelId}/messages`);
 
-    return collectionData(messagesCollection, { idField: 'id' }).pipe(
-      map((messages) =>
-        (messages as Array<Record<string, unknown>>).map((message) => ({
-          id: message['id'] as string,
-          authorId: message['authorId'] as string,
-          createdAt: message['createdAt'] as Timestamp,
-          updatedAt: message['updatedAt'] as Timestamp,
-          text: (message['text'] as string) ?? '',
-          replies: (message['replies'] as number) ?? 0,
-          lastReplyAt: message['lastReplyAt'] as Timestamp,
-          tag: message['tag'] as string,
-          attachment: message['attachment'] as ChannelAttachment,
-        }))
-      )
-    );
+        return collectionData(messagesCollection, { idField: 'id' }).pipe(
+          map((messages) =>
+            (messages as any[]).map((message) => ({
+              id: message.id,
+              authorId: message.authorId,
+              text: message.text ?? '',
+              createdAt: message.createdAt,
+              replies: message.replies ?? 0,
+              lastReplyAt: message.lastReplyAt,
+              tag: message.tag,
+              attachment: message.attachment,
+              updatedAt: message.updatedAt,
+            }))
+          ),
+          shareReplay({ bufferSize: 1, refCount: true })
+        );
+      });
+
+      this.channelMessagesCache.set(channelId, stream$);
+    }
+
+    return this.channelMessagesCache.get(channelId)!;
   }
 
   async addChannelMessage(channelId: string, message: Pick<ChannelMessage, 'text' | 'authorId'>): Promise<void> {
@@ -195,55 +216,72 @@ export class FirestoreService {
   }
 
   getDirectMessages(): Observable<DirectMessage[]> {
-    const usersCollection = collection(this.firestore, 'users');
+    return runInInjectionContext(this.injector, () => {
+      const usersCollection = collection(this.firestore, 'users');
 
-    return collectionData(usersCollection, { idField: 'id' }).pipe(
-      map((users) =>
-        (
-          users as Array<{
-            id?: string;
-            name?: string;
-            email?: string | null;
-            photoUrl?: string | null;
-          }>
-        ).map((user) => ({
-          id: user.id ?? 'unbekannt',
-          name: user.name ?? 'Unbenannter Nutzer',
-          email: user.email ?? null,
-          photoUrl: user.photoUrl ?? null,
-        }))
-      )
-    );
+      return collectionData(usersCollection, { idField: 'id' }).pipe(
+        map((users) =>
+          (users as any[]).map((user) => ({
+            id: user.id ?? 'unbekannt',
+            name: user.name ?? 'Unbenannter Nutzer',
+            email: user.email ?? null,
+            photoUrl: user.photoUrl ?? null,
+          }))
+        ),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    });
   }
 
   getDirectConversationMessages(currentUserId: string, otherUserId: string): Observable<DirectMessageEntry[]> {
     const conversationId = this.buildConversationId(currentUserId, otherUserId);
-    const messagesCollection = collection(this.firestore, `directMessages/${conversationId}/messages`);
-    const messagesQuery = query(messagesCollection, orderBy('createdAt', 'asc'));
+    if (!this.directMessagesCache.has(conversationId)) {
+      const messagesCollection = collection(this.firestore, `directMessages/${conversationId}/messages`);
 
-    return collectionData(messagesQuery, { idField: 'id' }).pipe(
-      map((messages) =>
-        (messages as Array<Record<string, unknown>>).map((message) => ({
-          id: message['id'] as string,
-          authorId: message['authorId'] as string,
-          authorName: (message['authorName'] as string) ?? 'Unbekannter Nutzer',
-          authorAvatar: (message['authorAvatar'] as string) ?? 'imgs/default-profile-picture.png',
-          text: (message['text'] as string) ?? '',
-          createdAt: message['createdAt'] as Timestamp,
-        }))
-      ),
-      catchError(() => of([]))
-    );
+      const messagesQuery = query(messagesCollection, orderBy('createdAt', 'asc'));
+
+      const stream$ = runInInjectionContext(this.injector, () =>
+        collectionData(messagesQuery, { idField: 'id' }).pipe(
+          map((messages) =>
+            (messages as Array<Record<string, unknown>>).map((message) => ({
+              id: message['id'] as string,
+              authorId: message['authorId'] as string,
+              authorName: (message['authorName'] as string) ?? 'Unbekannter Nutzer',
+              authorAvatar: (message['authorAvatar'] as string) ?? 'imgs/default-profile-picture.png',
+              text: (message['text'] as string) ?? '',
+              createdAt: message['createdAt'] as Timestamp,
+            }))
+          ),
+          catchError(() => of([])),
+          shareReplay({ bufferSize: 1, refCount: true })
+        )
+      );
+
+      this.directMessagesCache.set(conversationId, stream$);
+    }
+
+    return this.directMessagesCache.get(conversationId)!;
   }
 
   getDirectMessageReadStatus(currentUserId: string, otherUserId: string): Observable<Timestamp | null> {
     const conversationId = this.buildConversationId(currentUserId, otherUserId);
-    const readDoc = doc(this.firestore, `directMessages/${conversationId}/readStatus/${currentUserId}`);
+    const key = `${conversationId}:${currentUserId}`;
 
-    return docData(readDoc).pipe(
-      map((data) => (data as DirectMessageReadStatus | undefined)?.lastReadAt ?? null),
-      catchError(() => of(null))
-    );
+    if (!this.readStatusCache.has(key)) {
+      const stream$ = runInInjectionContext(this.injector, () => {
+        const readDoc = doc(this.firestore, `directMessages/${conversationId}/readStatus/${currentUserId}`);
+
+        return docData(readDoc).pipe(
+          map((data) => (data as DirectMessageReadStatus)?.lastReadAt ?? null),
+          catchError(() => of(null)),
+          shareReplay({ bufferSize: 1, refCount: true })
+        );
+      });
+
+      this.readStatusCache.set(key, stream$);
+    }
+
+    return this.readStatusCache.get(key)!;
   }
 
   async updateDirectMessageReadStatus(currentUserId: string, otherUserId: string): Promise<void> {
@@ -260,7 +298,6 @@ export class FirestoreService {
       { merge: true }
     );
   }
-
 
   async sendDirectMessage(
     currentUser: Pick<DirectMessageEntry, 'authorId' | 'authorName' | 'authorAvatar'> & { text: string },
@@ -333,19 +370,28 @@ export class FirestoreService {
   }
 
   getChannelMembers(channelId: string): Observable<ChannelMember[]> {
-    const membersCollection = collection(this.firestore, `channels/${channelId}/members`);
+    if (!this.channelMembersCache.has(channelId)) {
+      const stream$ = runInInjectionContext(this.injector, () => {
+        const membersCollection = collection(this.firestore, `channels/${channelId}/members`);
 
-    return collectionData(membersCollection, { idField: 'id' }).pipe(
-      map((members) =>
-        (members as Array<Record<string, unknown>>).map((member) => ({
-          id: (member['id'] as string) ?? 'unbekannt',
-          name: (member['name'] as string) ?? 'Unbenannter Nutzer',
-          avatar: (member['avatar'] as string) ?? 'imgs/users/placeholder.svg',
-          subtitle: member['subtitle'] as string | undefined,
-          addedAt: member['addedAt'] as Timestamp | undefined,
-        }))
-      )
-    );
+        return collectionData(membersCollection, { idField: 'id' }).pipe(
+          map((members) =>
+            (members as Array<Record<string, unknown>>).map((member) => ({
+              id: member['id'] as string,
+              name: (member['name'] as string) ?? 'Unbekannter Nutzer',
+              avatar: (member['avatar'] as string) ?? 'imgs/users/placeholder.svg',
+              subtitle: member['subtitle'] as string | undefined,
+              addedAt: member['addedAt'] as Timestamp | undefined,
+            }))
+          ),
+          shareReplay({ bufferSize: 1, refCount: true })
+        );
+      });
+
+      this.channelMembersCache.set(channelId, stream$);
+    }
+
+    return this.channelMembersCache.get(channelId)!;
   }
 
   async upsertChannelMember(
@@ -365,22 +411,33 @@ export class FirestoreService {
   }
 
   getThreadReplies(channelId: string, messageId: string): Observable<ThreadReply[]> {
-    const repliesCollection = collection(this.firestore, `channels/${channelId}/messages/${messageId}/threads`);
+    const key = `${channelId}:${messageId}`;
 
-    const repliesQuery = query(repliesCollection, orderBy('createdAt', 'asc'));
+    if (!this.threadRepliesCache.has(key)) {
+      const stream$ = runInInjectionContext(this.injector, () => {
+        const repliesCollection = collection(this.firestore, `channels/${channelId}/messages/${messageId}/threads`);
 
-    return collectionData(repliesQuery, { idField: 'id' }).pipe(
-      map((replies) =>
-        (replies as Array<Record<string, unknown>>).map((reply) => ({
-          id: reply['id'] as string,
-          author: (reply['author'] as string) ?? 'Unbekannter Nutzer',
-          avatar: (reply['avatar'] as string) ?? 'imgs/users/placeholder.svg',
-          text: (reply['text'] as string) ?? '',
-          createdAt: reply['createdAt'] as Timestamp,
-          isOwn: reply['isOwn'] as boolean,
-        }))
-      )
-    );
+        const repliesQuery = query(repliesCollection, orderBy('createdAt', 'asc'));
+
+        return collectionData(repliesQuery, { idField: 'id' }).pipe(
+          map((replies) =>
+            (replies as any[]).map((reply) => ({
+              id: reply.id,
+              author: reply.author ?? 'Unbekannter Nutzer',
+              avatar: reply.avatar ?? 'imgs/users/placeholder.svg',
+              text: reply.text ?? '',
+              createdAt: reply.createdAt,
+              isOwn: reply.isOwn,
+            }))
+          ),
+          shareReplay({ bufferSize: 1, refCount: true })
+        );
+      });
+
+      this.threadRepliesCache.set(key, stream$);
+    }
+
+    return this.threadRepliesCache.get(key)!;
   }
 
   async addThreadReply(
@@ -453,14 +510,25 @@ export class FirestoreService {
   }
 
   getThread(channelId: string, messageId: string): Observable<ThreadDocument | null> {
-    const threadDocRef = doc(
-      this.firestore,
-      `channels/${channelId}/messages/${messageId}/thread/${FirestoreService.THREAD_DOC_ID}`
-    );
+    const key = `${channelId}:${messageId}`;
 
-    return docData(threadDocRef, { idField: 'id' }).pipe(
-      map((data) => (data as ThreadDocument) ?? null),
-      catchError(() => of(null))
-    );
+    if (!this.threadCache.has(key)) {
+      const stream$ = runInInjectionContext(this.injector, () => {
+        const threadDocRef = doc(
+          this.firestore,
+          `channels/${channelId}/messages/${messageId}/thread/${FirestoreService.THREAD_DOC_ID}`
+        );
+
+        return docData(threadDocRef, { idField: 'id' }).pipe(
+          map((data) => (data as ThreadDocument) ?? null),
+          catchError(() => of(null)),
+          shareReplay({ bufferSize: 1, refCount: true })
+        );
+      });
+
+      this.threadCache.set(key, stream$);
+    }
+
+    return this.threadCache.get(key)!;
   }
 }

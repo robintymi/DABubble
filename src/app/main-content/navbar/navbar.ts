@@ -29,6 +29,15 @@ export class Navbar {
   private overlayService = inject(OverlayService);
   private userService = inject(UserService);
 
+  isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+
+  constructor() {
+    const media = window.matchMedia('(min-width: 1024px)');
+    media.addEventListener('change', (e) => {
+      this.isDesktop = e.matches;
+    });
+  }
+
   @ViewChild('menuBtn', { read: ElementRef })
   menuBtn!: ElementRef<HTMLElement>;
 
@@ -47,13 +56,28 @@ export class Navbar {
   onFocus() {}
 
   openUserMenu() {
+    if (this.isDesktop) {
+      this.openDesktopMenu();
+    } else {
+      this.openMobileMenu();
+    }
+  }
+
+  openDesktopMenu() {
+    if (!this.menuBtn) return;
     const target = this.menuBtn.nativeElement;
 
     this.overlayService.open(NavbarDialog, {
       target,
       offsetX: -225,
       offsetY: 40,
-      data: { originTarget: target },
+      mode: 'desktop',
+    });
+  }
+
+  openMobileMenu() {
+    this.overlayService.open(NavbarDialog, {
+      mode: 'mobile',
     });
   }
 

@@ -25,7 +25,7 @@
         <div
           *ngFor="let channel of channels"
           (click)="choose(channel)"
-          class="filter-bg flex cursor-pointer items-center gap-2 px-6 py-3">
+          class="filter-bg flex cursor-pointer items-center gap-2 px-2 py-3">
           <span>#</span><span>{{ channel.data.title }}</span>
         </div>
       </div>
@@ -39,11 +39,11 @@
   <ng-container *ngIf="!isUserSearch && !isChannelSearch">
     <ng-container *ngIf="users.length">
       <div class="px-10 py-2">
-        <div class="filter-color px-4 text-xs font-semibold">User</div>
+        <div class="filter-color px-2 text-xs font-semibold text-decoration-line: underline">User</div>
         <div
           *ngFor="let user of sortedUsers"
           (click)="choose(user)"
-          class="filter-bg flex cursor-pointer items-center px-4 py-3">
+          class="filter-bg flex cursor-pointer items-center px-2 py-3">
           <img class="mr-3 h-8 w-8 rounded-full" [src]="user.data.photoUrl" />
           {{ user.data.name }}
         </div>
@@ -52,11 +52,11 @@
 
     <ng-container *ngIf="channels.length">
       <div class="px-10 py-2">
-        <div class="filter-color px-4 text-xs font-semibold">Channels</div>
+        <div class="filter-color px-4 text-xs font-semibold text-decoration-line: underline">Channels</div>
         <div
           *ngFor="let channel of channels"
           (click)="choose(channel)"
-          class="filter-bg flex cursor-pointer items-center gap-2 px-4 py-3">
+          class="filter-bg flex cursor-pointer items-center gap-2 px-2 py-3">
           <span>#</span><span>{{ channel.data.title }}</span>
         </div>
       </div>
@@ -64,7 +64,7 @@
 
     <ng-container *ngIf="messages.length">
       <div class="px-10 py-2">
-        <div class="filter-color px-4 text-xs font-semibold">Messages</div>
+        <div class="filter-color px-4 text-xs font-semibold text-decoration-line: underline">Messages</div>
 
         <div
           *ngFor="let message of messages"

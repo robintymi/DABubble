@@ -1,5 +1,5 @@
 /** Class that dynamically creates, renders, and manages an overlay element.
- * 
+ *
  * Features:
  * - Render any Angular component in an overlay container.
  * - Position overlay relative to a target element.
@@ -17,13 +17,13 @@ import {
   EnvironmentInjector,
 } from '@angular/core';
 
-
 export interface OverlayConfig<T = any> {
   target?: HTMLElement;
   backdropOpacity?: number;
   data?: Partial<T>;
   offsetX?: number;
   offsetY?: number;
+  mode?: 'desktop' | 'mobile';
 }
 
 /**
@@ -35,6 +35,7 @@ export class OverlayRef<T extends object = any> {
   private _updateBound!: () => void;
   private _escListener!: (e: KeyboardEvent) => void;
   private onCloseCallback?: () => void;
+  public mode: 'desktop' | 'mobile' = 'desktop';
 
   /** Visibility flag for controlling animations */
   public visible = true;
@@ -50,7 +51,9 @@ export class OverlayRef<T extends object = any> {
     private config: OverlayConfig<T> = {},
     private appRef: ApplicationRef,
     private envInjector: EnvironmentInjector
-  ) {}
+  ) {
+    this.mode = config.mode ?? 'desktop';
+  }
 
   /**
    * Opens the overlay and renders the component inside it.
@@ -84,9 +87,11 @@ export class OverlayRef<T extends object = any> {
   private createComponent(component: Type<any>, data?: any) {
     this.componentRef = createComponent(component, { environmentInjector: this.envInjector });
 
-    if (data) Object.assign(this.componentRef.instance as any, data);
-
     const instance = this.componentRef.instance as any;
+    if ('mode' in instance) {
+      instance.mode = this.mode;
+    }
+    if (data) Object.assign(instance, data);
     instance.visible ??= true;
     instance.startCloseAnimation ??= () => (this.visible = false);
 
@@ -126,26 +131,26 @@ export class OverlayRef<T extends object = any> {
   /**
    * Initiates the close animation for the overlay/waits for animation event to complete before destroying.
    */
-startCloseAnimation() {
-  this.visible = false;
+  startCloseAnimation() {
+    this.visible = false;
 
-  const instance = this.componentRef.instance as any;
+    const instance = this.componentRef.instance as any;
 
-  if ('visible' in instance) {
-    instance.visible = false;
+    if ('visible' in instance) {
+      instance.visible = false;
+    }
+
+    if ('closed' in instance) {
+      instance.closed.subscribe(() => {
+        if (!this.visible) {
+          this.destroy();
+        }
+      });
+    } else {
+      // Fallback if component has no closed event
+      this.destroy();
+    }
   }
-
-  if ('closed' in instance) {
-    instance.closed.subscribe(() => {
-      if (!this.visible) {
-        this.destroy();
-      }
-    });
-  } else {
-    // Fallback if component has no closed event
-    this.destroy();
-  }
-}
 
   /**
    * Destroys the overlay and the attached component.
