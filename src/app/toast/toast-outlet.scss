@@ -1,0 +1,135 @@
+@keyframes dabToastEnterRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes dabToastLeaveRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes dabToastEnterLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes dabToastLeaveLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes dabToastEnterTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes dabToastLeaveTop {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes dabToastEnterBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes dabToastLeaveBottom {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes dabToastEnterFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes dabToastLeaveFade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.dab-toast-enter-right {
+  animation: dabToastEnterRight var(--dab-enter-ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.dab-toast-leave-right {
+  animation: dabToastLeaveRight var(--dab-exit-ms) cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.dab-toast-enter-left {
+  animation: dabToastEnterLeft var(--dab-enter-ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.dab-toast-leave-left {
+  animation: dabToastLeaveLeft var(--dab-exit-ms) cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.dab-toast-enter-top {
+  animation: dabToastEnterTop var(--dab-enter-ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.dab-toast-leave-top {
+  animation: dabToastLeaveTop var(--dab-exit-ms) cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.dab-toast-enter-bottom {
+  animation: dabToastEnterBottom var(--dab-enter-ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.dab-toast-leave-bottom {
+  animation: dabToastLeaveBottom var(--dab-exit-ms) cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.dab-toast-enter-fade {
+  animation: dabToastEnterFade var(--dab-enter-ms) ease-out both;
+}
+.dab-toast-leave-fade {
+  animation: dabToastLeaveFade var(--dab-exit-ms) ease-in both;
+}

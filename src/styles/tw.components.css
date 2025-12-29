@@ -23,11 +23,11 @@
 
     .top-right-btn,
     .back-btn {
-      @apply absolute sm:top-10 sm:left-10 lg:top-12 lg:left-12;
+      @apply absolute sm:top-11 sm:left-10 lg:top-13 lg:left-12;
       @media (width < 40rem) {
         position: static;
         display: block;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
       }
     }
 
@@ -174,5 +174,9 @@
 
   .dab-inline-error {
     @apply bg-rose-50 text-dab-rosa-error;
+  }
+
+  .dab-toast-btn {
+    @apply rounded-full border border-transparent transition hover:bg-white/20 focus-visible:border-2 focus-visible:border-black focus-visible:bg-white/20 focus-visible:outline-none;
   }
 }

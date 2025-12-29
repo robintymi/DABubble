@@ -1,0 +1,53 @@
+@if (isSmallScreen()) {
+  <div [ngClass]="anchors[3].containerClass">
+    @for (toast of bottomToasts(); track toast.id) {
+      <ng-container [ngTemplateOutlet]="toastTemplate" [ngTemplateOutletContext]="{ $implicit: toast }" />
+    }
+  </div>
+} @else {
+  @for (anchor of anchors; track anchor.key) {
+    <div [ngClass]="anchor.containerClass">
+      @for (toast of toastsFor(anchor.key); track toast.id) {
+        <ng-container [ngTemplateOutlet]="toastTemplate" [ngTemplateOutletContext]="{ $implicit: toast }" />
+      }
+    </div>
+  }
+}
+
+<ng-template #toastTemplate let-toast>
+  <div
+    class="pointer-events-auto flex w-fit items-center gap-2 px-6 py-5 text-xl shadow-lg sm:text-2xl"
+    [ngClass]="toastClass(toast)"
+    [style.--dab-enter-ms]="toast.enterMs + 'ms'"
+    [style.--dab-exit-ms]="toast.exitMs + 'ms'"
+    role="status"
+    aria-live="polite">
+    @if (toast.icon) {
+      <span class="material-icons">{{ toast.icon }}</span>
+    }
+
+    <span class="font-semibold">
+      {{ toast.message }}
+    </span>
+
+    @if (toast.action) {
+      <button
+        class="dab-toast-btn -mb-1 ml-2 px-4 py-2 small-text font-semibold"
+        [ngClass]="toast.variant === 'error' ? 'border-black' : 'border-white'"
+        (click)="handleActionClick(toast)">
+        {{ toast.action.label }}
+      </button>
+    }
+
+    @if (toast.showCloseButton) {
+      <button
+        type="button"
+        class="dab-toast-btn flex size-9 items-center justify-center"
+        [ngClass]="toast.variant === 'error' ? 'focus-visible:border-black' : 'focus-visible:border-white'"
+        (click)="dismiss(toast.id)"
+        aria-label="Schließen">
+        <span class="material-icons">close_outlined</span>
+      </button>
+    }
+  </div>
+</ng-template>

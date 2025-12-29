@@ -1,8 +1,9 @@
-import { Component, input, OnDestroy, signal } from '@angular/core';
+import { Component, inject, input, OnDestroy, signal } from '@angular/core';
 import { Logo } from './logo';
 import { RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { BrandStateService } from '../services/brand-state.service';
+import { ScreenService } from '../services/screen.service';
 
 @Component({
   selector: 'app-aside-content-wrapper',
@@ -79,25 +80,17 @@ import { BrandStateService } from '../services/brand-state.service';
     }
   `,
 })
-export class AsideContentWrapperComponent implements OnDestroy {
+export class AsideContentWrapperComponent {
+  screenService = inject(ScreenService);
+
+  isSmallScreen = this.screenService.isSmallScreen;
+
   /**
    * Set to false if the content is only the card, e.g. in an overlay for reauth.
    */
   showCardSurroundings = input(true);
 
-  isSmallScreen = signal(false);
-  mediaQueryListener: MediaQueryList;
-  matchQuery: () => void;
-
   constructor(public brandState: BrandStateService) {
-    this.mediaQueryListener = matchMedia('(width < 40rem)');
-    this.matchQuery = () => this.isSmallScreen.set(this.mediaQueryListener.matches);
-
-    this.matchQuery();
-    this.mediaQueryListener.addEventListener('change', this.matchQuery);
-  }
-
-  ngOnDestroy(): void {
-    this.mediaQueryListener.removeEventListener('change', this.matchQuery);
+    this.screenService.connect();
   }
 }
