@@ -58,6 +58,9 @@ export class OverlayService {
     overlayRef.stackIndex = this.overlays.length;
 
     this.overlays.push(overlayRef as OverlayRef<object>);
+    config ??= {};
+    config.data ??= {};
+    (config.data as any).overlayRef = overlayRef;
     this.updateBackdropStyle();
 
     overlayRef.onClose(() => {

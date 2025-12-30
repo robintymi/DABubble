@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { OverlayService } from '../../../services/overlay.service';
 import { ProfileMenuEdit } from '../profile-menu-edit/profile-menu-edit';
@@ -25,15 +25,17 @@ import { UserService } from '../../../services/user.service';
 export class ProfileMenu {
   private overlayService = inject(OverlayService);
   private userService = inject(UserService);
+  @Output() closed = new EventEmitter<void>();
 
   currentUser = this.userService.currentUser;
 
   originTarget!: HTMLElement;
   visible = true;
+  overlayRef!: any;
 
   onAnimationDone(event: any) {
     if (!this.visible) {
-      this.overlayService.closeLast();
+      this.closed.emit();
     }
   }
 
@@ -48,6 +50,6 @@ export class ProfileMenu {
   }
 
   closeOverlay() {
-    this.visible = false;
+    this.overlayRef.startCloseAnimation();
   }
 }

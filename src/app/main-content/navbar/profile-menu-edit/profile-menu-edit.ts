@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { OverlayService } from '../../../services/overlay.service';
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -22,18 +22,21 @@ export class ProfileMenuEdit {
   private overlayService = inject(OverlayService);
   private userService = inject(UserService);
 
+  @Output() closed = new EventEmitter<void>();
+
   newName: string = '';
   currentUser = this.userService.currentUser;
   visible = true;
+  overlayRef!: any;
 
   onAnimationDone(event: any) {
     if (!this.visible) {
-      this.overlayService.closeLast();
+      this.closed.emit();
     }
   }
 
   closeOverlay() {
-    this.visible = false;
+    this.overlayRef.startCloseAnimation();
   }
 
   updateName() {

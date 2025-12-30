@@ -11,7 +11,11 @@ export class ClickOutsideDirective {
 
   @HostListener('document:click', ['$event.target'])
   onClick(target: EventTarget | null) {
-    if (target instanceof HTMLElement && !this.el.nativeElement.contains(target)) {
+    if (
+      target instanceof HTMLElement &&
+      !this.el.nativeElement.contains(target) &&
+      !target.classList.contains('overlay-backdrop')
+    ) {
       this.clickOutside.emit();
     }
   }

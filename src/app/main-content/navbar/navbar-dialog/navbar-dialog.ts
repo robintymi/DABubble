@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, Output, ViewChild } from '@angular/core';
 import { OverlayService } from '../../../services/overlay.service';
 import { ProfileMenu } from '../profile-menu/profile-menu';
 import { AuthService } from '../../../services/auth.service';
@@ -29,9 +29,12 @@ import { BrandStateService } from '../../../services/brand-state.service';
   ],
 })
 export class NavbarDialog {
+  overlayRef!: any;
   originTarget!: HTMLElement;
   visible = true;
   mode: 'desktop' | 'mobile' = 'desktop';
+
+  @Output() closed = new EventEmitter<void>();
 
   @ViewChild('profileBtn', { read: ElementRef })
   profileBtn!: ElementRef<HTMLElement>;
@@ -81,12 +84,12 @@ export class NavbarDialog {
   }
 
   startCloseAnimation() {
-    this.visible = false;
+    this.overlayRef.startCloseAnimation();
   }
 
   onAnimationDone(event: any) {
     if (!this.visible) {
-      this.overlayService.closeLast();
+      this.closed.emit();
     }
   }
 

@@ -16,6 +16,7 @@ import {
   createComponent,
   EnvironmentInjector,
 } from '@angular/core';
+import { take } from 'rxjs';
 
 export interface OverlayConfig<T = any> {
   target?: HTMLElement;
@@ -108,13 +109,13 @@ export class OverlayRef<T extends object = any> {
    * @param config - Optional overlay configuration for the new component
    */
   replaceComponent<T2 extends object>(component: Type<T2>, config?: OverlayConfig<T2>) {
-    const oldInstance = this.componentRef.instance as any;
-    oldInstance.startCloseAnimation?.();
+    const data = {
+      ...(config?.data ?? {}),
+      overlayRef: this,
+    };
 
-    setTimeout(() => {
-      this.createComponent(component, config?.data);
-      this.updatePosition();
-    }, 250);
+    this.createComponent(component, data);
+    this.updatePosition();
   }
 
   /**
@@ -136,20 +137,14 @@ export class OverlayRef<T extends object = any> {
     this.visible = false;
 
     const instance = this.componentRef.instance as any;
+    instance.visible = false;
 
-    if ('visible' in instance) {
-      instance.visible = false;
-    }
-
-    if ('closed' in instance) {
-      instance.closed.subscribe(() => {
-        if (!this.visible) {
-          this.destroy();
-        }
+    if (instance.closed) {
+      instance.closed.pipe(take(1)).subscribe(() => {
+        this.destroy();
       });
     } else {
-      // Fallback if component has no closed event
-      this.destroy();
+      setTimeout(() => this.destroy(), 300);
     }
   }
 
