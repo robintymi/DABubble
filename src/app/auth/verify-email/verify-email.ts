@@ -40,7 +40,7 @@ export class VerifyEmail {
     this.errorMessage = null;
   }
 
-  private getCurrentUserOrSetError(): User | null {
+  private getCurrentUserOrShowError(): User | null {
     const currentUser = this.authService.auth.currentUser;
     if (!currentUser) {
       this.toastService.error(NOTIFICATIONS.NO_USER_LOGGED_IN);
@@ -58,14 +58,15 @@ export class VerifyEmail {
     this.resetMessages();
 
     try {
-      const currentUser = this.getCurrentUserOrSetError();
+      let currentUser = this.getCurrentUserOrShowError();
       if (!currentUser) {
-        setTimeout(() => this.router.navigate(['/login']), 1500);
+        this.router.navigate(['/login']);
         return;
       }
 
       await currentUser.reload();
-      if (currentUser.emailVerified) {
+      currentUser = this.authService.auth.currentUser;
+      if (currentUser?.emailVerified) {
         this.router.navigate(['/email-confirmed']);
       } else {
         this.statusMessage = NOTIFICATIONS.EMAIL_VERIFICATION_NOT_YET_CONFIRMED;
@@ -87,7 +88,7 @@ export class VerifyEmail {
     this.resetMessages();
 
     try {
-      const currentUser = this.getCurrentUserOrSetError();
+      const currentUser = this.getCurrentUserOrShowError();
       if (!currentUser) {
         this.router.navigate(['/login']);
         return;
