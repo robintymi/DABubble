@@ -32,6 +32,7 @@ export class ProfileMenu {
   originTarget!: HTMLElement;
   visible = true;
   overlayRef!: any;
+  isEditActive = false;
 
   onAnimationDone(event: any) {
     if (!this.visible) {

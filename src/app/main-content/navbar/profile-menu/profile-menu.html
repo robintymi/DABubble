@@ -11,7 +11,14 @@
   <div class="flex w-full flex-col gap-2 px-6">
     <div class="flex items-center justify-between">
       <h3>{{ currentUser()?.name || 'Gast' }}</h3>
-      <span class="edit" (click)="editProfile()">Bearbeiten</span>
+      <button type="button" class="edit-btn lg:hidden" (click)="editProfile()">
+        <div class="icon-wrapper">
+          <img class="icon icon-default" src="/imgs/edit.png" alt="Profil bearbeiten" />
+          <img class="icon icon-active" src="/imgs/edit_focus.png" alt="" />
+        </div>
+      </button>
+
+      <span class="edit hidden lg:block" (click)="editProfile()">Bearbeiten</span>
     </div>
     <div class="flex items-center gap-2">
       <button class="status"></button>
