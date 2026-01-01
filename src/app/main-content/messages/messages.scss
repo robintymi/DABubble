@@ -1,3 +1,14 @@
+.message-board,
+:host {
+  width: 100%;
+}
+
+:host {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
 .message-board {
   background: #ffffff;
   border-radius: 24px;
@@ -16,8 +27,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;  
-  padding-bottom:16px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -25,7 +36,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  cursor:pointer;
+  cursor: pointer;
 }
 
 .message-board__name-row {
@@ -82,7 +93,7 @@
   font-size: 13px;
   font-weight: 600;
   margin: 8px 0;
-  width:90%
+  width: 90%;
 }
 .message-board__divider::before,
 .message-board__divider::after {
@@ -168,7 +179,7 @@
   padding: 14px 18px;
   border-radius: 20px;
   width: fit-content;
-  min-width:60%;
+  min-width: 60%;
 }
 
 .message-board__bubble--own .message-board__bubble-content {
@@ -347,8 +358,8 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  flex:1;
-  min-height:0;
+  flex: 1;
+  min-height: 0;
 }
 
 .message-board__intro-avatar {
@@ -392,7 +403,7 @@
   color: #0f172a;
   padding: 8px;
   outline: none;
-  width:100%;
+  width: 100%;
 }
 
 .message-board__composer-actions {
