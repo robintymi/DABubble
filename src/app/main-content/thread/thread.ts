@@ -74,6 +74,14 @@ export class Thread {
     }
 
   }
+
+  protected onReplyKeydown(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key !== 'Enter' || keyboardEvent.shiftKey) return;
+    keyboardEvent.preventDefault();
+    this.sendReply();
+  }
+
   react(messageId: string | undefined, reaction: string): void {
     if (!messageId) return;
     if (this.messageReactions[messageId] === reaction) {

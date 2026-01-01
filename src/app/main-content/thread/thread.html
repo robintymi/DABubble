@@ -192,7 +192,8 @@
       [(ngModel)]="draftReply"
       #replyTextarea
       placeholder="Antworten"
-      aria-label="Antwort zum Thread schreiben"></textarea>
+      aria-label="Antwort zum Thread schreiben"
+      (keydown.enter)="onReplyKeydown($event)"></textarea>
     <button type="submit" [disabled]="replyForm.invalid">
       <mat-icon>send</mat-icon>
     </button>

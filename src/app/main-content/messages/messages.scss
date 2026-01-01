@@ -16,7 +16,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: wrap;  
+  padding-bottom:16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .message-board__identity {
@@ -80,8 +82,8 @@
   font-size: 13px;
   font-weight: 600;
   margin: 8px 0;
+  width:90%
 }
-
 .message-board__divider::before,
 .message-board__divider::after {
   content: '';

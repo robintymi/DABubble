@@ -16,6 +16,8 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .channel__actions {
@@ -482,19 +484,13 @@
 .channel__thread-summary {
   margin-top: 6px;
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
-  color: #1f2937;
-  cursor: pointer;
-  transition:
-    transform 0.1s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
+  cursor:pointer;
+  align-items: center;
+  gap:8px;
+  padding:0;
+  border:none;
+  background: transparent;
+  color:#4338ca
 }
 
 .channel__thread-summary:hover {
@@ -508,12 +504,12 @@
 }
 
 .channel__thread-count {
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .channel__thread-meta {
-  font-size: 12px;
+  font-size: 13px;
   color: #475569;
 }
 

@@ -162,12 +162,12 @@
                   type="button"
                   class="channel__thread-summary"
                   (click)="openThread(message)">
-                  <div class="channel__thread-count">
+                  <span class="channel__thread-count">
                     {{ message.replies }} Antwort{{ message.replies === 1 ? '' : 'en' }}
-                  </div>
-                  <div *ngIf="message.lastReplyTime" class="channel__thread-meta">
+                  </span>
+                  <span *ngIf="message.lastReplyTime" class="channel__thread-meta">
                     Letzte Antwort {{ message.lastReplyTime }}
-                  </div>
+                  </span>
                 </button>
               </div>
             </article>
@@ -188,6 +188,7 @@
           [(ngModel)]="messageText"
           (input)="onMessageInput($event)"
           (click)="onMessageInput($event)"
+          (keydown.enter)="onComposerKeydown($event)"
           [placeholder]="'Nachricht an #' + ((channelTitle$ | async) ?? channelDefaults.name)"></textarea>
         <div *ngIf="isMentionListVisible" class="channel__mention-suggestions">
           <button type="button" *ngFor="let member of mentionSuggestions" (click)="insertMention(member)">

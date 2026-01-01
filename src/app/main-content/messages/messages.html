@@ -140,7 +140,8 @@
       [(ngModel)]="draftMessage"
       placeholder="Nachricht an {{ recipient.name }}"
       [disabled]="isSending"
-      aria-label="Neue Nachricht verfassen"></textarea>
+      aria-label="Neue Nachricht verfassen"
+      (keydown.enter)="onComposerKeydown($event)"></textarea>
 
     <div class="message-board__composer-actions">
       <div class="message-board__composer-start">

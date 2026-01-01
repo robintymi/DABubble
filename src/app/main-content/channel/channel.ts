@@ -87,6 +87,9 @@ export class ChannelComponent {
   protected isMentionListVisible = false;
   private mentionTriggerIndex: number | null = null;
   private mentionCaretIndex: number | null = null;
+  private lastMessageCount = 0;
+  private lastMessageId?: string;
+
 
   protected readonly channel$: Observable<Channel | undefined> = combineLatest([
     this.channelSelectionService.selectedChannelId$,
@@ -193,6 +196,10 @@ export class ChannelComponent {
   );
 
   constructor() {
+    this.channel$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.lastMessageCount = 0;
+      this.lastMessageId = undefined;
+    });
     this.members$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((members) => {
       this.cachedMembers = members;
       this.updateMentionSuggestions();
@@ -200,8 +207,20 @@ export class ChannelComponent {
 
     this.messagesByDay$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.scrollToBottom());
+      .subscribe((days) => {
+        if (this.shouldAutoScroll(days)) {
+          this.scrollToBottom();
+        }
+      });
   }
+
+  protected onComposerKeydown(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' && !keyboardEvent.shiftKey) return;
+    keyboardEvent.preventDefault();
+    this.sendMessage();
+  }
+
   private groupMessagesByDay(messages: ChannelMessage[]): ChannelDay[] {
     const grouped = new Map<string, ChannelDay>();
 
@@ -409,7 +428,26 @@ export class ChannelComponent {
 
     return `${formatter.format(date)} Uhr`;
   }
+  private shouldAutoScroll(days: ChannelDay[]): boolean {
+    const snapshot = this.getMessageSnapshot(days);
+    const shouldScroll =
+      (this.lastMessageCount === 0 && snapshot.count > 0) ||
+      snapshot.count > this.lastMessageCount ||
+      (snapshot.lastId !== undefined && snapshot.lastId !== this.lastMessageId);
 
+    this.lastMessageCount = snapshot.count;
+    this.lastMessageId = snapshot.lastId;
+
+    return shouldScroll;
+  }
+
+  private getMessageSnapshot(days: ChannelDay[]): { count: number; lastId?: string } {
+    const count = days.reduce((total, day) => total + day.messages.length, 0);
+    const lastDay = days.at(-1);
+    const lastMessage = lastDay?.messages.at(-1);
+
+    return { count, lastId: lastMessage?.id };
+  }
   protected openChannelDescription(event: Event): void {
     const target = event.currentTarget as HTMLElement | null;
 

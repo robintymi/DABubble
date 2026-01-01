@@ -128,6 +128,14 @@ export class Messages {
       });
   }
 
+  protected onComposerKeydown(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key !== 'Enter' || keyboardEvent.shiftKey) return;
+    keyboardEvent.preventDefault();
+    this.sendMessage();
+  }
+
+
   protected openRecipientProfile(recipient: AppUser): void {
 
     if (this.currentUser?.uid === recipient.uid) {
