@@ -64,7 +64,7 @@
                     aria-label="Grünen Haken setzen"
                     [class.channel__message-action--active]="message.id && messageReactions[message.id] === '✅'"
                     (click)="react(message.id, '✅')">
-                    <mat-icon>check_circle</mat-icon>
+                    ✅
                   </button>
                   <button
                     type="button"
@@ -72,7 +72,7 @@
                     aria-label="Daumen hoch geben"
                     [class.channel__message-action--active]="message.id && messageReactions[message.id] === '👍'"
                     (click)="react(message.id, '👍')">
-                    <mat-icon>thumb_up</mat-icon>
+                    👍
                   </button>
                   <button
                     type="button"

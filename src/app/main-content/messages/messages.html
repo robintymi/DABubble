@@ -39,7 +39,7 @@
               aria-label="Daumen hoch geben"
               [class.message-board__bubble-action--active]="message.id && messageReactions[message.id] === '👍'"
               (click)="react(message.id, '👍')">
-              <mat-icon>thump_up</mat-icon>
+              👍
             </button>
             <button
               type="button"
@@ -47,7 +47,7 @@
               aria-label="Grünen Haken setzen"
               [class.message-board__bubble-action--active]="message.id && messageReactions[message.id] === '✅'"
               (click)="react(message.id, '✅')">
-              <mat-icon>check_circle</mat-icon>
+              ✅
             </button>
             <button
               type="button"

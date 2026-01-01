@@ -222,12 +222,12 @@
 
 .channel__message-actions {
   position: absolute;
-  right: 0;
+  right: 20%;
   top: -18px;
   display: flex;
   gap: 8px;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: 20px 20px 0 20px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(79, 70, 229, 0.18);
