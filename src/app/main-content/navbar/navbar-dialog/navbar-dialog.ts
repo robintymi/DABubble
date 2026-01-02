@@ -5,11 +5,12 @@ import { AuthService } from '../../../services/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { BrandStateService } from '../../../services/brand-state.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-navbar-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './navbar-dialog.html',
   styleUrl: './navbar-dialog.scss',
   animations: [

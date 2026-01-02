@@ -27,4 +27,18 @@
       alt="" />
     Log out
   </button>
+  <div class="flex pl-12 lg:flex-col lg:pl-0">
+    <button
+      (click)="startCloseAnimation()"
+      routerLink="/legal-notice"
+      class="hover-button flex h-6 w-35 cursor-pointer items-center justify-items-start rounded-full pl-4 text-sm lg:mr-0 lg:w-48 lg:justify-center lg:pl-0">
+      Impressum
+    </button>
+    <button
+      (click)="startCloseAnimation()"
+      routerLink="/privacy-policy"
+      class="hover-button flex h-6 w-35 cursor-pointer items-center justify-items-start rounded-full pl-4 text-sm lg:mr-0 lg:w-48 lg:justify-center lg:pl-0">
+      Datenschutz
+    </button>
+  </div>
 </section>
