@@ -117,6 +117,13 @@
   width: fit-content;
   --avatar-size: 36px;
 }
+.message-board__bubble:hover {
+  background: #eceefe;
+  border-radius: 16px;
+}
+.message-board__bubble:not(.message-board__bubble--own):hover .message-board__bubble-content {
+  background: #ffffff;
+}
 
 .message-board__bubble--own {
   align-self: flex-end;
@@ -193,7 +200,6 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   text-align: left;
- 
 }
 .message-board__bubble--own .message-board__bubble-text {
   color: #ffffff;
@@ -358,7 +364,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top:auto;
+  margin-top: auto;
 }
 
 .message-board__intro-avatar {
