@@ -71,7 +71,7 @@ export class NavbarDialog {
     this.overlayService.open(ProfileMenu, {
       target: this.originTarget,
       offsetX: -225,
-      offsetY: -72,
+      offsetY: -78,
       data: { originTarget: this.originTarget },
     });
   }
