@@ -96,7 +96,6 @@ export class NavbarDialog {
 
   logOut() {
     this.authService.signOut();
-    console.log('User logged out');
     this.startCloseAnimation();
     this.brandState.resetSplash();
   }
