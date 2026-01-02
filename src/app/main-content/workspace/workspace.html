@@ -58,7 +58,7 @@
       </div>
       <ng-container *ngIf="!areChannelsCollapsed">
         <ul class="workspace__list" id="workspace-channels">
-          <li *ngFor="let channel of channelsWithUnread$ | async">
+          <li *ngFor="let channel of channelsWithUnread$ | async; trackBy: trackChannel">
             <button
               class="workspace__list-item"
               type="button"
@@ -117,7 +117,7 @@
         class="workspace__list workspace__list--direct"
         id="workspace-direct-messages">
         <ng-container *ngIf="directMessageUsers$ | async as users">
-          <li *ngFor="let user of users">
+          <li *ngFor="let user of users; trackBy: trackDirectUser">
             <button
               type="button"
               class="workspace__list-item workspace__list-item--direct"

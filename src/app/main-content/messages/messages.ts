@@ -1,6 +1,18 @@
-import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, combineLatest, map, of, switchMap, tap, filter, distinctUntilChanged } from 'rxjs';
+import {
+  Observable,
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  filter,
+  from,
+  map,
+  of,
+  shareReplay,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FirestoreService } from '../../services/firestore.service';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +32,7 @@ type MessageBubble = {
   timestamp: Timestamp | undefined;
   isOwn?: boolean;
 };
+
 @Component({
   selector: 'app-messages',
   standalone: true,
@@ -36,22 +49,22 @@ export class Messages {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly currentUser$ = toObservable(this.userService.currentUser);
-  private readonly dmUserId$ = this.route.paramMap.pipe(map((params) => params.get('dmId')));
 
-  protected readonly selectedRecipient$: Observable<AppUser | null> = combineLatest([
-    this.dmUserId$,
-    this.userService.getAllUsers(),
-  ]).pipe(
-    map(([dmId, users]) => users.find((u) => u.uid === dmId) ?? null),
-    tap((recipient) => {
-      const currentUser = this.userService.currentUser();
-      if (recipient && currentUser) {
-        void this.firestoreService.updateDirectMessageReadStatus(currentUser.uid, recipient.uid);
-      }
-    })
+  private readonly dmUserId$ = this.route.paramMap.pipe(
+    map((params) => params.get('dmId')),
+    distinctUntilChanged(),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  protected readonly messages$ = combineLatest([this.currentUser$, this.selectedRecipient$]).pipe(
+  private readonly recipientSignal = signal<AppUser | null>(null);
+  private readonly recipientCache = new Map<string, AppUser | null>();
+
+  protected readonly selectedRecipient$: Observable<AppUser | null> = toObservable(this.recipientSignal);
+
+  private readonly rawMessages$: Observable<MessageBubble[]> = combineLatest([
+    this.currentUser$,
+    this.selectedRecipient$,
+  ]).pipe(
     switchMap(([currentUser, recipient]) => {
       if (!currentUser || !recipient) {
         return of([]);
@@ -61,8 +74,10 @@ export class Messages {
         .getDirectConversationMessages(currentUser.uid, recipient.uid)
         .pipe(map((messages) => messages.map((message) => this.mapMessage(message, currentUser))));
     }),
-    tap(() => this.scrollToBottom())
+    shareReplay({ bufferSize: 1, refCount: true })
   );
+
+  protected readonly messages$ = this.rawMessages$.pipe(tap(() => this.scrollToBottom()));
 
   protected selectedRecipient: AppUser | null = null;
   protected currentUser: AppUser | null = null;
@@ -86,18 +101,72 @@ export class Messages {
   constructor() {
     this.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user) => (this.currentUser = user));
 
+    this.dmUserId$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap((dmId) => {
+          if (!dmId) {
+            return of({ dmId: null as string | null, recipient: null as AppUser | null });
+          }
+
+          if (this.recipientCache.has(dmId)) {
+            return of({ dmId, recipient: this.recipientCache.get(dmId) ?? null });
+          }
+
+          return from(this.userService.getUserOnce(dmId)).pipe(
+            map((recipient) => ({ dmId, recipient })),
+            catchError(() => of({ dmId, recipient: null }))
+          );
+        })
+      )
+      .subscribe(({ dmId, recipient }) => {
+        if (dmId) {
+          this.recipientCache.set(dmId, recipient);
+        }
+        this.recipientSignal.set(recipient);
+      });
+
     this.selectedRecipient$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((recipient) => (this.selectedRecipient = recipient));
-    combineLatest([this.currentUser$, this.selectedRecipient$])
+
+    combineLatest([this.currentUser$, this.dmUserId$])
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        filter(([currentUser, recipient]) => !!currentUser && !!recipient),
-        distinctUntilChanged(([u1, r1], [u2, r2]) => u1?.uid === u2?.uid && r1?.uid === r2?.uid)
+        filter(([currentUser, dmId]) => !!currentUser && !!dmId),
+        distinctUntilChanged(([u1, d1], [u2, d2]) => u1?.uid === u2?.uid && d1 === d2),
+        switchMap(([currentUser, dmId]) =>
+          from(this.firestoreService.updateDirectMessageReadStatus(currentUser!.uid, dmId!)).pipe(
+            catchError(() => of(null))
+          )
+        )
       )
-      .subscribe(([currentUser, recipient]) => {
-        this.firestoreService.updateDirectMessageReadStatus(currentUser!.uid, recipient!.uid);
-      });
+      .subscribe();
+
+    combineLatest([this.currentUser$, this.dmUserId$, this.rawMessages$])
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter(([currentUser, dmId]) => !!currentUser && !!dmId),
+        map(([currentUser, dmId, messages]) => {
+          const lastMessage = messages.length ? messages[messages.length - 1] : null;
+          const lastMessageMillis = lastMessage?.timestamp?.toMillis?.() ?? null;
+          return { currentUser, dmId, lastMessage, lastMessageMillis };
+        }),
+        distinctUntilChanged(
+          (a, b) =>
+            a.currentUser?.uid === b.currentUser?.uid &&
+            a.dmId === b.dmId &&
+            a.lastMessageMillis === b.lastMessageMillis &&
+            a.lastMessage?.isOwn === b.lastMessage?.isOwn
+        ),
+        filter((state) => !!state.lastMessage && state.lastMessage!.isOwn === false),
+        switchMap((state) =>
+          from(this.firestoreService.updateDirectMessageReadStatus(state.currentUser!.uid, state.dmId!)).pipe(
+            catchError(() => of(null))
+          )
+        )
+      )
+      .subscribe();
   }
 
   protected sendMessage(): void {
@@ -174,6 +243,7 @@ export class Messages {
 
     return this.getDateKey(current.timestamp) !== this.getDateKey(previous.timestamp);
   }
+
   private mapMessage(message: DirectMessageEntry, currentUser: AppUser): MessageBubble {
     const isOwn = message.authorId === currentUser.uid;
     return {

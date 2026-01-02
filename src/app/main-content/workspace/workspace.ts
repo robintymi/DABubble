@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, map, of, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { CreateChannel } from './create-channel/create-channel';
@@ -34,35 +34,21 @@ export class Workspace {
     this.activeDmIdSubject.next(value ?? null);
   }
 
+  @Output() channelSelected = new EventEmitter<void>();
+
   protected readonly activeChannelId$ = this.activeChannelIdSubject.asObservable();
   protected readonly activeDmId$ = this.activeDmIdSubject.asObservable();
 
-  @Output() readonly channelSelected = new EventEmitter<void>();
-
-  protected readonly channels$: Observable<Channel[]> = this.currentUser$.pipe(
-    switchMap((user) => (user ? this.firestoreService.getChannelsForUser(user.uid) : of([])))
-  );
-
   protected readonly channelsWithUnread$: Observable<ChannelListItem[]> = combineLatest([
-    this.channels$,
+    this.firestoreService.getChannels(),
     this.currentUser$,
-    this.activeChannelId$,
   ]).pipe(
-    switchMap(([channels, currentUser, selectedChannelId]) => {
-      if (!currentUser || !channels.length) {
-        return of([]);
-      }
+    switchMap(([channels, currentUser]) => {
+      if (!currentUser) return of([]);
 
       const channelObservables = channels.map((channel) => {
         const channelId = channel.id;
-        if (!channelId) {
-          return of({ ...channel, unreadCount: 0 });
-        }
-
-        if (selectedChannelId === channelId) {
-          this.setChannelLastRead(currentUser.uid, channelId);
-          return of({ ...channel, unreadCount: 0 });
-        }
+        if (!channelId) return of({ ...channel, unreadCount: 0 });
 
         return this.firestoreService.getChannelMessages(channelId).pipe(
           map((messages) => {
@@ -84,14 +70,13 @@ export class Workspace {
   protected readonly directMessageUsers$: Observable<DirectMessageUser[]> = combineLatest([
     this.userService.getAllUsers(),
     this.currentUser$,
-    this.activeDmId$,
   ]).pipe(
-    switchMap(([users, currentUser, activeDmId]) => {
+    switchMap(([users, currentUser]) => {
       if (!currentUser) {
         return of([]);
       }
 
-      const directMessageUsers$ = users.map((user) => this.buildDirectMessageUser(user, currentUser, activeDmId));
+      const directMessageUsers$ = users.map((user) => this.buildDirectMessageUser(user, currentUser));
 
       if (!directMessageUsers$.length) {
         return of([]);
@@ -111,7 +96,8 @@ export class Workspace {
           })
         )
       );
-    })
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
   protected readonly directMessageUnreadTotal$ = this.directMessageUsers$.pipe(
@@ -161,11 +147,7 @@ export class Workspace {
     void this.router.navigate(['/main/dms', user.uid]);
   }
 
-  private buildDirectMessageUser(
-    user: AppUser,
-    currentUser: AppUser,
-    activeDmId: string | null
-  ): Observable<DirectMessageUser> {
+  private buildDirectMessageUser(user: AppUser, currentUser: AppUser): Observable<DirectMessageUser> {
     const displayName = user.uid === currentUser.uid ? `${user.name} (Du)` : user.name;
 
     if (user.uid === currentUser.uid) {
@@ -175,8 +157,9 @@ export class Workspace {
     return combineLatest([
       this.firestoreService.getDirectConversationMessages(currentUser.uid, user.uid),
       this.firestoreService.getDirectMessageReadStatus(currentUser.uid, user.uid),
+      this.activeDmId$,
     ]).pipe(
-      map(([messages, lastReadAt]) => {
+      map(([messages, lastReadAt, activeDmId]) => {
         const lastReadMs = lastReadAt?.toMillis() ?? 0;
         const isActive = activeDmId === user.uid;
         const unreadCount = messages.filter((message) => {
@@ -184,12 +167,7 @@ export class Workspace {
           return message.authorId !== currentUser.uid && createdAtMs > lastReadMs;
         }).length;
 
-        if (isActive) {
-          void this.firestoreService.updateDirectMessageReadStatus(currentUser.uid, user.uid);
-          return { ...user, displayName, unreadCount: 0 };
-        }
-
-        return { ...user, displayName, unreadCount };
+        return { ...user, displayName, unreadCount: isActive ? 0 : unreadCount };
       })
     );
   }
@@ -209,5 +187,13 @@ export class Workspace {
 
   private getChannelLastReadKey(userId: string, channelId: string): string {
     return `channelLastRead:${userId}:${channelId}`;
+  }
+
+  protected trackChannel(index: number, channel: ChannelListItem): string {
+    return channel.id ?? `${index}`;
+  }
+
+  protected trackDirectUser(index: number, user: DirectMessageUser): string {
+    return user.uid ?? `${index}`;
   }
 }
