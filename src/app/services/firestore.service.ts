@@ -16,7 +16,7 @@ import {
   query,
 } from '@angular/fire/firestore';
 import { Observable, catchError, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
-import { AppUser } from './user.service';
+import type { AppUser } from './user.service';
 export interface Channel {
   id?: string;
   title?: string;
@@ -390,7 +390,29 @@ export class FirestoreService {
     return channelIds;
   }
 
-  
+  async ensureDefaultChannelMembership(user: AppUser): Promise<void> {
+    const channelIds = await this.ensureDefaultChannels();
+
+    const memberships = FirestoreService.DEFAULT_CHANNELS.map((channel) => {
+      const channelId = channel.title ? channelIds.get(channel.title) : undefined;
+      if (!channelId) {
+        return undefined;
+      }
+
+      return this.upsertChannelMember(channelId, {
+        id: user.uid,
+        name: user.name,
+        avatar: user.photoUrl,
+        subtitle: user.email ?? undefined,
+      });
+    }).filter((promise): promise is Promise<void> => Boolean(promise));
+
+    if (!memberships.length) {
+      return;
+    }
+
+    await Promise.all(memberships);
+  }
 
   async updateChannel(channelId: string, payload: Partial<Pick<Channel, 'title' | 'description'>>): Promise<void> {
     const updates: Record<string, unknown> = {};

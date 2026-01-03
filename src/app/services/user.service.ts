@@ -35,6 +35,7 @@ export class UserService {
   private readonly injector = inject(EnvironmentInjector);
   private authService = inject(AuthService);
   private firestore = inject(Firestore);
+  private firestoreService = inject(FirestoreService);
   private userSnapshotUnsubscribe?: () => void;
 
   currentUser = signal<AppUser | null>(null);

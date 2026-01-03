@@ -51,3 +51,23 @@
   width: 100%;
   max-width: none;
 }
+
+@media (max-width: 1024px) {
+  mat-sidenav-container {
+    padding-left: 0 !important;
+  }
+
+  mat-sidenav {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  mat-sidenav-content,
+  .main-content__overlay {
+    display: none !important;
+  }
+
+  .workspace_button {
+    display: none;
+  }
+}
