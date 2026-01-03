@@ -1,3 +1,27 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.channel-layout {
+  height: 100%;
+  background: transparent;
+}
+
+.channel-layout__content {
+  height: 100%;
+  min-height: 0;
+}
+
+.channel-layout__thread {
+  width: min(450px, 30vw);
+  padding: 0;
+  background: transparent;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: none;
+}
+
 .channel {
   display: flex;
   flex-direction: column;
@@ -484,13 +508,13 @@
 .channel__thread-summary {
   margin-top: 6px;
   display: inline-flex;
-  cursor:pointer;
+  cursor: pointer;
   align-items: center;
-  gap:8px;
-  padding:0;
-  border:none;
+  gap: 8px;
+  padding: 0;
+  border: none;
   background: transparent;
-  color:#4338ca
+  color: #4338ca;
 }
 
 .channel__thread-summary:hover {
@@ -636,6 +660,13 @@
   text-align: center;
   color: #64748b;
   font-weight: 600;
+}
+
+@media (max-width: 1250px) {
+  .channel-layout__thread {
+    width: 100%;
+    border-left: none;
+  }
 }
 
 @media (max-width: 1024px) {

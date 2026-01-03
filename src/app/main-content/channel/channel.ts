@@ -2,6 +2,7 @@ import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { Observable, combineLatest, from, map, of, shareReplay, switchMap, take, tap } from 'rxjs';
 import {
@@ -17,6 +18,7 @@ import { AppUser, UserService } from '../../services/user.service';
 import { ChannelMembers } from './channel-members/channel-members';
 import { AddToChannel } from './add-to-channel/add-to-channel';
 import { ThreadService } from '../../services/thread.service';
+import { ScreenService } from '../../services/screen.service';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { EMOJI_CHOICES } from '../../texts';
 
@@ -49,7 +51,7 @@ type ChannelMemberView = ChannelMember & {
 @Component({
   selector: 'app-channel',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, RouterOutlet],
+  imports: [CommonModule, FormsModule, MatIconModule, MatSidenavModule, RouterOutlet],
   templateUrl: './channel.html',
   styleUrls: ['./channel.scss'],
 })
@@ -58,10 +60,13 @@ export class ChannelComponent {
   private readonly overlayService = inject(OverlayService);
   private readonly userService = inject(UserService);
   private readonly threadService = inject(ThreadService);
+  private readonly screenService = inject(ScreenService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly currentUser$ = toObservable(this.userService.currentUser);
+
+  protected readonly isSmallScreen = this.screenService.isSmallScreen;
 
   @ViewChild('messageTextarea')
   private messageTextarea?: ElementRef<HTMLTextAreaElement>;
@@ -203,6 +208,8 @@ export class ChannelComponent {
   );
 
   constructor() {
+    this.screenService.connect();
+
     this.channel$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.lastMessageCount = 0;
       this.lastMessageId = undefined;
@@ -230,6 +237,19 @@ export class ChannelComponent {
       .subscribe();
 
     this.syncChildRouteState();
+  }
+
+  protected closeThreadFromSidenav(): void {
+    if (!this.hasThreadChild()) return;
+
+    const channelId = this.route.snapshot.paramMap.get('channelId');
+    this.threadService.reset();
+
+    if (channelId) {
+      void this.router.navigate(['/main/channels', channelId]);
+    } else {
+      void this.router.navigate(['/main']);
+    }
   }
 
   protected onComposerKeydown(event: Event): void {
@@ -601,6 +621,13 @@ export class ChannelComponent {
 
   private syncChildRouteState(): void {
     const threadId = this.route.firstChild?.snapshot?.paramMap?.get('threadId');
-    this.hasThreadChild.set(!!threadId);
+    const hadThread = this.hasThreadChild();
+    const hasThread = !!threadId;
+
+    this.hasThreadChild.set(hasThread);
+
+    if (!hasThread && hadThread) {
+      this.threadService.reset();
+    }
   }
 }

@@ -166,7 +166,7 @@ export class MainContent {
       current = current.firstChild;
     }
 
-    if (threadId) {
+    if (threadId && this.isSmallScreen()) {
       view = 'thread';
     }
 
