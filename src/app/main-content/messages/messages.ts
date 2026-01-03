@@ -23,6 +23,7 @@ import { DirectMessageEntry } from '../../services/firestore.service';
 import { Timestamp } from '@angular/fire/firestore';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MemberDialog } from '../member-dialog/member-dialog';
+import { EMOJI_CHOICES } from '../../texts';
 
 type MessageBubble = {
   id?: string;
@@ -86,7 +87,7 @@ export class Messages {
   protected isSending = false;
   protected messageReactions: Record<string, string> = {};
   protected openEmojiPickerFor: string | null = null;
-  protected readonly emojiChoices = ['😀', '😁', '😂', '🤣', '😊', '😍'];
+  protected readonly emojiChoices = EMOJI_CHOICES;
   protected editingMessageId: string | null = null;
   protected editMessageText = '';
   protected isSavingEdit = false;

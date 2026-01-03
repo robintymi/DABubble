@@ -63,9 +63,9 @@
                       type="button"
                       class="channel__message-action"
                       aria-label="Grünen Haken setzen"
-                      [class.channel__message-action--active]="message.id && messageReactions[message.id] === '✔️'"
-                      (click)="react(message.id, '✔️')">
-                      ✔️
+                      [class.channel__message-action--active]="message.id && messageReactions[message.id] === '✅'"
+                      (click)="react(message.id, '✅')">
+                      ✅
                     </button>
                     <button
                       type="button"

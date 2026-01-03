@@ -24,6 +24,9 @@ export class NewMessagePanel {
   private readonly firestoreService = inject(FirestoreService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
+
+  @Output() readonly close = new EventEmitter<void>();
+
   private readonly currentUser$ = toObservable(this.userService.currentUser);
   private readonly searchTermSubject = new BehaviorSubject<string>('');
   protected readonly searchTerm$ = this.searchTermSubject.asObservable();
@@ -78,7 +81,6 @@ export class NewMessagePanel {
 
   protected selectChannel(channel: Channel): void {
     if (!channel.id) return;
-
     void this.router.navigate(['/main/channels', channel.id]);
     this.close.emit();
   }
@@ -88,8 +90,6 @@ export class NewMessagePanel {
     void this.router.navigate(['/main/dms', user.uid]);
     this.close.emit();
   }
-
-  @Output() readonly close = new EventEmitter<void>();
 
   protected closePanel(): void {
     this.close.emit();

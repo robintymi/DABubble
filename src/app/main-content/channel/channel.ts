@@ -18,6 +18,7 @@ import { ChannelMembers } from './channel-members/channel-members';
 import { AddToChannel } from './add-to-channel/add-to-channel';
 import { ThreadService } from '../../services/thread.service';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { EMOJI_CHOICES } from '../../texts';
 
 type ChannelDay = {
   label: string;
@@ -39,7 +40,11 @@ export type ChannelMessageView = {
   attachment?: ChannelAttachment;
   isOwn?: boolean;
 };
-type ChannelMemberView = ChannelMember & { isCurrentUser?: boolean; user?: AppUser };
+
+type ChannelMemberView = ChannelMember & {
+  isCurrentUser?: boolean;
+  user?: AppUser;
+};
 
 @Component({
   selector: 'app-channel',
@@ -58,7 +63,8 @@ export class ChannelComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly currentUser$ = toObservable(this.userService.currentUser);
 
-  @ViewChild('messageTextarea') private messageTextarea?: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('messageTextarea')
+  private messageTextarea?: ElementRef<HTMLTextAreaElement>;
   protected readonly channelDefaults = {
     name: 'Entwicklerteam',
     summary: 'Gruppe zum Austausch über technische Fragen und das laufende Redesign des Devspace.',
@@ -82,7 +88,7 @@ export class ChannelComponent {
 
   private readonly channelId$ = this.route.paramMap.pipe(
     map((params) => params.get('channelId')),
-    shareReplay(1)
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
   private readonly channels$ = this.currentUser$.pipe(
@@ -101,20 +107,24 @@ export class ChannelComponent {
   private lastMessageId?: string;
   protected readonly hasThreadChild = signal(false);
 
-  protected readonly channel$: Observable<Channel | undefined> = combineLatest([this.channelId$, this.channels$]).pipe(
-    tap(([channelId, channels]) => {
-      if (!channels.length) return;
+  protected readonly channel$: Observable<Channel | undefined> = combineLatest([
+    this.currentUser$,
+    this.channelId$,
+    this.channels$,
+  ]).pipe(
+    tap(([user, channelId, channels]) => {
+      if (!user) return;
       if (!channelId) {
         void this.router.navigate(['/main']);
         return;
       }
 
-      const exists = channels.some((channel) => channel.id === channelId);
-      if (!exists) {
+      const channelExists = channels.some((channel) => channel.id === channelId);
+      if (!channelExists) {
         void this.router.navigate(['/main']);
       }
     }),
-    map(([channelId, channels]) => channels.find((channel) => channel.id === channelId)),
+    map(([_, channelId, channels]) => channels.find((c) => c.id === channelId)),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -128,7 +138,7 @@ export class ChannelComponent {
 
   protected messageReactions: Record<string, string> = {};
   protected openEmojiPickerFor: string | null = null;
-  protected readonly emojiChoices = ['😀', '😁', '😂', '🤣', '😊', '😍'];
+  protected readonly emojiChoices = EMOJI_CHOICES;
   protected editingMessageId: string | null = null;
   protected editMessageText = '';
   protected isSavingEdit = false;

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
+import { Component, inject, input } from '@angular/core';
+import { Observable, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { CreateChannel } from './create-channel/create-channel';
@@ -23,21 +23,10 @@ export class Workspace {
   private readonly router = inject(Router);
   private readonly currentUser$ = toObservable(this.userService.currentUser);
 
-  private readonly activeChannelIdSubject = new BehaviorSubject<string | null>(null);
-  private readonly activeDmIdSubject = new BehaviorSubject<string | null>(null);
+  protected readonly activeChannelId = input<string | null>(null);
+  protected readonly activeDmId = input<string | null>(null);
 
-  @Input() set activeChannelId(value: string | null | undefined) {
-    this.activeChannelIdSubject.next(value ?? null);
-  }
-
-  @Input() set activeDmId(value: string | null | undefined) {
-    this.activeDmIdSubject.next(value ?? null);
-  }
-
-  @Output() channelSelected = new EventEmitter<void>();
-
-  protected readonly activeChannelId$ = this.activeChannelIdSubject.asObservable();
-  protected readonly activeDmId$ = this.activeDmIdSubject.asObservable();
+  protected readonly activeDmId$ = toObservable(this.activeDmId);
 
   protected readonly channelsWithUnread$: Observable<ChannelListItem[]> = combineLatest([
     this.firestoreService.getChannels(),
@@ -130,7 +119,6 @@ export class Workspace {
   protected selectChannel(channelId?: string | null): void {
     if (!channelId) return;
     void this.router.navigate(['/main/channels', channelId]);
-    this.channelSelected.emit();
 
     const currentUser = this.userService.currentUser();
     if (currentUser?.uid && channelId) {

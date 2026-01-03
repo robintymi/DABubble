@@ -78,6 +78,8 @@ export class ThreadService {
   }
 
   loadThread(channelId: string, messageId: string): void {
+    const current = this.threadSubject.value;
+    if (current && current.channelId === channelId && current.root.id === messageId) return;
     if (!channelId || !messageId) {
       this.reset();
       return;
@@ -85,14 +87,14 @@ export class ThreadService {
 
     const context: ThreadContext = {
       channelId,
-      channelTitle: '',
+      channelTitle: current?.channelId === channelId ? current.channelTitle : '',
       root: {
         id: messageId,
-        author: '',
-        avatar: 'imgs/users/placeholder.svg',
-        timestamp: '',
-        text: '',
-        isOwn: false,
+        author: current?.root.author ?? '',
+        avatar: current?.root.avatar ?? 'imgs/users/placeholder.svg',
+        timestamp: current?.root.timestamp ?? '',
+        text: current?.root.text ?? '',
+        isOwn: current?.root.isOwn ?? false,
       },
       replies: [],
     };

@@ -79,14 +79,6 @@ export class MainContent {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((route) => this.syncRouteState(route));
-
-    this.router.events
-      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))
-      .subscribe((event) => {
-        if (event.urlAfterRedirects.includes('undefined')) {
-          void this.router.navigate(['/main'], { replaceUrl: true });
-        }
-      });
   }
 
   protected showMobileBackButton(): boolean {
@@ -107,9 +99,7 @@ export class MainContent {
     }
 
     return (
-      (outlet.activatedRouteData?.['animation'] as string | undefined) ??
-      outlet.activatedRoute?.routeConfig?.path ??
-      ''
+      (outlet.activatedRouteData?.['animation'] as string | undefined) ?? outlet.activatedRoute?.routeConfig?.path ?? ''
     );
   }
 
@@ -126,6 +116,25 @@ export class MainContent {
     }
   }
 
+  /**
+   * Synchronisiert den lokalen UI-Zustand mit dem aktuellen Router-Zustand.
+   *
+   * Die Methode traversiert den `ActivatedRoute`-Baum entlang der `firstChild`-Kette (von der aktuellen Route aus)
+   * und leitet daraus eine Momentaufnahme für die UI ab:
+   *
+   * - Ermittelt die aktuell relevanten Routenparameter `channelId`, `dmId` und `threadId` aus den Snapshots.
+   * - Bestimmt die aktive Ansicht (`activeView`) anhand des `routeConfig.path` der gefundenen Route-Segmente.
+   * - Setzt bei fehlender Child-Route den Default-Zustand (`home`) und löscht alle IDs.
+   *
+   * Prioritätsregel:
+   * - Wenn eine `threadId` vorhanden ist, wird die Ansicht unabhängig von zuvor gefundenen Segmenten auf `thread` gesetzt.
+   *
+   * Hinweis:
+   * - Es wird ausschließlich die lineare `firstChild`-Kette ausgewertet. Parallele/named outlets oder Geschwister-Routen
+   *   werden von dieser Logik nicht berücksichtigt.
+   *
+   * @param route Root-Route der Komponente (typischerweise `this.route`), deren Child-Kette ausgewertet wird.
+   */
   private syncRouteState(route: ActivatedRoute): void {
     let current: ActivatedRoute | null = route.firstChild;
 

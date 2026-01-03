@@ -34,6 +34,11 @@ export class FilterBox implements OnInit, OnChanges {
     return this.userService.currentUser()?.uid ?? null;
   }
 
+  /**
+   * Returns the list of users sorted alphabetically by name,
+   * with the current user at the top of the list.
+   * Getter is used to ensure re-evaluation on each access.
+   * */
   get sortedUsers() {
     if (!this.users.length) return [];
 
