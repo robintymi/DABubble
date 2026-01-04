@@ -9,6 +9,7 @@ import {
   doc,
   docData,
   getDocs,
+  writeBatch,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -417,7 +418,57 @@ export class FirestoreService {
     if (!memberships.length) return;
     await Promise.all(memberships);
   }
+  async ensureDefaultChannelMembershipForAllUsers(): Promise<void> {
+    const channelIds = await this.ensureDefaultChannels();
+    if (!channelIds.size) return;
 
+    const usersCollection = collection(this.firestore, 'users');
+    const usersSnapshot = await getDocs(usersCollection);
+    if (usersSnapshot.empty) return;
+
+    const defaultChannelIds = FirestoreService.DEFAULT_CHANNELS.map((channel) =>
+      channel.title ? channelIds.get(channel.title) : undefined
+    ).filter((id): id is string => Boolean(id));
+    if (!defaultChannelIds.length) return;
+    let batch = writeBatch(this.firestore);
+    let operationCount = 0;
+
+    const commitBatch = async (): Promise<void> => {
+      if (!operationCount) return;
+      await batch.commit();
+      batch = writeBatch(this.firestore);
+      operationCount = 0;
+    };
+
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data() as AppUser;
+      const userId = userData.uid ?? userDoc.id;
+      if (!userId) continue;
+
+      const basePayload: Record<string, unknown> = {
+        id: userId,
+        name: userData.name ?? 'Unbekannter Nutzer',
+        avatar: userData.photoUrl ?? 'imgs/users/placeholder.svg',
+        addedAt: serverTimestamp(),
+      };
+
+      if (userData.email) {
+        basePayload['subtitle'] = userData.email;
+      }
+
+      for (const channelId of defaultChannelIds) {
+        const memberDoc = doc(this.firestore, `channels/${channelId}/members/${userId}`);
+        batch.set(memberDoc, basePayload, { merge: true });
+        operationCount += 1;
+
+        if (operationCount >= 450) {
+          await commitBatch();
+        }
+      }
+    }
+
+    await commitBatch();
+  }
 
 
   async updateChannel(channelId: string, payload: Partial<Pick<Channel, 'title' | 'description'>>): Promise<void> {
@@ -487,7 +538,7 @@ export class FirestoreService {
     });
   }
 
-   async leaveChannel(channelId: string, userId: string): Promise<void> {
+  async leaveChannel(channelId: string, userId: string): Promise<void> {
     const memberDoc = doc(this.firestore, `channels/${channelId}/members/${userId}`);
     await deleteDoc(memberDoc);
 

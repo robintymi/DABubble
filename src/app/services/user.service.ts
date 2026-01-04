@@ -80,6 +80,7 @@ export class UserService {
         updatedAt: serverTimestamp(),
       });
       await this.firestoreService.ensureDefaultChannelMembership(appUser);
+      await this.firestoreService.ensureDefaultChannelMembershipForAllUsers();
     });
   }
 
@@ -102,6 +103,7 @@ export class UserService {
 
     await setDoc(userRef, newUser);
     await this.firestoreService.ensureDefaultChannelMembership(newUser);
+    await this.firestoreService.ensureDefaultChannelMembershipForAllUsers();
   }
 
   /**
