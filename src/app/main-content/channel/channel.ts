@@ -459,7 +459,8 @@ export class ChannelComponent {
 
       this.overlayService.open(ChannelDescription, {
         target: target ?? undefined,
-        offsetY: 8,
+        offsetX: -150,
+        offsetY: -8,
         data: {
           channelId: resolvedChannel.id,
           title: resolvedChannel.title ?? this.channelDefaults.name,
