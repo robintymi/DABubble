@@ -1,5 +1,6 @@
 .add-to-channel {
   width: 420px;
+  width:100%;
   background: #ffffff;
   border-bottom-left-radius: 18px;
   border-bottom-right-radius: 18px;
@@ -170,6 +171,30 @@
   padding: 14px;
   color: #475569;
   font-size: 14px;
+}
+
+.add-to-channel__dropdown-actions {
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: flex-end;
+  background: #ffffff;
+  position: sticky;
+  bottom: 0;
+}
+
+.add-to-channel__dropdown-confirm {
+  border: none;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.add-to-channel__dropdown-confirm:hover {
+  background: #e2e8f0;
 }
 
 .add-to-channel__chips {

@@ -133,8 +133,42 @@ export class OverlayRef<T extends object = any> {
     const rect = this.config.target.getBoundingClientRect();
     const offsetX = this.config.offsetX ?? 0;
     const offsetY = this.config.offsetY ?? 0;
-    this.overlayContainer.style.left = rect.left + offsetX + 'px';
-    this.overlayContainer.style.top = rect.bottom + offsetY + 'px';
+    // this.overlayContainer.style.left = rect.left + offsetX + 'px';
+    // this.overlayContainer.style.top = rect.bottom + offsetY + 'px';
+    const margin = 12;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const maxWidth = Math.max(0, viewportWidth - margin * 2);
+    const maxHeight = Math.max(0, viewportHeight - margin * 2);
+
+    this.overlayContainer.style.maxWidth = `${maxWidth}px`;
+    this.overlayContainer.style.maxHeight = `${maxHeight}px`;
+    this.overlayContainer.style.overflowY = 'auto';
+    this.overlayContainer.style.overflowX = 'hidden';
+    const overlayWidth = this.overlayContainer.offsetWidth;
+    const overlayHeight = this.overlayContainer.offsetHeight;
+    let left = rect.left + offsetX;
+    let top = rect.bottom + offsetY;
+
+    if (left + overlayWidth > viewportWidth - margin) {
+      left = viewportWidth - overlayWidth - margin;
+    }
+
+    if (left < margin) {
+      left = margin;
+    }
+
+    if (top + overlayHeight > viewportHeight - margin) {
+      top = rect.top - overlayHeight - offsetY;
+    }
+
+    if (top < margin) {
+      top = margin;
+    }
+
+    this.overlayContainer.style.left = `${left}px`;
+    this.overlayContainer.style.top = `${top}px`;
   }
 
   /**
