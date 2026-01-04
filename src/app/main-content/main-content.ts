@@ -8,6 +8,7 @@ import { filter, map, startWith } from 'rxjs';
 import { Workspace } from './workspace/workspace';
 import { Navbar } from './navbar/navbar';
 import { ScreenService } from '../services/screen.service';
+import { ThreadCloseService } from '../services/thread-close.service';
 
 @Component({
   selector: 'app-main-content',
@@ -59,6 +60,7 @@ export class MainContent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly screenService = inject(ScreenService);
+  private readonly threadCloseService = inject(ThreadCloseService);
 
   protected readonly isTabletScreen = this.screenService.isTabletScreen;
   protected readonly activeChannelId = signal<string | null>(null);
@@ -87,9 +89,13 @@ export class MainContent {
   }
 
   protected navigateUp(): void {
+    if (this.activeView() === 'thread') {
+      this.threadCloseService.requestClose();
+      return;
+    }
+
     const target = this.mobileBackTarget();
     if (!target) return;
-
     void this.router.navigateByUrl(target);
   }
 

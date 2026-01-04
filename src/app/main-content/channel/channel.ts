@@ -2,7 +2,7 @@ import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { Observable, combineLatest, from, map, of, shareReplay, switchMap, take, tap } from 'rxjs';
 import {
@@ -18,6 +18,7 @@ import { AppUser, UserService } from '../../services/user.service';
 import { ChannelMembers } from './channel-members/channel-members';
 import { AddToChannel } from './add-to-channel/add-to-channel';
 import { ThreadService } from '../../services/thread.service';
+import { ThreadCloseService } from '../../services/thread-close.service';
 import { ScreenService } from '../../services/screen.service';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { EMOJI_CHOICES } from '../../texts';
@@ -60,6 +61,7 @@ export class ChannelComponent {
   private readonly overlayService = inject(OverlayService);
   private readonly userService = inject(UserService);
   private readonly threadService = inject(ThreadService);
+  private readonly threadCloseService = inject(ThreadCloseService);
   private readonly screenService = inject(ScreenService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
@@ -97,7 +99,7 @@ export class ChannelComponent {
   );
 
   private readonly channels$ = this.currentUser$.pipe(
-    switchMap((user) => (user ? this.firestoreService.getChannelsForUser(user.uid) : of([]))),
+    switchMap((user) => (user ? this.firestoreService.getChannelsForUser(user.uid) : of(null))),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -123,13 +125,14 @@ export class ChannelComponent {
         void this.router.navigate(['/main']);
         return;
       }
+      if (!channels) return;
 
       const channelExists = channels.some((channel) => channel.id === channelId);
       if (!channelExists) {
         void this.router.navigate(['/main']);
       }
     }),
-    map(([_, channelId, channels]) => channels.find((c) => c.id === channelId)),
+    map(([_, channelId, channels]) => (channels ? channels.find((c) => c.id === channelId) : undefined)),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -148,11 +151,17 @@ export class ChannelComponent {
   protected editMessageText = '';
   protected isSavingEdit = false;
   private channelMessages?: ElementRef<HTMLElement>;
+  private threadSidenav?: MatSidenav;
 
   @ViewChild('channelMessages')
   set channelMessagesRef(ref: ElementRef<HTMLElement> | undefined) {
     this.channelMessages = ref;
     this.scrollToBottom();
+  }
+
+  @ViewChild('threadSidenav')
+  set threadSidenavRef(ref: MatSidenav | undefined) {
+    this.threadSidenav = ref;
   }
 
   protected readonly members$: Observable<ChannelMemberView[]> = this.channel$.pipe(
@@ -236,10 +245,19 @@ export class ChannelComponent {
       )
       .subscribe();
 
+    this.threadCloseService.closeRequests$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (!this.hasThreadChild()) return;
+      if (this.threadSidenav) {
+        void this.threadSidenav.close();
+      } else {
+        this.closeThread();
+      }
+    });
+
     this.syncChildRouteState();
   }
 
-  protected closeThreadFromSidenav(): void {
+  closeThread(): void {
     if (!this.hasThreadChild()) return;
 
     const channelId = this.route.snapshot.paramMap.get('channelId');

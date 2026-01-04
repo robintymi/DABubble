@@ -210,12 +210,13 @@
   </mat-sidenav-content>
 
   <mat-sidenav
+    #threadSidenav
     class="channel-layout__thread"
     position="end"
     [mode]="isTabletScreen() ? 'over' : 'side'"
     [opened]="hasThreadChild()"
     [disableClose]="!isTabletScreen()"
-    (closedStart)="closeThreadFromSidenav()">
+    (closed)="closeThread()">
     <router-outlet></router-outlet>
   </mat-sidenav>
 </mat-sidenav-container>
