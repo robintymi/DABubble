@@ -62,11 +62,11 @@
       </div>
       <ng-container *ngIf="!areChannelsCollapsed">
         <ul class="workspace__list" id="workspace-channels">
-          <li *ngFor="let channel of channelsWithUnread$ | async">
+          <li *ngFor="let channel of channelsWithUnread$ | async; trackBy: trackChannel">
             <button
               class="workspace__list-item"
               type="button"
-              [class.workspace__list-item--active]="(selectedChannelId$ | async) === channel.id"
+              [class.workspace__list-item--active]="activeChannelId() === channel.id"
               [class.workspace__list-item--unread]="channel.unreadCount > 0"
               (click)="selectChannel(channel.id)">
               <span class="workspace__hash">#</span>
@@ -121,11 +121,11 @@
         class="workspace__list workspace__list--direct"
         id="workspace-direct-messages">
         <ng-container *ngIf="directMessageUsers$ | async as users">
-          <li *ngFor="let user of users">
+          <li *ngFor="let user of users; trackBy: trackDirectUser">
             <button
               type="button"
               class="workspace__list-item workspace__list-item--direct"
-              [class.workspace__list-item--active]="(selectedDirectMessageUser$ | async)?.uid === user.uid"
+              [class.workspace__list-item--active]="activeDmId() === user.uid"
               [class.workspace__list-item--unread]="user.unreadCount > 0"
               (click)="openDirectMessage(user)">
               <div class="relative">

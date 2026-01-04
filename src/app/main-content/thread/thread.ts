@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { Observable } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable, combineLatest, map, shareReplay } from 'rxjs';
 import { ThreadContext, ThreadService } from '../../services/thread.service';
 import { UserService } from '../../services/user.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
+import { EMOJI_CHOICES } from '../../texts';
 
 @Component({
   selector: 'app-thread',
@@ -19,22 +20,37 @@ export class Thread {
   private readonly threadService = inject(ThreadService);
   private readonly userService = inject(UserService);
   private readonly destroyRef = inject(DestroyRef);
-  protected readonly thread$: Observable<ThreadContext | null> =
-    this.threadService.thread$;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  protected readonly thread$: Observable<ThreadContext | null> = this.threadService.thread$;
+
+  private readonly channelId$: Observable<string | null> = this.route.parent!.paramMap.pipe(
+    map((params) => params.get('channelId')),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+
+  private readonly threadId$: Observable<string | null> = this.route.paramMap.pipe(
+    map((params) => params.get('threadId')),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+
   @ViewChild('replyTextarea') replyTextarea?: ElementRef<HTMLTextAreaElement>;
+
   private threadScrollArea?: ElementRef<HTMLElement>;
+
   @ViewChild('threadScrollArea')
   set threadScrollAreaRef(ref: ElementRef<HTMLElement> | undefined) {
     this.threadScrollArea = ref;
     this.scrollToBottom();
   }
+
   protected messageReactions: Record<string, string> = {};
   protected openEmojiPickerFor: string | null = null;
-  protected readonly emojiChoices = ['😀', '😄', '😍', '🎉', '🤔', '👏'];
+  protected readonly emojiChoices = EMOJI_CHOICES;
   protected editingMessageId: string | null = null;
   protected editMessageText = '';
   protected isSavingEdit = false;
-
 
   protected get currentUser() {
     const user = this.userService.currentUser();
@@ -44,16 +60,33 @@ export class Thread {
       avatar: user?.photoUrl ?? 'imgs/default-profile-picture.png',
     };
   }
+
   protected draftReply = '';
 
   constructor() {
-    this.thread$
+    combineLatest([this.channelId$, this.threadId$])
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.scrollToBottom());
+      .subscribe(([channelId, threadId]) => {
+        if (channelId && threadId) {
+          this.threadService.loadThread(channelId, threadId);
+        } else {
+          this.threadService.reset();
+        }
+      });
+
+    this.thread$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.scrollToBottom());
   }
 
-  protected closeThread(): void {
+  protected async closeThread(): Promise<void> {
+    const channelId =
+      this.route.parent?.snapshot.paramMap.get('channelId') ?? this.route.snapshot.paramMap.get('channelId');
     this.threadService.reset();
+
+    if (channelId) {
+      await this.router.navigate(['/main/channels', channelId]);
+    } else {
+      await this.router.navigate(['/main']);
+    }
   }
 
   protected async sendReply(): Promise<void> {
@@ -72,7 +105,6 @@ export class Thread {
     } catch (error) {
       console.error('Reply konnte nicht gespeichert werden', error);
     }
-
   }
 
   protected onReplyKeydown(event: Event): void {
@@ -84,6 +116,7 @@ export class Thread {
 
   react(messageId: string | undefined, reaction: string): void {
     if (!messageId) return;
+
     if (this.messageReactions[messageId] === reaction) {
       const { [messageId]: _removed, ...rest } = this.messageReactions;
       this.messageReactions = rest;
@@ -93,14 +126,14 @@ export class Thread {
         [messageId]: reaction,
       };
     }
+
     this.openEmojiPickerFor = null;
   }
 
   toggleEmojiPicker(messageId: string | undefined): void {
     if (!messageId) return;
 
-    this.openEmojiPickerFor =
-      this.openEmojiPickerFor === messageId ? null : messageId;
+    this.openEmojiPickerFor = this.openEmojiPickerFor === messageId ? null : messageId;
   }
 
   protected focusComposer(): void {
@@ -144,7 +177,6 @@ export class Thread {
   private scrollToBottom(): void {
     const element = this.threadScrollArea?.nativeElement;
     if (!element) return;
-
     requestAnimationFrame(() => {
       element.scrollTop = element.scrollHeight;
     });

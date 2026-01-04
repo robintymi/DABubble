@@ -1,16 +1,29 @@
-import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, combineLatest, map, of, switchMap, tap, filter, distinctUntilChanged } from 'rxjs';
+import {
+  Observable,
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  filter,
+  from,
+  map,
+  of,
+  shareReplay,
+  switchMap,
+  tap,
+} from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FirestoreService } from '../../services/firestore.service';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { AppUser, UserService } from '../../services/user.service';
-import { DirectMessageSelectionService } from '../../services/direct-message-selection.service';
 import { DirectMessageEntry } from '../../services/firestore.service';
 import { Timestamp } from '@angular/fire/firestore';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MemberDialog } from '../member-dialog/member-dialog';
+import { EMOJI_CHOICES } from '../../texts';
 
 type MessageBubble = {
   id?: string;
@@ -20,6 +33,7 @@ type MessageBubble = {
   timestamp: Timestamp | undefined;
   isOwn?: boolean;
 };
+
 @Component({
   selector: 'app-messages',
   standalone: true,
@@ -31,16 +45,24 @@ export class Messages {
   private readonly firestoreService = inject(FirestoreService);
   private readonly userService = inject(UserService);
   private readonly dialog = inject(MatDialog);
-  private readonly directMessageSelectionService = inject(
-    DirectMessageSelectionService
-  );
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly selectedRecipient$ =
-    this.directMessageSelectionService.selectedUser$;
   private readonly currentUser$ = toObservable(this.userService.currentUser);
 
-  protected readonly messages$ = combineLatest([
+  private readonly dmUserId$ = this.route.paramMap.pipe(
+    map((params) => params.get('dmId')),
+    distinctUntilChanged(),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+
+  private readonly recipientSignal = signal<AppUser | null>(null);
+  private readonly recipientCache = new Map<string, AppUser | null>();
+
+  protected readonly selectedRecipient$: Observable<AppUser | null> = toObservable(this.recipientSignal);
+
+  private readonly rawMessages$: Observable<MessageBubble[]> = combineLatest([
     this.currentUser$,
     this.selectedRecipient$,
   ]).pipe(
@@ -51,14 +73,12 @@ export class Messages {
 
       return this.firestoreService
         .getDirectConversationMessages(currentUser.uid, recipient.uid)
-        .pipe(
-          map((messages) =>
-            messages.map((message) => this.mapMessage(message, currentUser))
-          )
-        );
+        .pipe(map((messages) => messages.map((message) => this.mapMessage(message, currentUser))));
     }),
-    tap(() => this.scrollToBottom())
+    shareReplay({ bufferSize: 1, refCount: true })
   );
+
+  protected readonly messages$ = this.rawMessages$.pipe(tap(() => this.scrollToBottom()));
 
   protected selectedRecipient: AppUser | null = null;
   protected currentUser: AppUser | null = null;
@@ -67,7 +87,7 @@ export class Messages {
   protected isSending = false;
   protected messageReactions: Record<string, string> = {};
   protected openEmojiPickerFor: string | null = null;
-  protected readonly emojiChoices = ['😀', '😄', '😍', '🎉', '🤔', '👏'];
+  protected readonly emojiChoices = EMOJI_CHOICES;
   protected editingMessageId: string | null = null;
   protected editMessageText = '';
   protected isSavingEdit = false;
@@ -80,30 +100,74 @@ export class Messages {
   }
 
   constructor() {
-    this.currentUser$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((user) => (this.currentUser = user));
+    this.currentUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user) => (this.currentUser = user));
+
+    this.dmUserId$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap((dmId) => {
+          if (!dmId) {
+            return of({ dmId: null as string | null, recipient: null as AppUser | null });
+          }
+
+          if (this.recipientCache.has(dmId)) {
+            return of({ dmId, recipient: this.recipientCache.get(dmId) ?? null });
+          }
+
+          return from(this.userService.getUserOnce(dmId)).pipe(
+            map((recipient) => ({ dmId, recipient })),
+            catchError(() => of({ dmId, recipient: null }))
+          );
+        })
+      )
+      .subscribe(({ dmId, recipient }) => {
+        if (dmId) {
+          this.recipientCache.set(dmId, recipient);
+        }
+        this.recipientSignal.set(recipient);
+      });
 
     this.selectedRecipient$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((recipient) => (this.selectedRecipient = recipient));
-    combineLatest([this.currentUser$, this.selectedRecipient$])
+
+    combineLatest([this.currentUser$, this.dmUserId$])
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        filter(
-          ([currentUser, recipient]) => !!currentUser && !!recipient
-        ),
-        distinctUntilChanged(
-          ([u1, r1], [u2, r2]) =>
-            u1?.uid === u2?.uid && r1?.uid === r2?.uid
+        filter(([currentUser, dmId]) => !!currentUser && !!dmId),
+        distinctUntilChanged(([u1, d1], [u2, d2]) => u1?.uid === u2?.uid && d1 === d2),
+        switchMap(([currentUser, dmId]) =>
+          from(this.firestoreService.updateDirectMessageReadStatus(currentUser!.uid, dmId!)).pipe(
+            catchError(() => of(null))
+          )
         )
       )
-      .subscribe(([currentUser, recipient]) => {
-        this.firestoreService.updateDirectMessageReadStatus(
-          currentUser!.uid,
-          recipient!.uid
-        );
-      });
+      .subscribe();
+
+    combineLatest([this.currentUser$, this.dmUserId$, this.rawMessages$])
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter(([currentUser, dmId]) => !!currentUser && !!dmId),
+        map(([currentUser, dmId, messages]) => {
+          const lastMessage = messages.length ? messages[messages.length - 1] : null;
+          const lastMessageMillis = lastMessage?.timestamp?.toMillis?.() ?? null;
+          return { currentUser, dmId, lastMessage, lastMessageMillis };
+        }),
+        distinctUntilChanged(
+          (a, b) =>
+            a.currentUser?.uid === b.currentUser?.uid &&
+            a.dmId === b.dmId &&
+            a.lastMessageMillis === b.lastMessageMillis &&
+            a.lastMessage?.isOwn === b.lastMessage?.isOwn
+        ),
+        filter((state) => !!state.lastMessage && state.lastMessage!.isOwn === false),
+        switchMap((state) =>
+          from(this.firestoreService.updateDirectMessageReadStatus(state.currentUser!.uid, state.dmId!)).pipe(
+            catchError(() => of(null))
+          )
+        )
+      )
+      .subscribe();
   }
 
   protected sendMessage(): void {
@@ -135,9 +199,7 @@ export class Messages {
     this.sendMessage();
   }
 
-
   protected openRecipientProfile(recipient: AppUser): void {
-
     if (this.currentUser?.uid === recipient.uid) {
       return;
     }
@@ -172,10 +234,7 @@ export class Messages {
     }).format(date);
   }
 
-  protected shouldShowDateDivider(
-    messages: MessageBubble[],
-    index: number
-  ): boolean {
+  protected shouldShowDateDivider(messages: MessageBubble[], index: number): boolean {
     const current = messages[index];
     if (!current?.timestamp) return false;
     if (index === 0) return true;
@@ -183,19 +242,14 @@ export class Messages {
     const previous = messages[index - 1];
     if (!previous?.timestamp) return true;
 
-    return (
-      this.getDateKey(current.timestamp) !==
-      this.getDateKey(previous.timestamp)
-    );
+    return this.getDateKey(current.timestamp) !== this.getDateKey(previous.timestamp);
   }
-  private mapMessage(
-    message: DirectMessageEntry,
-    currentUser: AppUser
-  ): MessageBubble {
+
+  private mapMessage(message: DirectMessageEntry, currentUser: AppUser): MessageBubble {
     const isOwn = message.authorId === currentUser.uid;
     return {
       id: message.id,
-      author: isOwn ? 'Du' : message.authorName ?? 'Unbekannter Nutzer',
+      author: isOwn ? 'Du' : (message.authorName ?? 'Unbekannter Nutzer'),
       avatar: message.authorAvatar ?? 'imgs/default-profile-picture.png',
       content: message.text ?? '',
       timestamp: message.createdAt,
@@ -235,12 +289,7 @@ export class Messages {
 
     this.isSavingEdit = true;
     this.firestoreService
-      .updateDirectMessage(
-        this.currentUser.uid,
-        this.selectedRecipient.uid,
-        messageId,
-        { text: trimmed }
-      )
+      .updateDirectMessage(this.currentUser.uid, this.selectedRecipient.uid, messageId, { text: trimmed })
       .finally(() => {
         this.isSavingEdit = false;
         this.cancelEditing();
@@ -250,8 +299,7 @@ export class Messages {
   toggleEmojiPicker(messageId: string | undefined): void {
     if (!messageId) return;
 
-    this.openEmojiPickerFor =
-      this.openEmojiPickerFor === messageId ? null : messageId;
+    this.openEmojiPickerFor = this.openEmojiPickerFor === messageId ? null : messageId;
   }
 
   private scrollToBottom(): void {
