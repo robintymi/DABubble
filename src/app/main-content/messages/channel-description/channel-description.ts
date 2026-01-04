@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { OverlayService } from '../../../services/overlay.service';
 import { FormsModule } from '@angular/forms';
 import { FirestoreService } from '../../../services/firestore.service';
+import { UserService } from '../../../services/user.service';
 
 @Component({
   selector: 'app-channel-description',
@@ -13,6 +14,7 @@ import { FirestoreService } from '../../../services/firestore.service';
 export class ChannelDescription implements OnChanges, OnInit {
   private readonly overlayService = inject(OverlayService);
   private readonly firestoreService = inject(FirestoreService);
+  private readonly userService = inject(UserService);
 
   @Input() channelId?: string;
   @Input() title = '';
@@ -28,6 +30,7 @@ export class ChannelDescription implements OnChanges, OnInit {
   protected isEditingDescription = false;
   protected isSavingTitle = false;
   protected isSavingDescription = false;
+  protected isLeaving = false;
   protected errorMessage = '';
 
   ngOnInit(): void {
@@ -112,6 +115,31 @@ export class ChannelDescription implements OnChanges, OnInit {
       this.errorMessage = 'Channel-Änderungen konnten nicht gespeichert werden.';
     } finally {
       this.isSavingDescription = false;
+    }
+  }
+
+  protected async leaveChannel(): Promise<void> {
+    if (!this.channelId || this.isLeaving) {
+      return;
+    }
+
+    const currentUser = this.userService.currentUser();
+    if (!currentUser?.uid) {
+      this.errorMessage = 'Kein eingeloggter Nutzer gefunden.';
+      return;
+    }
+
+    this.isLeaving = true;
+    this.errorMessage = '';
+
+    try {
+      await this.firestoreService.leaveChannel(this.channelId, currentUser.uid);
+      this.closeOverlay();
+    } catch (error) {
+      console.error('Fehler beim Verlassen des Channels', error);
+      this.errorMessage = 'Channel konnte nicht verlassen werden.';
+    } finally {
+      this.isLeaving = false;
     }
   }
   private syncEditableFields(): void {

@@ -73,11 +73,13 @@ export class UserService {
         return;
       }
 
+      const appUser = snap.data() as AppUser;
       await updateDoc(userRef, {
         onlineStatus: true,
         lastSeen: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      await this.firestoreService.ensureDefaultChannelMembership(appUser);
     });
   }
 
@@ -98,7 +100,8 @@ export class UserService {
       lastSeen: serverTimestamp(),
     };
 
-    return setDoc(userRef, newUser);
+    await setDoc(userRef, newUser);
+    await this.firestoreService.ensureDefaultChannelMembership(newUser);
   }
 
   /**
@@ -143,7 +146,7 @@ export class UserService {
         onlineStatus: false,
         lastSeen: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     this.currentUser.set(null);
@@ -192,17 +195,26 @@ export class UserService {
     });
   }
 
+
   /**
    * Since Google Login registers a user, if not already present, we must ensure creation of user object in firestore
    */
   async ensureUserDocumentForCurrentUser(credential: UserCredential): Promise<void> {
     const firebaseUser = credential.user;
-    if (!firebaseUser || firebaseUser.isAnonymous) {
+    if (!firebaseUser) {
       return;
     }
 
     const existingAppUser = await this.getUserOnce(firebaseUser.uid);
     if (existingAppUser) {
+      await this.firestoreService.ensureDefaultChannelMembership(existingAppUser);
+      return;
+    }
+    if (firebaseUser.isAnonymous) {
+      await this.createUserDocument(firebaseUser, {
+        name: 'Gast',
+        photoUrl: PROFILE_PICTURE_URLS.default,
+      });
       return;
     }
 

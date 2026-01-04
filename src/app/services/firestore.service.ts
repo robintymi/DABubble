@@ -5,6 +5,7 @@ import {
   addDoc,
   collection,
   collectionData,
+  deleteDoc,
   doc,
   docData,
   getDocs,
@@ -364,55 +365,60 @@ export class FirestoreService {
 
     snapshot.forEach((docSnap) => {
       const data = docSnap.data() as Channel;
-      if (data.title) {
-        existingByTitle.set(data.title, docSnap.id);
-      }
+      if (data.title) existingByTitle.set(data.title, docSnap.id);
     });
 
-    const channelIds = new Map(existingByTitle)
-    for (const channel of FirestoreService.DEFAULT_CHANNELS) {
-      if (channel.title && channelIds.has(channel.title)) {
-        continue;
-      }
+    const channelIds = new Map(existingByTitle);
 
-      const newChannel = await addDoc(channelsCollection, {
-        title: channel.title?.trim(),
-        description: channel.description?.trim(),
+    for (const channel of FirestoreService.DEFAULT_CHANNELS) {
+      const title = channel.title?.trim();
+      if (!title) continue;
+
+      if (channelIds.has(title)) continue;
+
+      // ✅ Payload ohne undefined bauen
+      const payload: Record<string, unknown> = {
+        title,
         createdAt: serverTimestamp(),
         isDefault: true,
-      });
+      };
 
-      if (channel.title) {
-        channelIds.set(channel.title, newChannel.id);
-      }
+      const description = channel.description?.trim();
+      if (description) payload['description'] = description;
+
+      const newChannel = await addDoc(channelsCollection, payload);
+      channelIds.set(title, newChannel.id);
     }
 
     return channelIds;
   }
-
   async ensureDefaultChannelMembership(user: AppUser): Promise<void> {
     const channelIds = await this.ensureDefaultChannels();
 
     const memberships = FirestoreService.DEFAULT_CHANNELS.map((channel) => {
       const channelId = channel.title ? channelIds.get(channel.title) : undefined;
-      if (!channelId) {
-        return undefined;
-      }
+      if (!channelId) return undefined;
 
-      return this.upsertChannelMember(channelId, {
+      // ✅ payload ohne subtitle bauen
+      const memberPayload: Pick<ChannelMember, 'id' | 'name' | 'avatar' | 'subtitle'> = {
         id: user.uid,
         name: user.name,
         avatar: user.photoUrl,
-        subtitle: user.email ?? undefined,
-      });
-    }).filter((promise): promise is Promise<void> => Boolean(promise));
+      };
 
-    if (!memberships.length) {
-      return;
-    }
+      // ✅ subtitle nur setzen, wenn email wirklich ein string ist
+      if (user.email) {
+        memberPayload.subtitle = user.email;
+      }
 
+      return this.upsertChannelMember(channelId, memberPayload);
+    }).filter((p): p is Promise<void> => Boolean(p));
+
+    if (!memberships.length) return;
     await Promise.all(memberships);
   }
+
+
 
   async updateChannel(channelId: string, payload: Partial<Pick<Channel, 'title' | 'description'>>): Promise<void> {
     const updates: Record<string, unknown> = {};
@@ -462,16 +468,36 @@ export class FirestoreService {
     channelId: string,
     member: Pick<ChannelMember, 'id' | 'name' | 'avatar' | 'subtitle'>
   ): Promise<void> {
-    const memberDoc = doc(this.firestore, `channels/${channelId}/members/${member.id}`);
+    return runInInjectionContext(this.injector, async () => {
+      const memberDoc = doc(this.firestore, `channels/${channelId}/members/${member.id}`);
 
-    await setDoc(
-      memberDoc,
-      {
-        ...member,
+      // ✅ payload bauen ohne undefined
+      const payload: Record<string, unknown> = {
+        id: member.id,
+        name: member.name,
+        avatar: member.avatar,
         addedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+      };
+
+      if (member.subtitle) {
+        payload['subtitle'] = member.subtitle;
+      }
+
+      await setDoc(memberDoc, payload, { merge: true });
+    });
+  }
+
+   async leaveChannel(channelId: string, userId: string): Promise<void> {
+    const memberDoc = doc(this.firestore, `channels/${channelId}/members/${userId}`);
+    await deleteDoc(memberDoc);
+
+    const membersCollection = collection(this.firestore, `channels/${channelId}/members`);
+    const remainingMembers = await getDocs(membersCollection);
+
+    if (remainingMembers.empty) {
+      const channelDoc = doc(this.firestore, `channels/${channelId}`);
+      await deleteDoc(channelDoc);
+    }
   }
 
   getThreadReplies(channelId: string, messageId: string): Observable<ThreadReply[]> {

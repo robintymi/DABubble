@@ -78,6 +78,6 @@
   </div>
 
   <div class="channel-description__actions">
-    <button type="button" class="channel-description__secondary" (click)="closeOverlay()">Channel verlassen</button>
+    <button type="button" class="channel-description__secondary" (click)="leaveChannel()" [disabled]="isLeaving || !channelId">Channel verlassen</button>
   </div>
 </section>

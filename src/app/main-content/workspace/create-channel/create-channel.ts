@@ -54,13 +54,18 @@ export class CreateChannel {
         });
       }
       form.resetForm();
-      this.closeOverlay();
+      this.forceCloseOverlay();
     }
 
     finally {
       this.isSubmitting = false;
     }
   }
+
+  protected forceCloseOverlay(): void {
+  this.close.emit();
+}
+
 }
 
 
