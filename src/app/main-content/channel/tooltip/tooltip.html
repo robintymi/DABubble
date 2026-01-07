@@ -1,7 +1,8 @@
 <div class="reaction-tooltip">
   <div class="reaction-tooltip__emoji">{{ emoji }}</div>
 
-  <ul class="reaction-tooltip__users">
+  <ul class="reaction-tooltip__users"
+  [class.reaction-tooltip__users--single]="users.length === 1">
     <li>
       <ng-container *ngFor="let user of users; let i = index; let last = last">
         <ng-container *ngIf="i > 0">
