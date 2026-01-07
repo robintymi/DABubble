@@ -21,6 +21,7 @@ import {
   arrayRemove,
   deleteField,
   runTransaction,
+  collectionGroup,
 } from '@angular/fire/firestore';
 import { Observable, catchError, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
 import type { AppUser } from './user.service';
@@ -775,5 +776,36 @@ export class FirestoreService {
         updatedAt: serverTimestamp(),
       });
     });
+  }
+
+  async deleteAllMessagesByAuthor(userId: string): Promise<void> {
+    const db = this.firestore;
+
+    try {
+      const channelsSnap = await getDocs(collection(db, 'channels'));
+
+      for (const channel of channelsSnap.docs) {
+        const messagesSnap = await getDocs(
+          query(collection(db, `channels/${channel.id}/messages`), where('authorId', '==', userId))
+        );
+
+        for (const message of messagesSnap.docs) {
+          const threadsSnap = await getDocs(collection(message.ref, 'threads'));
+          for (const reply of threadsSnap.docs) {
+            await deleteDoc(reply.ref);
+          }
+
+          await deleteDoc(message.ref);
+        }
+      }
+
+      const dmMessagesSnap = await getDocs(query(collectionGroup(db, 'messages'), where('authorId', '==', userId)));
+
+      for (const dm of dmMessagesSnap.docs) {
+        await deleteDoc(dm.ref);
+      }
+    } catch (error) {
+      console.error('deleteAllMessagesByAuthor failed', error);
+    }
   }
 }

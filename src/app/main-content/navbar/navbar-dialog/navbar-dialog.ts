@@ -1,11 +1,11 @@
 import { Component, ElementRef, EventEmitter, inject, Output, ViewChild } from '@angular/core';
 import { OverlayService } from '../../../services/overlay.service';
 import { ProfileMenu } from '../profile-menu/profile-menu';
-import { AuthService } from '../../../services/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { BrandStateService } from '../../../services/brand-state.service';
 import { RouterModule } from '@angular/router';
+import { UserService } from '../../../services/user.service';
 
 @Component({
   selector: 'app-navbar-dialog',
@@ -42,7 +42,7 @@ export class NavbarDialog {
   activeItem: 'profile' | 'logout' | null = null;
 
   constructor(
-    private authService: AuthService,
+    private userService: UserService,
     private overlayService: OverlayService,
     public brandState: BrandStateService
   ) {}
@@ -94,8 +94,8 @@ export class NavbarDialog {
     }
   }
 
-  logOut() {
-    this.authService.signOut();
+  async logOut() {
+    this.userService.logout();
     this.startCloseAnimation();
     this.brandState.resetSplash();
   }

@@ -4,6 +4,7 @@ import {
   Firestore,
   collection,
   collectionData,
+  deleteDoc,
   doc,
   docData,
   getDoc,
@@ -18,6 +19,7 @@ import { PROFILE_PICTURE_URLS } from '../auth/set-profile-picture/set-profile-pi
 import { FirestoreService } from './firestore.service';
 import { AuthService } from './auth.service';
 import { TEXTS } from '../texts';
+import { Router } from '@angular/router';
 
 export interface AppUser {
   uid: string;
@@ -29,6 +31,7 @@ export interface AppUser {
   updatedAt?: unknown;
   createdAt?: unknown;
   role?: 'admin' | 'user';
+  isGuest?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,6 +39,7 @@ export class UserService {
   private readonly injector = inject(EnvironmentInjector);
   private authService = inject(AuthService);
   private firestore = inject(Firestore);
+  private router = inject(Router);
   private firestoreService = inject(FirestoreService);
   private userDocSubscription?: Subscription;
   private allUsers$?: Observable<AppUser[]>;
@@ -55,6 +59,7 @@ export class UserService {
   private async handleAuthStateChange(firebaseUser: FirebaseUser | null): Promise<void> {
     if (!firebaseUser) {
       await this.handleSignOutState();
+      await this.router.navigate(['/login']);
       return;
     }
 
@@ -95,6 +100,7 @@ export class UserService {
       name: data.name || TEXTS.NEW_USER,
       photoUrl: data.photoUrl || PROFILE_PICTURE_URLS.default,
       onlineStatus: true,
+      isGuest: data.isGuest ?? false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastSeen: serverTimestamp(),
@@ -137,7 +143,7 @@ export class UserService {
     const prevUser = this.currentUser();
     this.unsubscribeFromUserDocument();
 
-    if (prevUser) {
+    if (prevUser && !prevUser.isGuest) {
       await updateDoc(doc(this.firestore, `users/${prevUser.uid}`), {
         onlineStatus: false,
         lastSeen: serverTimestamp(),
@@ -257,6 +263,7 @@ export class UserService {
       await this.createUserDocument(firebaseUser, {
         name: 'Gast',
         photoUrl: PROFILE_PICTURE_URLS.default,
+        isGuest: true,
       });
       return;
     }
@@ -270,5 +277,35 @@ export class UserService {
       name,
       photoUrl,
     });
+  }
+
+  async signOutGuest(): Promise<void> {
+    const user = this.currentUser();
+    const firebaseUser = this.authService.auth.currentUser;
+
+    if (!user || !firebaseUser) return;
+    if (!user.isGuest || !firebaseUser.isAnonymous) return;
+
+    await this.authService.signOut();
+
+    queueMicrotask(async () => {
+      try {
+        await this.firestoreService.deleteAllMessagesByAuthor(user.uid);
+        await deleteDoc(doc(this.firestore, `users/${user.uid}`));
+        await firebaseUser.delete();
+      } catch (err) {
+        console.error('Guest background cleanup failed', err);
+      }
+    });
+  }
+
+  async logout(): Promise<void> {
+    const user = this.currentUser();
+
+    if (user?.isGuest) {
+      await this.signOutGuest();
+    } else {
+      await this.authService.signOut();
+    }
   }
 }
