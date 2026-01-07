@@ -144,14 +144,13 @@
 
                     <ng-container *ngIf="message.id as messageId">
                       <div
-                        class="channel__message-reactions"
                         *ngIf="message.reactions && (message.reactions | keyvalue).length">
                         <button
                           type="button"
                           class="channel__reaction"
                           *ngFor="let r of message.reactions | keyvalue"
                           (click)="react(message, r.key)"
-                          [class.channel__reaction--own]="r.value.includes(currentUser?.uid ?? '')">
+                          [class.channel__reaction--own]="!!currentUser && r.value.includes(currentUser.uid)">
                           {{ r.key }} {{ r.value.length }}
                         </button>
                       </div>

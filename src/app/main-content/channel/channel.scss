@@ -546,30 +546,26 @@
   color: #475569;
 }
 
-.channel__message-reaction {
+.channel__reaction {
   display: inline-flex;
   align-items: center;
-  padding: 0px 12px;
+  padding: 0 12px;
+  margin-left: 8px;
   background: #ffffff;
-  color: #4338ca;
   border-radius: 999px;
   font-weight: 700;
   border: 1px solid #797ef3;
   width: fit-content;
+
   &:hover {
-    border: 1px solid #444df2;
+    border-color: #444df2;
     cursor: pointer;
   }
 }
 
-.channel__message--own .channel__message-reaction {
-  background: #ffffff;
+.channel__reaction--own {
+  background: #4338ca;
   color: #ffffff;
-  border: 1px solid #797ef3;
-  &:hover {
-    border: 1px solid #444df2;
-    cursor: pointer;
-  }
 }
 
 .channel__composer {
