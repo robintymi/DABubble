@@ -771,11 +771,16 @@ export class ChannelComponent {
   );
 
   showReactionTooltip(event: MouseEvent, emoji: string, userIds: string[]): void {
+    if (!this.currentUser) return;
+
+    const currentUserId = this.currentUser.uid;
+
+    const isCurrentUserIncluded = userIds.includes(currentUserId);
+
     const names = userIds
+      .filter((uid) => uid !== currentUserId)
       .map((uid) => this.allUsersSnapshot.find((u) => u.uid === uid)?.name)
       .filter(Boolean) as string[];
-
-    if (!names.length) return;
 
     this.hideReactionTooltip();
 
@@ -788,14 +793,13 @@ export class ChannelComponent {
           originY: 'top',
           overlayX: 'center',
           overlayY: 'bottom',
-          offsetY: 1,
-          offsetX: 70,
+          offsetY: 0,
+          offsetX: 75,
         },
       ]);
 
     this.overlayRef = this.overlay.create({
       positionStrategy,
-      hasBackdrop: false,
       scrollStrategy: this.overlay.scrollStrategies.reposition(),
     });
 
@@ -803,11 +807,49 @@ export class ChannelComponent {
     const tooltipRef = this.overlayRef.attach(portal);
 
     tooltipRef.instance.emoji = emoji;
-    tooltipRef.instance.names = names;
+    tooltipRef.instance.users = names;
+    tooltipRef.instance.isCurrentUserIncluded = isCurrentUserIncluded;
+    const { users, verbText } = this.buildReactionTooltipData(names, isCurrentUserIncluded);
+
+    tooltipRef.instance.emoji = emoji;
+    tooltipRef.instance.users = users;
+    tooltipRef.instance.verbText = verbText;
   }
 
   hideReactionTooltip(): void {
     this.overlayRef?.dispose();
     this.overlayRef = undefined;
+  }
+
+  private buildReactionTooltipData(
+    names: string[],
+    isCurrentUserIncluded: boolean
+  ): { users: string[]; verbText: string } {
+    let users = isCurrentUserIncluded ? ['Du', ...names] : [...names];
+    users = this.moveDuToEnd(users);
+
+    if (users.length === 1 && users[0] === 'Du') {
+      return {
+        users,
+        verbText: 'hast reagiert',
+      };
+    }
+
+    if (users.length === 1) {
+      return {
+        users,
+        verbText: 'hat reagiert',
+      };
+    }
+
+    return {
+      users,
+      verbText: 'haben reagiert',
+    };
+  }
+
+  private moveDuToEnd(users: string[]): string[] {
+    const withoutDu = users.filter((u) => u !== 'Du');
+    return users.includes('Du') ? [...withoutDu, 'Du'] : users;
   }
 }

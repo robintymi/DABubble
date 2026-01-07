@@ -1,13 +1,16 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-tooltip',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './tooltip.html',
   styleUrl: './tooltip.scss',
 })
 export class ReactionTooltipComponent {
-  emoji!: string;
-  names!: string[];
+  @Input() emoji!: string;
+  @Input() users!: string[];
+  @Input() verbText!: string;
+  @Input() isCurrentUserIncluded = false;
 }

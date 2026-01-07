@@ -64,7 +64,7 @@ export interface ChannelMessage {
   tag?: string;
   attachment?: ChannelAttachment;
   reactions?: {
-    [emoji: string]: string[]; // 👍 → [uid1, uid2]
+    [emoji: string]: string[];
   };
 }
 
@@ -762,7 +762,6 @@ export class FirestoreService {
       const users: string[] = reactions[emoji] ?? [];
 
       if (hasReacted) {
-        // entfernen
         reactions[emoji] = users.filter((id) => id !== userId);
         if (reactions[emoji].length === 0) {
           delete reactions[emoji];
