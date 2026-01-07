@@ -9,7 +9,7 @@ import { AppUser } from '../../../services/user.service';
 import { MemberDialog } from '../../member-dialog/member-dialog';
 
 type ChannelMember = {
-  id: string;            // <-- hinzugefügt
+  id: string; // <-- hinzugefügt
   name: string;
   avatar: string;
   subtitle?: string;
@@ -30,7 +30,7 @@ type ChannelMember = {
         animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0) scale(1)' })),
       ]),
       transition(':leave', [
-        animate('180ms ease-in', style({ opacity: 0, transform: 'translateY(-4px) scale(0.96)' }))
+        animate('180ms ease-in', style({ opacity: 0, transform: 'translateY(-4px) scale(0.96)' })),
       ]),
     ]),
   ],
@@ -43,6 +43,7 @@ export class ChannelMembers {
   @Input() title = 'Mitglieder';
   @Input() channelId?: string;
 
+  originTarget!: HTMLElement;
   protected visible = true;
 
   protected closeOverlay(): void {
@@ -56,12 +57,12 @@ export class ChannelMembers {
   }
 
   protected openAddToChannel(event: Event): void {
-    const target = event.currentTarget as HTMLElement | null;
-
-    this.overlayService.open(AddToChannel, {
-      target: target ?? undefined,
+    const overlayRef = this.overlayService.getLastOverlay();
+    if (!overlayRef) return;
+    overlayRef.replaceComponent(AddToChannel, {
+      target: this.originTarget,
+      offsetX: -370,
       offsetY: 8,
-      data: { channelId: this.channelId, channelTitle: this.title, members: this.members },
     });
   }
 
