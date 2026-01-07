@@ -471,16 +471,35 @@
   }
 
   .workspace__section-label {
-    font-size: 18px;
+    font-size: 24px;
   }
 
-  .workspace__list-item {
-    font-size: 18px;
+  .workspace__list {
+    padding-left: 24px;
+    padding-right:16px;
+  }
+    .workspace__list-item {
+    font-size: 20px;
+    padding: 8px 20px;
+    width:100%;
+    box-sizing:border-box
   }
 
+  .workspace__list {
+    padding-left: 30px;
+  }
+
+  .workspace__hash {
+    font-size: 24px;
+  }
+
+  .workspace__channel-name,
+  .workspace__user-name {
+    font-size: 24px;
+  }
   .workspace__avatar {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
   }
 
   .workspace__add-btn {
