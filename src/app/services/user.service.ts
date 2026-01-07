@@ -286,13 +286,15 @@ export class UserService {
     if (!user || !firebaseUser) return;
     if (!user.isGuest || !firebaseUser.isAnonymous) return;
 
+    const uid = user.uid;
+
     await this.authService.signOut();
 
     queueMicrotask(async () => {
       try {
-        await this.firestoreService.deleteAllMessagesByAuthor(user.uid);
-        await deleteDoc(doc(this.firestore, `users/${user.uid}`));
-        await firebaseUser.delete();
+        await this.firestoreService.deleteAllMessagesByAuthor(uid);
+        await this.firestoreService.removeReactionsByUser(uid);
+        await deleteDoc(doc(this.firestore, `users/${uid}`));
       } catch (err) {
         console.error('Guest background cleanup failed', err);
       }
