@@ -189,6 +189,7 @@ export class UserService {
               updatedAt: user.updatedAt,
               createdAt: user.createdAt,
               role: user.role,
+              isGuest: user.isGuest ?? false,
             }))
           ),
           shareReplay({ bufferSize: 1, refCount: false })
@@ -218,6 +219,7 @@ export class UserService {
             updatedAt: data.updatedAt,
             createdAt: data.createdAt,
             role: data.role,
+            isGuest: data.isGuest ?? false,
           },
         };
       });

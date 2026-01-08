@@ -29,6 +29,13 @@ export const NOTIFICATIONS = {
 
   ACCOUNT_DELETION_SUCCESS: 'Dein Konto wurde dauerhaft gelöscht.',
   ACCOUNT_DELETION_FAILURE: 'Das Konto konnte nicht gelöscht werden.',
+  GUEST_CLEANUP_FAILED: 'Gastdaten konnten nicht gelöscht werden.',
+  GUEST_MESSAGES_DELETE_FAILED: 'Gastnachrichten konnten nicht gelöscht werden.',
+  GUEST_REACTIONS_REMOVE_FAILED: 'Gastreaktionen konnten nicht entfernt werden.',
+  GUEST_NUMBER_RELEASE_FAILED: 'Gastnummer konnte nicht freigegeben werden.',
+  GUEST_USER_DOCUMENT_DELETE_FAILED: 'Gast-User-Dokument konnte nicht gelöscht werden.',
+  GUEST_CLEANUP_SCHEDULE_FAILED: 'Gastdaten-Bereinigung konnte nicht gestartet werden.',
+  GUEST_CLEANUP_EXPIRED_FAILED: 'Es ist ein Fehler in der Bereinigung der Gastdaten aufgetreten.',
 
   TOAST_LOGIN_SUCCESS: 'Anmeldung erfolgreich',
   TOAST_LOGOUT_SUCCESS: 'Du wurdest abgemeldet',

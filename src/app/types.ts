@@ -27,4 +27,4 @@ export interface ProfilePicture {
   path: string;
 }
 
-export type GuestRegistryData = { usedNumbers?: number[] };
+export type GuestRegistryData = { usedNumbers?: number[]; isCleanedUp?: boolean; lastCleanupAt?: number };

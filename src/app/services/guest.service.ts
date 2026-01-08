@@ -7,10 +7,13 @@ import {
   doc,
   DocumentReference,
   Firestore,
+  getDoc,
   runTransaction,
   getDocs,
   query,
   serverTimestamp,
+  setDoc,
+  Timestamp,
   Transaction,
   updateDoc,
   where,
@@ -28,6 +31,7 @@ export class GuestService {
   private authService = inject(AuthService);
   private firestore = inject(Firestore);
 
+  /** Builds the initial guest user payload. */
   async buildGuestUserDocData() {
     const guestNumber = await this.getRandomGuestNumber();
     const name = `Gast ${guestNumber}`;
@@ -39,13 +43,12 @@ export class GuestService {
     };
   }
 
+  /** Signs out and schedules cleanup for a guest account. */
   async signOutGuest(user: AppUser | null): Promise<void> {
     const firebaseUser = this.authService.auth.currentUser;
 
     if (!user || !firebaseUser) return;
     if (!user.isGuest || !firebaseUser.isAnonymous) return;
-
-    const uid = user.uid;
 
     let deleted = false;
     try {
@@ -58,92 +61,184 @@ export class GuestService {
 
     if (!deleted) return;
 
+    this.scheduleGuestCleanup(user);
+  }
+
+  /** Runs cleanup for a guest without blocking the caller. */
+  private scheduleGuestCleanup(user: AppUser): void {
     queueMicrotask(async () => {
       try {
-        await this.deleteAllMessagesByAuthor(uid);
-        await this.removeReactionsByUser(uid);
-        await this.releaseGuestNumber(user.name);
-        await deleteDoc(doc(this.firestore, `users/${uid}`));
-      } catch (err) {
-        console.error('Guest background cleanup failed', err);
+        await this.cleanupGuestUserData(user);
+      } catch (error) {
+        console.error(NOTIFICATIONS.GUEST_CLEANUP_FAILED, error);
       }
     });
   }
 
+  /** Cleans up expired guests if not successful last 24 hours. */
+  async cleanupExpiredGuestsIfNeeded(allUsers: AppUser[]): Promise<void> {
+    const shouldCleanup = await this.isCleanupRequired();
+    if (!shouldCleanup) {
+      return;
+    }
+
+    const expiredGuests = this.getExpiredGuests(allUsers);
+
+    if (!expiredGuests.length) {
+      await this.markCleanupDone();
+      return;
+    }
+
+    const areCleanUpsSuccessfull = await Promise.all(expiredGuests.map((user) => this.cleanupGuestUserData(user)));
+    if (areCleanUpsSuccessfull.every((isCleanUpSuccessfull) => isCleanUpSuccessfull === true)) {
+      await this.markCleanupDone();
+    }
+  }
+
+  /** Deletes all guest data across collections. */
+  async cleanupGuestUserData(user: AppUser): Promise<boolean> {
+    let isSuccessful = true;
+
+    try {
+      await this.deleteAllMessagesByAuthor(user.uid);
+    } catch (error) {
+      console.error(NOTIFICATIONS.GUEST_MESSAGES_DELETE_FAILED, error);
+      isSuccessful = false;
+    }
+
+    try {
+      await this.removeReactionsByUser(user.uid);
+    } catch (error) {
+      console.error(NOTIFICATIONS.GUEST_REACTIONS_REMOVE_FAILED, error);
+      isSuccessful = false;
+    }
+
+    try {
+      await this.releaseGuestNumber(user.name);
+    } catch (error) {
+      console.error(NOTIFICATIONS.GUEST_NUMBER_RELEASE_FAILED, error);
+      isSuccessful = false;
+    }
+
+    try {
+      await deleteDoc(doc(this.firestore, `users/${user.uid}`));
+    } catch (error) {
+      console.error(NOTIFICATIONS.GUEST_USER_DOCUMENT_DELETE_FAILED, error);
+      isSuccessful = false;
+    }
+
+    return isSuccessful;
+  }
+
+  /** Returns guest users older than 24 hours. */
+  private getExpiredGuests(allUsers: AppUser[]): AppUser[] {
+    return allUsers.filter((user) => {
+      if (!user.isGuest) {
+        return false;
+      }
+
+      const cutoffTimestamp = Date.now() - 24 * 60 * 60 * 1000;
+      const createdAtMillis = (user.createdAt as Timestamp).toMillis();
+
+      return createdAtMillis < cutoffTimestamp;
+    });
+  }
+
+  /** Checks whether the cleanup should run now. */
+  private async isCleanupRequired(): Promise<boolean> {
+    const guestsDocRef = this.getGuestsDocRef();
+    const snap = await getDoc(guestsDocRef);
+    const data = snap.data() as GuestRegistryData;
+
+    if (!data?.isCleanedUp || !data?.lastCleanupAt) {
+      return true;
+    }
+
+    return Date.now() - data.lastCleanupAt >= 24 * 60 * 60 * 1000;
+  }
+
+  /** Persists the last successful cleanup time. */
+  private async markCleanupDone(): Promise<void> {
+    const guestsDocRef = this.getGuestsDocRef();
+    await setDoc(
+      guestsDocRef,
+      {
+        isCleanedUp: true,
+        lastCleanupAt: Date.now(),
+      },
+      { merge: true }
+    );
+  }
+
+  /** Removes channel and DM messages written by the user. */
   private async deleteAllMessagesByAuthor(userId: string): Promise<void> {
     const db = this.firestore;
 
-    try {
-      const channelsSnap = await getDocs(collection(db, 'channels'));
+    const channelsSnap = await getDocs(collection(db, 'channels'));
 
-      for (const channel of channelsSnap.docs) {
-        const messagesSnap = await getDocs(
-          query(collection(db, `channels/${channel.id}/messages`), where('authorId', '==', userId))
-        );
+    for (const channel of channelsSnap.docs) {
+      const messagesSnap = await getDocs(
+        query(collection(db, `channels/${channel.id}/messages`), where('authorId', '==', userId))
+      );
 
-        for (const message of messagesSnap.docs) {
-          const threadsSnap = await getDocs(collection(message.ref, 'threads'));
-          for (const reply of threadsSnap.docs) {
-            await deleteDoc(reply.ref);
-          }
-
-          await deleteDoc(message.ref);
+      for (const message of messagesSnap.docs) {
+        const threadsSnap = await getDocs(collection(message.ref, 'threads'));
+        for (const reply of threadsSnap.docs) {
+          await deleteDoc(reply.ref);
         }
-      }
 
-      const dmMessagesSnap = await getDocs(query(collectionGroup(db, 'messages'), where('authorId', '==', userId)));
-
-      for (const dm of dmMessagesSnap.docs) {
-        await deleteDoc(dm.ref);
+        await deleteDoc(message.ref);
       }
-    } catch (error) {
-      console.error('deleteAllMessagesByAuthor failed', error);
+    }
+
+    const dmMessagesSnap = await getDocs(query(collectionGroup(db, 'messages'), where('authorId', '==', userId)));
+
+    for (const dm of dmMessagesSnap.docs) {
+      await deleteDoc(dm.ref);
     }
   }
 
+  /** Removes the user from all reactions in channels. */
   private async removeReactionsByUser(userId: string): Promise<void> {
     const db = this.firestore;
 
-    try {
-      const channelsSnap = await getDocs(collection(db, 'channels'));
+    const channelsSnap = await getDocs(collection(db, 'channels'));
 
-      for (const channel of channelsSnap.docs) {
-        const messagesSnap = await getDocs(collection(db, `channels/${channel.id}/messages`));
+    for (const channel of channelsSnap.docs) {
+      const messagesSnap = await getDocs(collection(db, `channels/${channel.id}/messages`));
 
-        for (const message of messagesSnap.docs) {
-          const data = message.data();
-          const reactions = data['reactions'] as Record<string, string[]> | undefined;
+      for (const message of messagesSnap.docs) {
+        const data = message.data();
+        const reactions = data['reactions'] as Record<string, string[]> | undefined;
 
-          if (!reactions) continue;
+        if (!reactions) continue;
 
-          let changed = false;
-          const updatedReactions: Record<string, string[]> = {};
+        let changed = false;
+        const updatedReactions: Record<string, string[]> = {};
 
-          for (const [emoji, users] of Object.entries(reactions)) {
-            const filtered = (users as string[]).filter((id) => id !== userId);
+        for (const [emoji, users] of Object.entries(reactions)) {
+          const filtered = (users as string[]).filter((id) => id !== userId);
 
-            if (filtered.length > 0) {
-              updatedReactions[emoji] = filtered;
-            }
-
-            if (filtered.length !== users.length) {
-              changed = true;
-            }
+          if (filtered.length > 0) {
+            updatedReactions[emoji] = filtered;
           }
 
-          if (changed) {
-            await updateDoc(message.ref, {
-              reactions: Object.keys(updatedReactions).length ? updatedReactions : deleteField(),
-              updatedAt: serverTimestamp(),
-            });
+          if (filtered.length !== users.length) {
+            changed = true;
           }
         }
+
+        if (changed) {
+          await updateDoc(message.ref, {
+            reactions: Object.keys(updatedReactions).length ? updatedReactions : deleteField(),
+            updatedAt: serverTimestamp(),
+          });
+        }
       }
-    } catch (err) {
-      console.error('removeReactionsByUser failed', err);
     }
   }
 
+  /** Picks a random unused guest number. */
   private async getRandomGuestNumber(): Promise<number> {
     const guestsDocRef = this.getGuestsDocRef();
 
@@ -161,10 +256,12 @@ export class GuestService {
     });
   }
 
+  /** Returns the guest registry document reference. */
   private getGuestsDocRef(): DocumentReference<GuestRegistryData> {
     return doc(this.firestore, 'guests', 'registry');
   }
 
+  /** Loads the used guest numbers from the registry. */
   private async getUsedGuestNumbers(
     transaction: Transaction,
     guestsDocRef: DocumentReference<GuestRegistryData>
@@ -174,6 +271,7 @@ export class GuestService {
     return data?.usedNumbers ?? [];
   }
 
+  /** Builds the list of available guest numbers. */
   private buildAvailableGuestNumbers(usedNumbers: number[]): number[] {
     const usedSet = new Set<number>(usedNumbers);
     const availableNumbers: number[] = [];
@@ -187,11 +285,13 @@ export class GuestService {
     return availableNumbers;
   }
 
+  /** Returns one random number from the list. */
   private pickRandomNumber(numbers: number[]): number {
     const randomIndex = Math.floor(Math.random() * numbers.length);
     return numbers[randomIndex];
   }
 
+  /** Writes the used guest numbers to the registry. */
   private setUsedGuestNumbers(
     transaction: Transaction,
     guestsDocRef: DocumentReference<GuestRegistryData>,
@@ -200,6 +300,7 @@ export class GuestService {
     transaction.set(guestsDocRef, { usedNumbers }, { merge: true });
   }
 
+  /** Releases the guest number for reuse. */
   private async releaseGuestNumber(displayName: AppUser['name']): Promise<void> {
     const guestNumber = this.extractGuestNumber(displayName);
     if (guestNumber === null) return;
@@ -217,6 +318,7 @@ export class GuestService {
     });
   }
 
+  /** Extracts the 3-digit guest number from the display name. */
   private extractGuestNumber(displayName: string): number | null {
     const numberMatch = displayName.match(/\b\d{3}\b/);
     if (!numberMatch) {

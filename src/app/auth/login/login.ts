@@ -6,9 +6,11 @@ import { AuthService } from '../../services/auth.service';
 import { NOTIFICATIONS } from '../../notifications';
 import { UserCredential } from 'firebase/auth';
 import { UserService } from '../../services/user.service';
+import { GuestService } from '../../services/guest.service';
 import { AsideContentWrapperComponent } from '../../aside-content/aside-content-wrapper';
 import { ToastService } from '../../toast/toast.service';
 import { BrandStateService } from '../../services/brand-state.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +22,7 @@ export class Login implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly userService = inject(UserService);
+  private readonly guestService = inject(GuestService);
   private readonly toastService = inject(ToastService);
 
   constructor(private brandState: BrandStateService) {}
@@ -60,6 +63,7 @@ export class Login implements OnInit {
     try {
       const credential = await loginAction();
       await this.userService.ensureUserDocumentForCurrentUser(credential);
+      this.cleanupExpiredGuests();
 
       this.toastService.info(NOTIFICATIONS.TOAST_LOGIN_SUCCESS, { durationMs: 2000 });
 
@@ -178,5 +182,16 @@ export class Login implements OnInit {
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  private cleanupExpiredGuests() {
+    queueMicrotask(async () => {
+      try {
+        const allUsers = await firstValueFrom(this.userService.getAllUsers());
+        await this.guestService.cleanupExpiredGuestsIfNeeded(allUsers);
+      } catch (error) {
+        console.error(NOTIFICATIONS.GUEST_CLEANUP_EXPIRED_FAILED, error);
+      }
+    });
   }
 }
