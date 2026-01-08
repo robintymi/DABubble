@@ -49,7 +49,7 @@ import { ScreenService } from '../services/screen.service';
           <ng-container [ngTemplateOutlet]="footer"></ng-container>
         </section>
       } @else {
-        <section class="aside-content-wrapper">
+        <section class="aside-content-wrapper max-width mx-auto">
           <header>
             <div class="flex h-full items-start justify-between px-8 pt-6 pb-4 sm:px-10 sm:pt-10">
               <app-logo [class.logo-hidden]="!brandState.splashDone()"></app-logo>
