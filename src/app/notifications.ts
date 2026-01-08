@@ -28,6 +28,7 @@ export const NOTIFICATIONS = {
   EMAIL_VERIFICATION_STATUS_REFRESH_ERROR: 'Der Status konnte nicht aktualisiert werden. Bitte versuche es erneut.',
 
   ACCOUNT_DELETION_SUCCESS: 'Dein Konto wurde dauerhaft gelöscht.',
+  ACCOUNT_DELETION_FAILURE: 'Das Konto konnte nicht gelöscht werden.',
 
   TOAST_LOGIN_SUCCESS: 'Anmeldung erfolgreich',
   TOAST_LOGOUT_SUCCESS: 'Du wurdest abgemeldet',

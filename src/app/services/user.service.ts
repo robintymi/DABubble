@@ -20,6 +20,7 @@ import { FirestoreService } from './firestore.service';
 import { AuthService } from './auth.service';
 import { TEXTS } from '../texts';
 import { Router } from '@angular/router';
+import { NOTIFICATIONS } from '../notifications';
 
 export interface AppUser {
   uid: string;
@@ -288,7 +289,16 @@ export class UserService {
 
     const uid = user.uid;
 
-    await this.authService.signOut();
+    let deleted = false;
+    try {
+      await this.authService.deleteCurrentUser();
+      deleted = true;
+    } catch (error) {
+      console.error(error);
+      console.error(NOTIFICATIONS.ACCOUNT_DELETION_FAILURE);
+    }
+
+    if (!deleted) return;
 
     queueMicrotask(async () => {
       try {
