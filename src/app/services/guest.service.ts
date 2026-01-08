@@ -5,10 +5,13 @@ import {
   deleteDoc,
   deleteField,
   doc,
+  DocumentReference,
   Firestore,
+  runTransaction,
   getDocs,
   query,
   serverTimestamp,
+  Transaction,
   updateDoc,
   where,
 } from '@angular/fire/firestore';
@@ -16,6 +19,9 @@ import { AuthService } from './auth.service';
 import { NOTIFICATIONS } from '../notifications';
 import { type AppUser } from './user.service';
 import { PROFILE_PICTURE_URLS } from '../auth/set-profile-picture/set-profile-picture';
+import { GuestRegistryData } from '../types';
+
+const GUEST_FALLBACK_NUMBER = 999;
 
 @Injectable({ providedIn: 'root' })
 export class GuestService {
@@ -23,8 +29,11 @@ export class GuestService {
   private firestore = inject(Firestore);
 
   async buildGuestUserDocData() {
+    const guestNumber = await this.getRandomGuestNumber();
+    const name = `Gast ${guestNumber}`;
+
     return {
-      name: 'Gast',
+      name,
       photoUrl: PROFILE_PICTURE_URLS.default,
       isGuest: true,
     };
@@ -53,6 +62,7 @@ export class GuestService {
       try {
         await this.deleteAllMessagesByAuthor(uid);
         await this.removeReactionsByUser(uid);
+        await this.releaseGuestNumber(user.name);
         await deleteDoc(doc(this.firestore, `users/${uid}`));
       } catch (err) {
         console.error('Guest background cleanup failed', err);
@@ -132,5 +142,86 @@ export class GuestService {
     } catch (err) {
       console.error('removeReactionsByUser failed', err);
     }
+  }
+
+  private async getRandomGuestNumber(): Promise<number> {
+    const guestsDocRef = this.getGuestsDocRef();
+
+    return runTransaction(this.firestore, async (transaction) => {
+      const usedNumbers = await this.getUsedGuestNumbers(transaction, guestsDocRef);
+      const availableNumbers = this.buildAvailableGuestNumbers(usedNumbers);
+
+      if (!availableNumbers.length) {
+        return GUEST_FALLBACK_NUMBER;
+      }
+
+      const selectedNumber = this.pickRandomNumber(availableNumbers);
+      this.setUsedGuestNumbers(transaction, guestsDocRef, [...usedNumbers, selectedNumber]);
+      return selectedNumber;
+    });
+  }
+
+  private getGuestsDocRef(): DocumentReference<GuestRegistryData> {
+    return doc(this.firestore, 'guests', 'registry');
+  }
+
+  private async getUsedGuestNumbers(
+    transaction: Transaction,
+    guestsDocRef: DocumentReference<GuestRegistryData>
+  ): Promise<number[]> {
+    const snap = await transaction.get(guestsDocRef);
+    const data = snap.data();
+    return data?.usedNumbers ?? [];
+  }
+
+  private buildAvailableGuestNumbers(usedNumbers: number[]): number[] {
+    const usedSet = new Set<number>(usedNumbers);
+    const availableNumbers: number[] = [];
+
+    for (let number = 100; number <= 500; number += 1) {
+      if (!usedSet.has(number)) {
+        availableNumbers.push(number);
+      }
+    }
+
+    return availableNumbers;
+  }
+
+  private pickRandomNumber(numbers: number[]): number {
+    const randomIndex = Math.floor(Math.random() * numbers.length);
+    return numbers[randomIndex];
+  }
+
+  private setUsedGuestNumbers(
+    transaction: Transaction,
+    guestsDocRef: DocumentReference<GuestRegistryData>,
+    usedNumbers: number[]
+  ): void {
+    transaction.set(guestsDocRef, { usedNumbers }, { merge: true });
+  }
+
+  private async releaseGuestNumber(displayName: AppUser['name']): Promise<void> {
+    const guestNumber = this.extractGuestNumber(displayName);
+    if (guestNumber === null) return;
+
+    const guestsDocRef = this.getGuestsDocRef();
+
+    await runTransaction(this.firestore, async (transaction) => {
+      const usedNumbers = await this.getUsedGuestNumbers(transaction, guestsDocRef);
+      if (!usedNumbers.length) return;
+
+      const nextNumbers = usedNumbers.filter((value) => value !== guestNumber);
+      if (nextNumbers.length === usedNumbers.length) return;
+
+      this.setUsedGuestNumbers(transaction, guestsDocRef, nextNumbers);
+    });
+  }
+
+  private extractGuestNumber(displayName: string): number | null {
+    const numberMatch = displayName.match(/\b\d{3}\b/);
+    if (!numberMatch) {
+      return null;
+    }
+    return Number(numberMatch[0]);
   }
 }

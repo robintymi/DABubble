@@ -26,3 +26,5 @@ export interface ProfilePicture {
   key: ProfilePictureKey;
   path: string;
 }
+
+export type GuestRegistryData = { usedNumbers?: number[] };
