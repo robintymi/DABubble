@@ -15,20 +15,16 @@ import {
   writeBatch,
 } from '@angular/fire/firestore';
 import { ChannelService } from './channel.service';
-import { UserService, AppUser } from './user.service';
+import type { AppUser } from './user.service';
 import { Observable, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
 import { NOTIFICATIONS } from '../notifications';
 import type { Channel, ChannelMember } from '../types';
 
 @Injectable({ providedIn: 'root' })
 export class ChannelMembershipService {
-  private userService = inject(UserService);
   private channelService = inject(ChannelService);
   private firestore = inject(Firestore);
   private injector = inject(EnvironmentInjector);
-
-  // 僶. Injection Context: FIELD INITIALIZER
-  private currentUser$ = this.userService.currentUser$;
 
   private channelMembersCache = new Map<string, Observable<ChannelMember[]>>();
 
@@ -36,8 +32,8 @@ export class ChannelMembershipService {
    * Emits the set of channel IDs the current user is a member of.
    * Always emits (empty set if logged out).
    */
-  getAllowedChannelIds$(): Observable<Set<string>> {
-    return this.currentUser$.pipe(
+  getAllowedChannelIds$(currentUser$: Observable<AppUser | null>): Observable<Set<string>> {
+    return currentUser$.pipe(
       switchMap((user: AppUser | null) => {
         if (!user?.uid) {
           // 衁"' EXTREM WICHTIG: IMMER emitten

@@ -1,6 +1,6 @@
 import { Timestamp } from '@angular/fire/firestore';
 import { PROFILE_PICTURE_URLS } from './auth/set-profile-picture/set-profile-picture';
-import { AppUser } from './services/user.service';
+import type { AppUser } from './services/user.service';
 
 // Auth and profile
 export interface PasswordValidationResult {

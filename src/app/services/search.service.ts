@@ -37,7 +37,7 @@ export class SearchService {
     if (this.isChannelSearch(term)) {
       const query = term.substring(1).trim();
 
-      return this.channelMembershipService.getAllowedChannelIds$().pipe(
+      return this.channelMembershipService.getAllowedChannelIds$(this.userService.currentUser$).pipe(
         switchMap((ids) => {
           if (query === '') {
             return from(this.searchChannelsForUser('', ids));
@@ -51,7 +51,7 @@ export class SearchService {
     if (term.length < 3) return of([]);
 
     return this.channelMembershipService
-      .getAllowedChannelIds$()
+      .getAllowedChannelIds$(this.userService.currentUser$)
       .pipe(switchMap((ids) => from(this.smartSearchInternal(term, ids))));
   }
 
