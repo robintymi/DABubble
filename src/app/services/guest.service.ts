@@ -24,6 +24,7 @@ import { type AppUser } from './user.service';
 import { PROFILE_PICTURE_URLS } from '../auth/set-profile-picture/set-profile-picture';
 import { GuestRegistryData } from '../types';
 import { FirestoreService } from './firestore.service';
+import { DirectMessagesService } from './direct-messages.service';
 
 const GUEST_FALLBACK_NUMBER = 999;
 
@@ -32,6 +33,7 @@ export class GuestService {
   private authService = inject(AuthService);
   private firestore = inject(Firestore);
   private firestoreService = inject(FirestoreService);
+  private directMessagesService = inject(DirectMessagesService);
 
   /** Builds the initial guest user payload. */
   async buildGuestUserDocData() {
@@ -104,35 +106,42 @@ export class GuestService {
     try {
       await this.deleteAllMessagesByAuthor(user.uid);
     } catch (error) {
-      console.error(NOTIFICATIONS.GUEST_MESSAGES_DELETE_FAILED, error);
+      console.error('Gast: ' + NOTIFICATIONS.MESSAGES_DELETE_FAILED, error);
       isSuccessful = false;
     }
 
     try {
       await this.removeReactionsByUser(user.uid);
     } catch (error) {
-      console.error(NOTIFICATIONS.GUEST_REACTIONS_REMOVE_FAILED, error);
+      console.error('Gast: ' + NOTIFICATIONS.REACTIONS_REMOVE_FAILED, error);
       isSuccessful = false;
     }
 
     try {
       await this.removeGuestFromAllChannels(user.uid);
     } catch (error) {
-      console.error(NOTIFICATIONS.GUEST_CHANNEL_MEMBERSHIPS_REMOVE_FAILED, error);
+      console.error('Gast: ' + NOTIFICATIONS.CHANNEL_MEMBERSHIPS_REMOVE_FAILED, error);
+      isSuccessful = false;
+    }
+
+    try {
+      await this.directMessagesService.deleteAllDirectMessagesByParticipant(user.uid);
+    } catch (error) {
+      console.error('Gast: ' + NOTIFICATIONS.DIRECT_MESSAGES_DELETE_FAILED, error);
       isSuccessful = false;
     }
 
     try {
       await this.releaseGuestNumber(user.name);
     } catch (error) {
-      console.error(NOTIFICATIONS.GUEST_NUMBER_RELEASE_FAILED, error);
+      console.error('Gast: ' + NOTIFICATIONS.GUEST_NUMBER_RELEASE_FAILED, error);
       isSuccessful = false;
     }
 
     try {
       await deleteDoc(doc(this.firestore, `users/${user.uid}`));
     } catch (error) {
-      console.error(NOTIFICATIONS.GUEST_USER_DOCUMENT_DELETE_FAILED, error);
+      console.error('Gast: ' + NOTIFICATIONS.USER_DOCUMENT_DELETE_FAILED, error);
       isSuccessful = false;
     }
 
@@ -364,10 +373,10 @@ export class GuestService {
     );
 
     const failures = results.filter((result) => result.status === 'rejected');
-    results.forEach((result) => console.error('leaveChannel', result));
+    results.forEach((result) => console.error(NOTIFICATIONS.LEAVE_CHANNEL_FAILED, result));
 
     if (failures.length) {
-      throw new Error(NOTIFICATIONS.GUEST_LEAVE_CHANNEL_FAILED);
+      throw new Error(NOTIFICATIONS.LEAVE_CHANNEL_FAILED);
     }
   }
 }

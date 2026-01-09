@@ -29,15 +29,17 @@ export const NOTIFICATIONS = {
 
   ACCOUNT_DELETION_SUCCESS: 'Dein Konto wurde dauerhaft gelöscht.',
   ACCOUNT_DELETION_FAILURE: 'Das Konto konnte nicht gelöscht werden.',
+  MESSAGES_DELETE_FAILED: 'Nachrichten konnten nicht gelöscht werden.',
+  REACTIONS_REMOVE_FAILED: 'Reaktionen konnten nicht entfernt werden.',
+  USER_DOCUMENT_DELETE_FAILED: 'User-Dokument konnte nicht gelöscht werden.',
+  CHANNEL_MEMBERSHIPS_REMOVE_FAILED: 'Fehler beim Entfernen der Mitgliedschaften von Channels.',
+  LEAVE_CHANNEL_FAILED: 'Fehler beim Verlassen des Channels',
+  DIRECT_MESSAGES_DELETE_FAILED: 'Fehler beim Löschen der Direct Message.',
+
   GUEST_CLEANUP_FAILED: 'Gastdaten konnten nicht gelöscht werden.',
-  GUEST_MESSAGES_DELETE_FAILED: 'Gastnachrichten konnten nicht gelöscht werden.',
-  GUEST_REACTIONS_REMOVE_FAILED: 'Gastreaktionen konnten nicht entfernt werden.',
   GUEST_NUMBER_RELEASE_FAILED: 'Gastnummer konnte nicht freigegeben werden.',
-  GUEST_USER_DOCUMENT_DELETE_FAILED: 'Gast-User-Dokument konnte nicht gelöscht werden.',
   GUEST_CLEANUP_SCHEDULE_FAILED: 'Gastdaten-Bereinigung konnte nicht gestartet werden.',
   GUEST_CLEANUP_EXPIRED_FAILED: 'Es ist ein Fehler in der Bereinigung der Gastdaten aufgetreten.',
-  GUEST_CHANNEL_MEMBERSHIPS_REMOVE_FAILED: 'Fehler beim Entfernen der Gast-Mitgliedschaften.',
-  GUEST_LEAVE_CHANNEL_FAILED: 'Fehler beim leaveChannel von Gast-Mitgliedschaften.',
 
   TOAST_LOGIN_SUCCESS: 'Anmeldung erfolgreich',
   TOAST_LOGOUT_SUCCESS: 'Du wurdest abgemeldet',
