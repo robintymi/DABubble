@@ -93,6 +93,8 @@ export class NewMessagePanel {
 
   protected closePanel(): void {
     this.close.emit();
-    void this.router.navigate(['/main']);
+    void this.router.navigate(['/main'], {
+      info: { mobileRouteDirection: 'back' },
+    });
   }
 }
