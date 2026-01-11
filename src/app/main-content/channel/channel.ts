@@ -221,9 +221,12 @@ export class ChannelComponent {
   constructor() {
     this.screenService.connect();
 
-    this.channel$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.channel$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((channel) => {
       this.lastMessageCount = 0;
       this.lastMessageId = undefined;
+      if (channel?.id) {
+        requestAnimationFrame(() => this.focusComposer());
+      }
     });
 
     this.publicChannelMemberSync();

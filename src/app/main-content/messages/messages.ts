@@ -130,7 +130,12 @@ export class Messages {
 
     this.selectedRecipient$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((recipient) => (this.selectedRecipient = recipient));
+      .subscribe((recipient) => {
+        this.selectedRecipient = recipient;
+        if (recipient) {
+          requestAnimationFrame(() => this.focusComposer());
+        }
+      });
   }
 
   protected async sendMessage(): Promise<void> {

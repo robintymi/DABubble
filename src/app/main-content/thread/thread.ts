@@ -153,6 +153,9 @@ export class Thread {
     this.thread$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((thread) => {
       this.threadSnapshot = thread;
       this.scrollToBottom();
+      if (thread) {
+        requestAnimationFrame(() => this.focusComposer());
+      }
     });
   }
 
