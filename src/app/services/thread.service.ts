@@ -1,4 +1,4 @@
-import { EnvironmentInjector, Injectable, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   addDoc,
@@ -30,7 +30,7 @@ import { UserService } from './user.service';
 import { AuthService } from './auth.service';
 import type { ChannelMessage, ThreadDocument, ThreadReply, ThreadContext, ThreadSource, ThreadMessage } from '../types';
 import type { User } from '@angular/fire/auth';
-import { createAuthenticatedFirestoreStream } from './authenticated-firestore-stream';
+import { AuthenticatedFirestoreStreamService } from './authenticated-firestore-stream';
 
 @Injectable({ providedIn: 'root' })
 export class ThreadService {
@@ -38,7 +38,7 @@ export class ThreadService {
   private readonly userService = inject(UserService);
   private readonly channelService = inject(ChannelService);
   private readonly firestore = inject(Firestore);
-  private readonly injector = inject(EnvironmentInjector);
+  private readonly authenticatedFirestoreStreamService = inject(AuthenticatedFirestoreStreamService);
 
   private readonly closeRequests = new Subject<void>();
   readonly closeRequests$ = this.closeRequests.asObservable();
@@ -197,12 +197,12 @@ export class ThreadService {
     const key = `${channelId}:${messageId}`;
 
     if (!this.threadRepliesCache.has(key)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const repliesCollection = collection(this.firestore, `channels/${channelId}/messages/${messageId}/threads`);
+      const repliesCollection = collection(this.firestore, `channels/${channelId}/messages/${messageId}/threads`);
 
-        const repliesQuery = query(repliesCollection, orderBy('createdAt', 'asc'));
+      const repliesQuery = query(repliesCollection, orderBy('createdAt', 'asc'));
 
-        return createAuthenticatedFirestoreStream<ThreadReply[]>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<ThreadReply[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
@@ -218,8 +218,8 @@ export class ThreadService {
                 }))
               )
             ),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.threadRepliesCache.set(key, stream$);
     }
@@ -306,20 +306,20 @@ export class ThreadService {
     const key = `${channelId}:${messageId}`;
 
     if (!this.threadCache.has(key)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const threadDocRef = doc(
-          this.firestore,
-          `channels/${channelId}/messages/${messageId}/thread/${ThreadService.THREAD_DOC_ID}`
-        );
+      const threadDocRef = doc(
+        this.firestore,
+        `channels/${channelId}/messages/${messageId}/thread/${ThreadService.THREAD_DOC_ID}`
+      );
 
-        return createAuthenticatedFirestoreStream<ThreadDocument | null>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<ThreadDocument | null>({
           authState$: this.authService.authState$,
           fallbackValue: null,
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
           createStream: () =>
             docData(threadDocRef, { idField: 'id' }).pipe(map((data) => (data as ThreadDocument) ?? null)),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.threadCache.set(key, stream$);
     }

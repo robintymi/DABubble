@@ -1,4 +1,4 @@
-import { EnvironmentInjector, Injectable, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   Timestamp,
@@ -20,14 +20,14 @@ import type { AppUser } from './user.service';
 import { Observable, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
 import { NOTIFICATIONS } from '../notifications';
 import type { Channel, ChannelMember } from '../types';
-import { createAuthenticatedFirestoreStream } from './authenticated-firestore-stream';
+import { AuthenticatedFirestoreStreamService } from './authenticated-firestore-stream';
 
 @Injectable({ providedIn: 'root' })
 export class ChannelMembershipService {
   private channelService = inject(ChannelService);
   private authService = inject(AuthService);
   private firestore = inject(Firestore);
-  private injector = inject(EnvironmentInjector);
+  private authenticatedFirestoreStreamService = inject(AuthenticatedFirestoreStreamService);
 
   private channelMembersCache = new Map<string, Observable<ChannelMember[]>>();
 
@@ -83,10 +83,10 @@ export class ChannelMembershipService {
 
   getChannelMembers(channelId: string): Observable<ChannelMember[]> {
     if (!this.channelMembersCache.has(channelId)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const membersCollection = collection(this.firestore, `channels/${channelId}/members`);
+      const membersCollection = collection(this.firestore, `channels/${channelId}/members`);
 
-        return createAuthenticatedFirestoreStream<ChannelMember[]>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<ChannelMember[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
@@ -103,8 +103,8 @@ export class ChannelMembershipService {
                 }))
               )
             ),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.channelMembersCache.set(channelId, stream$);
     }

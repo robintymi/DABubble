@@ -1,4 +1,4 @@
-import { EnvironmentInjector, Injectable, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   Timestamp,
@@ -19,7 +19,7 @@ import { Observable, combineLatest, map, shareReplay } from 'rxjs';
 import type { AppUser } from './user.service';
 import type { Channel, ChannelAttachment, ChannelMessage } from '../types';
 import { AuthService } from './auth.service';
-import { createAuthenticatedFirestoreStream } from './authenticated-firestore-stream';
+import { AuthenticatedFirestoreStreamService } from './authenticated-firestore-stream';
 
 @Injectable({ providedIn: 'root' })
 export class ChannelService {
@@ -29,13 +29,13 @@ export class ChannelService {
   private channelCache = new Map<string, Observable<Channel | null>>();
 
   private readonly firestore = inject(Firestore);
-  private readonly injector = inject(EnvironmentInjector);
   private readonly authService = inject(AuthService);
+  private readonly authenticatedFirestoreStreamService = inject(AuthenticatedFirestoreStreamService);
 
   getChannels(): Observable<Channel[]> {
     if (!this.channels$) {
-      this.channels$ = runInInjectionContext(this.injector, () => {
-        return createAuthenticatedFirestoreStream<Channel[]>({
+      this.channels$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<Channel[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
@@ -43,8 +43,8 @@ export class ChannelService {
             const channelsCollection = collection(this.firestore, 'channels');
             return collectionData(channelsCollection, { idField: 'id' }).pipe(map((channels) => channels as Channel[]));
           },
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
     }
 
     return this.channels$;
@@ -52,16 +52,16 @@ export class ChannelService {
 
   getChannel(channelId: string): Observable<Channel | null> {
     if (!this.channelCache.has(channelId)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const channelDoc = doc(this.firestore, `channels/${channelId}`);
+      const channelDoc = doc(this.firestore, `channels/${channelId}`);
 
-        return createAuthenticatedFirestoreStream<Channel | null>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<Channel | null>({
           authState$: this.authService.authState$,
           fallbackValue: null,
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
           createStream: () => docData(channelDoc).pipe(map((data) => (data as Channel) ?? null)),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.channelCache.set(channelId, stream$);
     }
@@ -71,10 +71,10 @@ export class ChannelService {
 
   getChannelMessages(channelId: string): Observable<ChannelMessage[]> {
     if (!this.channelMessagesCache.has(channelId)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const messagesCollection = collection(this.firestore, `channels/${channelId}/messages`);
+      const messagesCollection = collection(this.firestore, `channels/${channelId}/messages`);
 
-        return createAuthenticatedFirestoreStream<ChannelMessage[]>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<ChannelMessage[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
@@ -95,8 +95,8 @@ export class ChannelService {
                 }))
               )
             ),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.channelMessagesCache.set(channelId, stream$);
     }
@@ -204,10 +204,10 @@ export class ChannelService {
     const key = `${channelId}:${messageId}`;
 
     if (!this.channelMessageCache.has(key)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const messageDoc = doc(this.firestore, `channels/${channelId}/messages/${messageId}`);
+      const messageDoc = doc(this.firestore, `channels/${channelId}/messages/${messageId}`);
 
-        return createAuthenticatedFirestoreStream<ChannelMessage | null>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<ChannelMessage | null>({
           authState$: this.authService.authState$,
           fallbackValue: null,
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
@@ -229,8 +229,8 @@ export class ChannelService {
                 } as ChannelMessage;
               })
             ),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.channelMessageCache.set(key, stream$);
     }

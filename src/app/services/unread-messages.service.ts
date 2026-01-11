@@ -1,4 +1,4 @@
-import { EnvironmentInjector, Injectable, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   Timestamp,
@@ -29,7 +29,7 @@ import { DirectMessagesService } from './direct-messages.service';
 import { ChannelMembershipService } from './membership.service';
 import { AuthService } from './auth.service';
 import type { Channel, ChannelListItem, DirectMessageMeta, DirectMessageUser, ReadStatusEntry } from '../types';
-import { createAuthenticatedFirestoreStream } from './authenticated-firestore-stream';
+import { AuthenticatedFirestoreStreamService } from './authenticated-firestore-stream';
 
 @Injectable({ providedIn: 'root' })
 export class UnreadMessagesService {
@@ -39,7 +39,7 @@ export class UnreadMessagesService {
   private readonly userService = inject(UserService);
   private readonly authService = inject(AuthService);
   private readonly firestore = inject(Firestore);
-  private readonly injector = inject(EnvironmentInjector);
+  private readonly authenticatedFirestoreStreamService = inject(AuthenticatedFirestoreStreamService);
 
   private readonly activeChannelIdSubject = new BehaviorSubject<string | null>(null);
   private readonly activeDmIdSubject = new BehaviorSubject<string | null>(null);
@@ -292,11 +292,11 @@ export class UnreadMessagesService {
 
   private getReadStatusEntriesByUser(userId: string): Observable<ReadStatusEntry[]> {
     if (!this.readStatusEntriesByUserCache.has(userId)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const readStatusCollection = collectionGroup(this.firestore, 'readStatus');
-        const readStatusQuery = query(readStatusCollection, where('userId', '==', userId));
+      const readStatusCollection = collectionGroup(this.firestore, 'readStatus');
+      const readStatusQuery = query(readStatusCollection, where('userId', '==', userId));
 
-        return createAuthenticatedFirestoreStream<ReadStatusEntry[]>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<ReadStatusEntry[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           isUserAllowed: (currentUser) => currentUser.uid === userId,
@@ -315,8 +315,8 @@ export class UnreadMessagesService {
                 }))
               )
             ),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
       this.readStatusEntriesByUserCache.set(userId, stream$);
     }

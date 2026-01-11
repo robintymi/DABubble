@@ -1,4 +1,4 @@
-import { EnvironmentInjector, Injectable, inject, runInInjectionContext } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
   Timestamp,
@@ -20,7 +20,7 @@ import { Observable, map, shareReplay } from 'rxjs';
 import { NOTIFICATIONS } from '../notifications';
 import type { DirectMessage, DirectMessageEntry, DirectMessageMeta } from '../types';
 import { AuthService } from './auth.service';
-import { createAuthenticatedFirestoreStream } from './authenticated-firestore-stream';
+import { AuthenticatedFirestoreStreamService } from './authenticated-firestore-stream';
 
 @Injectable({ providedIn: 'root' })
 export class DirectMessagesService {
@@ -30,12 +30,12 @@ export class DirectMessagesService {
 
   private authService = inject(AuthService);
   private firestore = inject(Firestore);
-  private injector = inject(EnvironmentInjector);
+  private authenticatedFirestoreStreamService = inject(AuthenticatedFirestoreStreamService);
 
   getDirectMessages(): Observable<DirectMessage[]> {
     if (!this.directMessages$) {
-      this.directMessages$ = runInInjectionContext(this.injector, () => {
-        return createAuthenticatedFirestoreStream<DirectMessage[]>({
+      this.directMessages$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<DirectMessage[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
@@ -52,8 +52,8 @@ export class DirectMessagesService {
               )
             );
           },
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
     }
 
     return this.directMessages$;
@@ -61,11 +61,11 @@ export class DirectMessagesService {
 
   getDirectMessageMetas(userId: string): Observable<DirectMessageMeta[]> {
     if (!this.directMessageMetaCache.has(userId)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const metaCollection = collection(this.firestore, 'directMessages');
-        const metaQuery = query(metaCollection, where('participants', 'array-contains', userId));
+      const metaCollection = collection(this.firestore, 'directMessages');
+      const metaQuery = query(metaCollection, where('participants', 'array-contains', userId));
 
-        return createAuthenticatedFirestoreStream<DirectMessageMeta[]>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<DirectMessageMeta[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           isUserAllowed: (currentUser) => currentUser.uid === userId,
@@ -82,8 +82,8 @@ export class DirectMessagesService {
                 }))
               )
             ),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
       this.directMessageMetaCache.set(userId, stream$);
     }
@@ -98,8 +98,8 @@ export class DirectMessagesService {
 
       const messagesQuery = query(messagesCollection, orderBy('createdAt', 'asc'));
 
-      const stream$ = runInInjectionContext(this.injector, () =>
-        createAuthenticatedFirestoreStream<DirectMessageEntry[]>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<DirectMessageEntry[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           isUserAllowed: (currentUser) => currentUser.uid === currentUserId,
@@ -118,8 +118,8 @@ export class DirectMessagesService {
                 }))
               )
             ),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: true }))
-      );
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
       this.directMessagesCache.set(conversationId, stream$);
     }

@@ -22,7 +22,7 @@ import { Router } from '@angular/router';
 import { ToastService } from '../toast/toast.service';
 import { NOTIFICATIONS } from '../notifications';
 import { ProfilePictureKey } from '../types';
-import { createAuthenticatedFirestoreStream } from './authenticated-firestore-stream';
+import { AuthenticatedFirestoreStreamService } from './authenticated-firestore-stream';
 
 export interface AppUser {
   uid: string;
@@ -46,6 +46,7 @@ export class UserService {
   private firestore = inject(Firestore);
   private router = inject(Router);
   private toastService = inject(ToastService);
+  private authenticatedFirestoreStreamService = inject(AuthenticatedFirestoreStreamService);
 
   private userDocSubscription?: Subscription;
   private allUsers$?: Observable<AppUser[]>;
@@ -181,8 +182,8 @@ export class UserService {
    */
   getAllUsers(): Observable<AppUser[]> {
     if (!this.allUsers$) {
-      this.allUsers$ = runInInjectionContext(this.injector, () => {
-        return createAuthenticatedFirestoreStream<AppUser[]>({
+      this.allUsers$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<AppUser[]>({
           authState$: this.authService.authState$,
           fallbackValue: [],
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
@@ -205,8 +206,8 @@ export class UserService {
               )
             );
           },
-        }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: false }));
     }
 
     return this.allUsers$;
@@ -240,17 +241,17 @@ export class UserService {
 
   private getUserDoc(uid: string): Observable<AppUser | null> {
     if (!this.userDocCache.has(uid)) {
-      const stream$ = runInInjectionContext(this.injector, () => {
-        const userDoc = doc(this.firestore, `users/${uid}`);
+      const userDoc = doc(this.firestore, `users/${uid}`);
 
-        return createAuthenticatedFirestoreStream<AppUser | null>({
+      const stream$ = this.authenticatedFirestoreStreamService
+        .createStreamWithInjectionContext<AppUser | null>({
           authState$: this.authService.authState$,
           fallbackValue: null,
           isUserAllowed: (currentUser) => currentUser.uid === uid,
           shouldLogError: () => Boolean(this.authService.auth.currentUser),
           createStream: () => docData(userDoc).pipe(map((data) => (data as AppUser) ?? null)),
-        }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
-      });
+        })
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
       this.userDocCache.set(uid, stream$);
     }
