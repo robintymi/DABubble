@@ -259,7 +259,7 @@
   display: flex;
   gap: 8px;
   padding: 6px 12px;
-  border-radius: 20px 20px 0 20px;
+  border-radius: 20px 20px 20px 0;
   border: 1px solid #e2e8f0;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(79, 70, 229, 0.18);
@@ -271,6 +271,13 @@
     transform 0.2s ease;
   z-index: 4;
 }
+
+.message-board__bubble-actions--own {
+  right: auto;
+  left: 0;
+  border-radius: 20px 20px 0 20px;
+}
+
 .message-board__bubble:hover .message-board__bubble-actions,
 .message-board__bubble-actions--visible {
   opacity: 1;

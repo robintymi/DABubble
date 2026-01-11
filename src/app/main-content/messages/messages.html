@@ -32,7 +32,8 @@
         <article class="message-board__bubble" [class.message-board__bubble--own]="message.isOwn">
           <div
             class="message-board__bubble-actions"
-            [class.message-board__bubble-actions--visible]="openEmojiPickerFor === message.id">
+            [class.message-board__bubble-actions--visible]="openEmojiPickerFor === message.id"
+            [class.message-board__bubble-actions--own]="message.isOwn">
             <button
               type="button"
               class="message-board__bubble-action"

@@ -18,6 +18,7 @@
         <div
           class="thread__bubble-actions"
           [class.thread__bubble-actions--visible]="openEmojiPickerFor === thread.root.id"
+          [class.thread__bubble-actions--own]="thread.root.isOwn"
           aria-label="Aktionen für die Ausgangsnachricht">
           <button
             type="button"
@@ -81,6 +82,7 @@
           <div
             class="thread__bubble-actions"
             [class.thread__bubble-actions--visible]="openEmojiPickerFor === reply.id"
+            [class.thread__bubble-actions--own]="reply.isOwn"
             aria-label="Aktionen für die Antwort">
             <button
               type="button"

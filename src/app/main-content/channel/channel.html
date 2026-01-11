@@ -60,6 +60,7 @@
                     <div
                       class="channel__message-actions"
                       [class.channel__message-actions--visible]="openEmojiPickerFor === message.id"
+                      [class.channel__message-actions--own]="message.isOwn"
                       aria-label="Nachrichtenaktionen">
                       <button
                         type="button"
