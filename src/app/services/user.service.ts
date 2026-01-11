@@ -289,12 +289,15 @@ export class UserService {
 
     try {
       if (user?.isGuest) {
+        document.body.style.cursor = 'wait';
         await this.guestService.signOutGuest(user);
       } else {
         await this.authService.signOut();
       }
     } catch (error: any) {
       this.toastService.error(error.message ?? NOTIFICATIONS.TOAST_LOGOUT_FAILURE);
+    } finally {
+      document.body.style.cursor = 'default';
     }
   }
 }

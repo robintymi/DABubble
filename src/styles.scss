@@ -37,6 +37,7 @@ a {
 
   &:disabled {
     cursor: default;
+    filter: grayscale(1);
   }
 }
 

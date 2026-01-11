@@ -34,6 +34,7 @@ export class NavbarDialog {
   originTarget!: HTMLElement;
   visible = true;
   mode: 'desktop' | 'mobile' = 'desktop';
+  isSigningOut = false;
 
   @Output() closed = new EventEmitter<void>();
 
@@ -95,8 +96,10 @@ export class NavbarDialog {
   }
 
   async logOut() {
-    this.userService.logout();
+    this.isSigningOut = true;
+    await this.userService.logout();
     this.startCloseAnimation();
     this.brandState.resetSplash();
+    this.isSigningOut = false;
   }
 }

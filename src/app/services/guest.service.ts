@@ -19,6 +19,7 @@ import { ChannelService } from './channel.service';
 import { ChannelMembershipService } from './membership.service';
 import { DirectMessagesService } from './direct-messages.service';
 import { MessageReactionsService } from './message-reactions.service';
+import { ToastService } from '../toast/toast.service';
 
 const GUEST_FALLBACK_NUMBER = 999;
 
@@ -30,6 +31,7 @@ export class GuestService {
   private membershipService = inject(ChannelMembershipService);
   private directMessagesService = inject(DirectMessagesService);
   private messageReactionsService = inject(MessageReactionsService);
+  private toastService = inject(ToastService);
 
   /** Builds the initial guest user payload. */
   async buildGuestUserDocData() {
@@ -43,39 +45,19 @@ export class GuestService {
     };
   }
 
-  /** Signs out and schedules cleanup for a guest account. */
+  /** Signs out and cleans up database for a guest account. */
   async signOutGuest(user: AppUser | null): Promise<void> {
-    try {
-      await this.deleteGuestAuthRecord(user);
-      this.scheduleGuestCleanup(user!);
-    } catch (_) {
+    if (!this.isGuestUser(user)) {
       throw new Error(NOTIFICATIONS.TOAST_LOGOUT_FAILURE);
     }
+    await this.cleanupGuestUserData(user!);
   }
 
-  async deleteGuestAuthRecord(user: AppUser | null): Promise<void> {
+  private isGuestUser(user: AppUser | null) {
     const firebaseUser = this.authService.auth.currentUser;
-
-    if (!user || !firebaseUser) throw new Error(NOTIFICATIONS.GUEST_WRONG_IDENTITY);
-    if (!user.isGuest || !firebaseUser.isAnonymous) throw new Error(NOTIFICATIONS.GUEST_WRONG_IDENTITY);
-
-    try {
-      await this.authService.deleteCurrentUser();
-    } catch (error) {
-      console.error(error);
-      throw new Error(NOTIFICATIONS.ACCOUNT_DELETION_FAILURE);
-    }
-  }
-
-  /** Runs cleanup for a guest without blocking the caller. */
-  private scheduleGuestCleanup(user: AppUser): void {
-    queueMicrotask(async () => {
-      try {
-        await this.cleanupGuestUserData(user);
-      } catch (error) {
-        console.error(NOTIFICATIONS.GUEST_CLEANUP_FAILED, error);
-      }
-    });
+    if (!user || !firebaseUser) return false;
+    if (!user.isGuest || !firebaseUser.isAnonymous) return false;
+    return true;
   }
 
   /** Cleans up expired guests if not successful last 24 hours. */
@@ -101,13 +83,6 @@ export class GuestService {
   /** Deletes all guest data across collections. */
   async cleanupGuestUserData(user: AppUser): Promise<boolean> {
     let isSuccessful = true;
-
-    try {
-      await this.deleteGuestAuthRecord(user);
-    } catch (error) {
-      console.error('Gast: ' + NOTIFICATIONS.ACCOUNT_DELETION_FAILURE);
-      isSuccessful = false;
-    }
 
     try {
       await this.deleteAllMessagesByAuthor(user.uid);
@@ -148,6 +123,14 @@ export class GuestService {
       await deleteDoc(doc(this.firestore, `users/${user.uid}`));
     } catch (error) {
       console.error('Gast: ' + NOTIFICATIONS.USER_DOCUMENT_DELETE_FAILED, error);
+      isSuccessful = false;
+    }
+
+    try {
+      await this.deleteGuestAuthRecord(user);
+    } catch (error: any) {
+      this.toastService.error(NOTIFICATIONS.TOAST_LOGOUT_FAILURE);
+      console.error('Gast: ' + error.message);
       isSuccessful = false;
     }
 
@@ -203,6 +186,19 @@ export class GuestService {
   /** Removes the user from all reactions in channels. */
   private async removeReactionsByUser(userId: string): Promise<void> {
     await this.messageReactionsService.removeReactionsByUser(userId);
+  }
+
+  async deleteGuestAuthRecord(user: AppUser | null): Promise<void> {
+    if (!this.isGuestUser(user)) {
+      throw new Error(NOTIFICATIONS.GUEST_WRONG_IDENTITY);
+    }
+
+    try {
+      await this.authService.deleteCurrentUser();
+    } catch (error) {
+      console.error(error);
+      throw new Error(NOTIFICATIONS.ACCOUNT_DELETION_FAILURE);
+    }
   }
 
   /** Picks a random unused guest number. */

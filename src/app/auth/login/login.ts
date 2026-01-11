@@ -50,6 +50,7 @@ export class Login {
       return;
     }
 
+    document.body.style.cursor = 'wait';
     this.isSubmitting = true;
     this.resetMessages();
 
@@ -67,6 +68,7 @@ export class Login {
       this.toastService.error(NOTIFICATIONS.TOAST_LOGIN_FAILURE);
     } finally {
       this.isSubmitting = false;
+      document.body.style.cursor = 'default';
     }
   }
 
