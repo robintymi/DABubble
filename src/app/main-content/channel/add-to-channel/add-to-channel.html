@@ -14,14 +14,12 @@
   </header>
 
   <div class="add-to-channel__channel-tag" aria-label="Aktueller Channel">
-    <mat-icon>tag</mat-icon>
     <span># {{ channelTitle }}</span>
   </div>
 
   <form class="add-to-channel__search" (ngSubmit)="onSubmit()">
-    <label class="add-to-channel__label" for="add-to-channel-search">Mitglieder hinzufügen</label>
     <div class="add-to-channel__field">
-      <mat-icon>add_circle</mat-icon>
+    
       <input
         id="add-to-channel-search"
         type="text"
