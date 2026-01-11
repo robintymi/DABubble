@@ -238,7 +238,9 @@ export class UserService {
         return docData(userDoc).pipe(
           map((data) => (data as AppUser) ?? null),
           catchError((error) => {
-            console.error(error);
+            if (this.authService.auth.currentUser) {
+              console.error(error);
+            }
             return of(null);
           }),
           shareReplay({ bufferSize: 1, refCount: false })

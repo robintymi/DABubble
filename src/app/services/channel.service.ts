@@ -18,6 +18,7 @@ import {
 import { Observable, catchError, combineLatest, map, of, shareReplay } from 'rxjs';
 import type { AppUser } from './user.service';
 import type { Channel, ChannelAttachment, ChannelMessage } from '../types';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class ChannelService {
@@ -28,6 +29,7 @@ export class ChannelService {
 
   private readonly firestore = inject(Firestore);
   private readonly injector = inject(EnvironmentInjector);
+  private readonly authService = inject(AuthService);
 
   getChannels(): Observable<Channel[]> {
     if (!this.channels$) {
@@ -51,7 +53,9 @@ export class ChannelService {
         return docData(channelDoc).pipe(
           map((data) => (data as Channel) ?? null),
           catchError((error) => {
-            console.error(error);
+            if (this.authService.auth.currentUser) {
+              console.error(error);
+            }
             return of(null);
           }),
           shareReplay({ bufferSize: 1, refCount: false })
