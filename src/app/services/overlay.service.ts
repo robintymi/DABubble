@@ -14,6 +14,9 @@ export class OverlayService {
     this.createBackdrop();
   }
 
+  BASE_OVERLAY_Z = 600;
+  BASE_BACKDROP_Z = 500;
+
   registerOnAnyOverlayClosed(cb: () => void) {
     this.onAnyOverlayClosed = cb;
   }
@@ -27,7 +30,7 @@ export class OverlayService {
       this.backdrop.style.background = 'rgba(0,0,0,0.6)';
     }
 
-    this.backdrop.style.zIndex = String(1000 + depth - 1);
+    this.backdrop.style.zIndex = String(this.BASE_BACKDROP_Z + depth);
   }
 
   private createBackdrop() {
@@ -37,7 +40,7 @@ export class OverlayService {
       position: 'fixed',
       inset: '0',
       background: 'rgba(0,0,0,0.4)',
-      zIndex: '999',
+      zIndex: String(this.BASE_BACKDROP_Z),
       display: 'none',
     });
 

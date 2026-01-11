@@ -39,6 +39,8 @@ export class OverlayRef<T extends object = any> {
   private previouslyFocusedElement: HTMLElement | null = null;
   public mode: 'desktop' | 'mobile' = 'desktop';
   public stackIndex = 0;
+  BASE_OVERLAY_Z = 600; // Custom Overlays
+  BASE_BACKDROP_Z = 500;
 
   /** Visibility flag for controlling animations */
   public visible = true;
@@ -67,7 +69,7 @@ export class OverlayRef<T extends object = any> {
     this.overlayContainer = document.createElement('div');
     Object.assign(this.overlayContainer.style, {
       position: 'fixed',
-      zIndex: String(1000 + this.stackIndex),
+      zIndex: String(this.BASE_OVERLAY_Z + this.stackIndex),
     });
 
     this.overlayContainer.setAttribute('role', 'dialog');
