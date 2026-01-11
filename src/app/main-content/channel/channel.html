@@ -264,6 +264,8 @@
     [mode]="isTabletScreen() ? 'over' : 'side'"
     [opened]="hasThreadChild()"
     [disableClose]="!isTabletScreen()"
+    (opened)="updateThreadPanelOpenState(true)"
+    (closedStart)="updateThreadPanelOpenState(false)"
     (closed)="closeThread()">
     <router-outlet></router-outlet>
   </mat-sidenav>

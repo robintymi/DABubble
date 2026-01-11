@@ -42,6 +42,8 @@ export class ThreadService {
 
   private readonly closeRequests = new Subject<void>();
   readonly closeRequests$ = this.closeRequests.asObservable();
+  private readonly threadPanelOpenSubject = new BehaviorSubject(false);
+  readonly threadPanelOpen$ = this.threadPanelOpenSubject.asObservable();
 
   private readonly authUser$ = this.authService.authState$.pipe(
     startWith(this.authService.auth.currentUser),
@@ -150,6 +152,10 @@ export class ThreadService {
 
   requestClose(): void {
     this.closeRequests.next();
+  }
+
+  setThreadPanelOpen(isOpen: boolean): void {
+    this.threadPanelOpenSubject.next(isOpen);
   }
 
   async addReply(text: string): Promise<void> {

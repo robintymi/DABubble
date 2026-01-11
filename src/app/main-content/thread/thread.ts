@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, combineLatest, map, of, shareReplay, switchMap } from 'rxjs';
+import { Observable, combineLatest, distinctUntilChanged, filter, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { ThreadService } from '../../services/thread.service';
 import type { ChannelMemberView, ThreadContext } from '../../types';
 import { AppUser, UserService } from '../../services/user.service';
@@ -153,10 +153,20 @@ export class Thread {
     this.thread$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((thread) => {
       this.threadSnapshot = thread;
       this.scrollToBottom();
-      if (thread) {
-        requestAnimationFrame(() => this.focusComposer());
-      }
     });
+
+    const threadId$ = this.thread$.pipe(
+      map((thread) => thread?.root?.id ?? null),
+      distinctUntilChanged()
+    );
+
+    combineLatest([threadId$, this.threadService.threadPanelOpen$])
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter(([threadId, isOpen]) => Boolean(threadId) && isOpen),
+        tap(() => requestAnimationFrame(() => this.focusComposer()))
+      )
+      .subscribe();
   }
 
   protected async closeThread(): Promise<void> {

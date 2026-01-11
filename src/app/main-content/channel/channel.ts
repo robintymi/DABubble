@@ -316,6 +316,10 @@ export class ChannelComponent {
     }
   }
 
+  protected updateThreadPanelOpenState(isOpen: boolean): void {
+    this.threadService.setThreadPanelOpen(isOpen);
+  }
+
   protected onComposerKeydown(event: Event): void {
     const keyboardEvent = event as KeyboardEvent;
     if (keyboardEvent.key === 'Enter' && !keyboardEvent.shiftKey) return;
