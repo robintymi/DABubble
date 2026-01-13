@@ -38,7 +38,12 @@ export class OverlayService {
 
     Object.assign(this.backdrop.style, {
       position: 'fixed',
-      inset: '0',
+      top: '0',
+      left: '0',
+      right: '0',
+      bottom: '0',
+      width: '100vw',
+      height: '100vh',
       background: 'rgba(0,0,0,0.4)',
       zIndex: String(this.BASE_BACKDROP_Z),
       display: 'none',
@@ -49,14 +54,14 @@ export class OverlayService {
       last?.startCloseAnimation();
     });
 
-    document.body.appendChild(this.backdrop);
+    document.documentElement.appendChild(this.backdrop);
   }
 
   open<T extends object>(component: Type<T>, config?: OverlayConfig<T>) {
     const previous = this.getLastOverlay();
     previous?.suspendFocus?.();
     this.backdrop.style.display = 'block';
-    this.backdrop.style.zIndex = String(1000 + this.overlays.length);
+    this.backdrop.style.zIndex = String(this.BASE_BACKDROP_Z + this.overlays.length);
 
     const overlayRef = new OverlayRef<T>(component, config, this.appRef, this.envInjector);
 

@@ -2,6 +2,9 @@
   width: 15rem;
   height: 15rem;
   border-radius: 1.5rem 0 1.5rem 1.5rem;
+  isolation: isolate;
+  position: relative;
+  background: white;
 }
 
 .navbar-dialog.mobile {
@@ -12,6 +15,21 @@
   height: auto;
   padding: 1.5rem 0;
   border-radius: 1rem 1rem 0 0;
+}
+
+.navbar-dialog.background {
+  pointer-events: none;
+  filter: blur(1px);
+}
+
+.navbar-dialog.background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: inherit;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .account-img {

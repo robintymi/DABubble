@@ -35,6 +35,7 @@ export class NavbarDialog {
   visible = true;
   mode: 'desktop' | 'mobile' = 'desktop';
   isSigningOut = false;
+  isBackground = false;
 
   @Output() closed = new EventEmitter<void>();
 
@@ -55,11 +56,13 @@ export class NavbarDialog {
   ngOnInit() {
     this.overlayService.registerOnAnyOverlayClosed(() => {
       this.activeItem = null;
+      this.isBackground = false;
     });
   }
 
   openProfileDialog() {
     this.activeItem = 'profile';
+    this.isBackground = true;
 
     if (this.mode === 'desktop') {
       this.openProfileDesktop();
@@ -80,7 +83,7 @@ export class NavbarDialog {
   openProfileMobile() {
     this.overlayService.open(ProfileMenu, {
       target: this.originTarget,
-      offsetX: -5,
+      offsetX: -110,
       offsetY: -535,
     });
   }
