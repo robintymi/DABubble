@@ -2,9 +2,12 @@ button:disabled {
   cursor: not-allowed;
   &:hover {
     cursor: not-allowed;
-    background-color: #bb0404;
     opacity: 0.5;
   }
+}
+
+.avatar-img {
+  cursor: pointer;
 }
 
 input {

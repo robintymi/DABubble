@@ -8,11 +8,12 @@
     <button (click)="closeOverlay()"><mat-icon class="close">close</mat-icon></button>
   </div>
   <div class="flex flex-col items-center">
-    <img
-      class="size-40 cursor-pointer rounded-full"
-      [src]="profilePictureService.getUrl(currentUser()?.profilePictureKey)"
-      alt="Profilbild ändern"
-      (click)="openAvatarOverlay()" />
+    <button class="avatar-img" (click)="openAvatarOverlay()" [disabled]="!canEditName">
+      <img
+        class="size-40 rounded-full"
+        [src]="profilePictureService.getUrl(currentUser()?.profilePictureKey)"
+        alt="Profilbild ändern" />
+    </button>
     <span class="text-xs">Klick mich zum Ändern</span>
   </div>
 
