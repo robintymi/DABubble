@@ -102,14 +102,15 @@ export class NavbarDialog {
     if (this.isSigningOut) {
       return;
     }
-    
+
     this.isSigningOut = true;
     this.brandState.resetSplash();
-    
+
     try {
       await this.userService.logout();
+      this.startCloseAnimation();
       // Nach logout wird zu /login navigiert, Component wird zerstört
-      // Keine Animation mehr nötig
+      // Keine Animation mehr nötig (Musste ich wieder reinbauen, weil sonst der Dialog/Overlay offen bleibt)
     } catch (error) {
       // Bei Fehler Animation schließen und Flag zurücksetzen
       this.startCloseAnimation();
