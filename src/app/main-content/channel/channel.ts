@@ -337,7 +337,7 @@ export class ChannelComponent {
 
   protected onComposerKeydown(event: Event): void {
     const keyboardEvent = event as KeyboardEvent;
-    if (keyboardEvent.key === 'Enter' && !keyboardEvent.shiftKey) return;
+    if (keyboardEvent.key !== 'Enter' || keyboardEvent.shiftKey) return;
     keyboardEvent.preventDefault();
     this.sendMessage();
   }
