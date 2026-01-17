@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, NgZone, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -39,6 +39,7 @@ export class Thread {
   private readonly directMessagesService = inject(DirectMessagesService);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly ngZone = inject(NgZone);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly messageReactionsService = inject(MessageReactionsService);
@@ -156,8 +157,21 @@ export class Thread {
 
     this.thread$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((thread) => {
       this.threadSnapshot = thread;
-      this.scrollToBottom();
     });
+
+    this.thread$
+      .pipe(
+        map((thread) => ({
+          rootId: thread?.root?.id ?? null,
+          repliesCount: thread?.replies.length ?? 0,
+        })),
+        distinctUntilChanged(
+          (previous, current) =>
+            previous.rootId === current.rootId && previous.repliesCount === current.repliesCount
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => this.scrollToBottom());
 
     const threadId$ = this.thread$.pipe(
       map((thread) => thread?.root?.id ?? null),
@@ -481,8 +495,10 @@ export class Thread {
   private scrollToBottom(): void {
     const element = this.threadScrollArea?.nativeElement;
     if (!element) return;
-    requestAnimationFrame(() => {
-      element.scrollTop = element.scrollHeight;
+    this.ngZone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        element.scrollTop = element.scrollHeight;
+      });
     });
   }
 
