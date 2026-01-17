@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, NgZone, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -75,6 +75,7 @@ export class ChannelComponent {
   private readonly dialog = inject(MatDialog);
   private readonly screenService = inject(ScreenService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly ngZone = inject(NgZone);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly overlay = inject(Overlay);
@@ -113,6 +114,7 @@ export class ChannelComponent {
   private mentionCaretIndex: number | null = null;
   private lastMessageCount = 0;
   private lastMessageId?: string;
+  private shouldScrollOnNextMessage = false;
   private overlayRef?: OverlayRef;
   protected readonly hasThreadChild = signal(false);
 
@@ -220,7 +222,8 @@ export class ChannelComponent {
       return this.channelService
         .getChannelMessagesResolved(channel.id, this.allUsers$)
         .pipe(map((messages) => this.groupMessagesByDay(messages)));
-    })
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
   constructor() {
@@ -229,6 +232,7 @@ export class ChannelComponent {
     this.channel$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((channel) => {
       this.lastMessageCount = 0;
       this.lastMessageId = undefined;
+      this.shouldScrollOnNextMessage = false;
       if (channel?.id) {
         requestAnimationFrame(() => this.focusComposer());
       }
@@ -243,8 +247,14 @@ export class ChannelComponent {
       this.updateMentionSuggestions();
     });
 
-    this.messagesByDay$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      if (this.isNearBottom()) {
+    this.messagesByDay$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((days) => {
+      const wasNearBottom = this.isNearBottom();
+      const hasNewMessages = this.shouldAutoScroll(days);
+      if (!hasNewMessages) return;
+
+      const shouldScroll = this.shouldScrollOnNextMessage || wasNearBottom;
+      this.shouldScrollOnNextMessage = false;
+      if (shouldScroll) {
         this.scrollToBottom();
       }
     });
@@ -584,6 +594,8 @@ export class ChannelComponent {
     if (!currentUser?.uid) return;
 
     this.isSending = true;
+    this.shouldScrollOnNextMessage = true;
+    this.ngZone.runOutsideAngular(() => requestAnimationFrame(() => this.focusComposer()));
 
     this.channel$
       .pipe(
@@ -615,8 +627,10 @@ export class ChannelComponent {
           this.messageText = '';
           this.resetMentionSuggestions();
           this.isComposerEmojiPickerOpen = false;
+          this.ngZone.runOutsideAngular(() => requestAnimationFrame(() => this.focusComposer()));
         },
         error: (error: unknown) => {
+          this.shouldScrollOnNextMessage = false;
           console.error('Fehler beim Senden der Nachricht', error);
         },
         complete: () => {
@@ -851,8 +865,10 @@ export class ChannelComponent {
     const element = this.channelMessages?.nativeElement;
     if (!element) return;
 
-    requestAnimationFrame(() => {
-      element.scrollTop = element.scrollHeight;
+    this.ngZone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        element.scrollTop = element.scrollHeight;
+      });
     });
   }
 
@@ -875,34 +891,38 @@ export class ChannelComponent {
 
       if (!el || !container) {
         if (attempt < 10) {
-          requestAnimationFrame(() => tryScroll(attempt + 1));
+          this.ngZone.runOutsideAngular(() => requestAnimationFrame(() => tryScroll(attempt + 1)));
         }
         return;
       }
 
-      requestAnimationFrame(() => {
+      this.ngZone.runOutsideAngular(() => {
         requestAnimationFrame(() => {
-          const containerRect = container.getBoundingClientRect();
-          const elRect = el.getBoundingClientRect();
+          requestAnimationFrame(() => {
+            const containerRect = container.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
 
-          const offset =
-            elRect.top - containerRect.top + container.scrollTop - container.clientHeight / 2 + el.clientHeight / 2;
+            const offset =
+              elRect.top - containerRect.top + container.scrollTop - container.clientHeight / 2 + el.clientHeight / 2;
 
-          container.scrollTo({
-            top: offset,
-            behavior: 'smooth',
-          });
+            container.scrollTo({
+              top: offset,
+              behavior: 'smooth',
+            });
 
-          el.classList.add('highlight');
+            el.classList.add('highlight');
 
-          setTimeout(() => {
-            el.classList.remove('highlight');
-          }, 800);
+            setTimeout(() => {
+              el.classList.remove('highlight');
+            }, 800);
 
-          void this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: {},
-            replaceUrl: true,
+            this.ngZone.run(() => {
+              void this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: {},
+                replaceUrl: true,
+              });
+            });
           });
         });
       });
