@@ -61,7 +61,7 @@
             Channels
           </span>
           <ng-container *ngIf="channelUnreadTotalCount$ | async as unreadTotal">
-            <span class="workspace__section-badge workspace__section-badge--active" *ngIf="unreadTotal > 0">
+            <span class="workspace__unread-badge" *ngIf="unreadTotal > 0">
               {{ unreadTotal }}
             </span>
           </ng-container>
@@ -96,8 +96,8 @@
           </li>
         </ul>
         <button class="workspace__add-btn" type="button" (click)="openCreateChannel()">
-          <img class="desktop"src="imgs/workspace/add new channel.png" alt="Neuen Channel anlegen" />
-          <img class="mobile" src="imgs/workspace/add-circle-mobile.svg" alt="Mobile neuen Channel anlegen">
+          <img class="desktop" src="imgs/workspace/add new channel.png" alt="Neuen Channel anlegen" />
+          <img class="mobile" src="imgs/workspace/add-circle-mobile.svg" alt="Mobile neuen Channel anlegen" />
           <span>Channel hinzufügen</span>
         </button>
       </ng-container>
@@ -129,7 +129,7 @@
             Direktnachrichten
           </span>
           <ng-container *ngIf="directMessageUnreadTotalCount$ | async as unreadTotal">
-            <span class="workspace__section-badge workspace__section-badge--active" *ngIf="unreadTotal > 0">
+            <span class="workspace__unread-badge" *ngIf="unreadTotal > 0">
               {{ unreadTotal }}
             </span>
           </ng-container>
@@ -148,10 +148,7 @@
               [class.workspace__list-item--unread]="user.unreadCount > 0"
               (click)="openDirectMessage(user)">
               <div class="relative">
-                <img
-                  class="workspace__avatar"
-                  [src]="getAvatarUrl(user.profilePictureKey)"
-                  [alt]="user.name" />
+                <img class="workspace__avatar" [src]="getAvatarUrl(user.profilePictureKey)" [alt]="user.name" />
                 <span
                   class="absolute right-0 bottom-0 size-3 rounded-full border-2 border-white"
                   [ngClass]="user.onlineStatus ? 'bg-green-500' : 'bg-gray-400'">
