@@ -23,6 +23,7 @@ import { ToastService } from '../toast/toast.service';
 import { NOTIFICATIONS } from '../notifications';
 import { ProfilePictureKey } from '../types';
 import { AuthenticatedFirestoreStreamService } from './authenticated-firestore-stream';
+import { BrandStateService } from './brand-state.service';
 
 export interface AppUser {
   uid: string;
@@ -46,6 +47,7 @@ export class UserService {
   private router = inject(Router);
   private toastService = inject(ToastService);
   private authenticatedFirestoreStreamService = inject(AuthenticatedFirestoreStreamService);
+  private brandState = inject(BrandStateService);
 
   private userDocSubscription?: Subscription;
   private allUsers$?: Observable<AppUser[]>;

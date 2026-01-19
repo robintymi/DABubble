@@ -4,7 +4,7 @@ import { ProfileMenu } from '../profile-menu/profile-menu';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { BrandStateService } from '../../../services/brand-state.service';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { UserService } from '../../../services/user.service';
 
 @Component({
@@ -42,6 +42,8 @@ export class NavbarDialog {
   @ViewChild('profileBtn', { read: ElementRef })
   profileBtn!: ElementRef<HTMLElement>;
   activeItem: 'profile' | 'logout' | null = null;
+
+  private router = inject(Router);
 
   constructor(
     private userService: UserService,
@@ -100,15 +102,21 @@ export class NavbarDialog {
 
   async logOut() {
     if (this.isSigningOut) return;
-
     this.isSigningOut = true;
 
     try {
       await this.userService.logout();
-      this.startCloseAnimation();
-      this.brandState.resetSplash();
+      await this.closeOverlay();
+      await this.router.navigate(['/login'], { replaceUrl: true });
     } finally {
       this.isSigningOut = false;
     }
+  }
+
+  private closeOverlay(): Promise<void> {
+    return new Promise((resolve) => {
+      this.closed.subscribe(() => resolve());
+      this.startCloseAnimation();
+    });
   }
 }
