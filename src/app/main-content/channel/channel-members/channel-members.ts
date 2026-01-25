@@ -34,8 +34,9 @@ export class ChannelMembers {
   private readonly profilePictureService = inject(ProfilePictureService);
 
   @Input() members: ChannelMemberView[] = [];
-  @Input() title = 'Mitglieder';
+  @Input() overlayTitle  = 'Mitglieder';
   @Input() channelId?: string;
+  @Input() channelTitle?: string;
   @Input() mode: 'desktop' | 'mobile' = 'desktop';
 
   @Input() originTarget?: HTMLElement;
@@ -70,6 +71,11 @@ export class ChannelMembers {
       offsetX: isMobile ? -285 : -285,
 
       mode: isMobile ? 'mobile' : 'desktop',
+      data: {
+        channelId: this.channelId,
+        members: this.members,
+        channelTitle: this.channelTitle,
+      },
     });
   }
 

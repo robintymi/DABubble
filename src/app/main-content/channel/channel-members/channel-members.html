@@ -6,10 +6,10 @@
   (@fadeScale.done)="onAnimationDone()"
   role="dialog"
   aria-modal="true"
-  [attr.aria-label]="title">
+  [attr.aria-label]="overlayTitle">
   <header class="channel-members__header">
     <div class="channel-members__title-row">
-      <h3>{{ title }}</h3>
+      <h3>{{ overlayTitle }}</h3>
     </div>
     <button type="button" class="channel-members__close" aria-label="Overlay schließen" (click)="closeOverlay()">
       <mat-icon>close</mat-icon>

@@ -484,17 +484,18 @@ export class ChannelComponent {
     const target = event.currentTarget as HTMLElement | null;
     const isMobile = this.screenService.isTabletScreen();
 
-    combineLatest([this.channel$, this.channelTitle$, this.members$])
+    combineLatest([this.channel$, this.members$])
       .pipe(take(1))
-      .subscribe(([ch, title, members]) => {
+      .subscribe(([ch, members]) => {
         this.overlayService.open(ChannelMembers, {
           target: target ?? undefined,
           offsetX: isMobile ? -185 : -185,
           offsetY: 8,
           data: {
             channelId: ch?.id,
-            title,
             members,
+            overlayTitle: 'Mitglieder',
+            channelTitle: ch?.title,
             mode: isMobile ? 'mobile' : 'desktop',
             originTarget: target ?? undefined,
           },
