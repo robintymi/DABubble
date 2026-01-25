@@ -180,26 +180,22 @@ export class ChannelComponent {
   private enrichMembers(members: ChannelMemberView[], users: AppUser[]): ChannelMemberView[] {
     const currentUserId = this.userService.currentUser()?.uid;
     const userMap = new Map(users.map((u) => [u.uid, u]));
-    return members.map((m) => {
-      const user = userMap.get(m.id);
-      return {
-        id: m.id,
-        name: user?.name ?? m.name,
-        profilePictureKey: user?.profilePictureKey ?? m.profilePictureKey ?? 'default',
-        subtitle: m.subtitle,
-        isCurrentUser: m.id === currentUserId,
-        user: user ?? {
-          uid: m.id,
-          name: m.name,
-          email: null,
-          profilePictureKey: m.profilePictureKey ?? 'default',
-          onlineStatus: false,
-          lastSeen: undefined,
-          updatedAt: undefined,
-          createdAt: undefined,
-        },
-      };
-    });
+
+    return members
+      .map((m): ChannelMemberView | undefined => {
+        const user = userMap.get(m.id);
+        if (!user) return undefined;
+
+        return {
+          id: m.id,
+          name: user.name ?? m.name,
+          profilePictureKey: user.profilePictureKey ?? m.profilePictureKey,
+          subtitle: m.subtitle,
+          isCurrentUser: m.id === currentUserId,
+          user,
+        };
+      })
+      .filter((m): m is ChannelMemberView => m !== undefined);
   }
 
   /** Creates messages by day observable. */
