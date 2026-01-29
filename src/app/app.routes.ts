@@ -58,7 +58,11 @@ export const routes: Routes = [
     component: MainContent,
     canActivate: [onlyVerifiedGuard],
     children: [
-      { path: '', component: MainHome },
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'channels/GzP5VuJtvB50FtijLqlI',
+      },
       {
         path: 'create-channel',
         component: CreateChannelWithMembers,
@@ -66,7 +70,11 @@ export const routes: Routes = [
       {
         path: 'channels',
         children: [
-          { path: '', pathMatch: 'full', redirectTo: '/main' },
+          {
+            path: '',
+            pathMatch: 'full',
+            redirectTo: 'GzP5VuJtvB50FtijLqlI',
+          },
           {
             path: ':channelId',
             component: ChannelComponent,

@@ -104,6 +104,7 @@ export class ChannelComponent {
   protected channelId: string | null = null;
   protected currentUser: AppUser | null = null;
   protected readonly hasThreadChild = signal(false);
+  private didInitialScroll = false;
 
   // Mention state
   private mentionState: MentionState = { suggestions: [], isVisible: false, triggerIndex: null, caretIndex: null };
@@ -228,6 +229,9 @@ export class ChannelComponent {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
+        this.didInitialScroll = false;
+        this.lastMessageCount = 0;
+        this.lastMessageId = undefined;
         requestAnimationFrame(() => this.focusComposer());
       });
     this.allUsers$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => (this.allUsersSnapshot = u));
@@ -271,6 +275,17 @@ export class ChannelComponent {
 
   /** Handles messages change for auto-scroll. */
   private onMessagesChange(days: ChannelDay[]): void {
+    if (!this.channelMessages) return;
+    if (!this.didInitialScroll && days.length) {
+      this.didInitialScroll = true;
+
+      requestAnimationFrame(() => {
+        scrollToBottom(this.channelMessages, this.ngZone);
+      });
+      this.lastMessageCount = days.reduce((sum, d) => sum + d.messages.length, 0);
+      this.lastMessageId = days.at(-1)?.messages.at(-1)?.id;
+      return;
+    }
     const wasNear = isNearBottom(this.channelMessages?.nativeElement);
     const result = shouldAutoScroll(days, this.lastMessageCount, this.lastMessageId);
     if (!result.shouldScroll) return;

@@ -1,10 +1,11 @@
 .create-channel-view {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100%);
   max-height: 100vh;
   background: white;
   overflow: hidden;
+  border-radius: 25px;
 
   &__header {
     display: flex;
