@@ -7,12 +7,12 @@
       (click)="onBackClick()"
       aria-label="Zur vorherigen Ansicht">
       <mat-icon>keyboard_arrow_left</mat-icon>
-      <img class="size-12 rounded-full" src="/imgs/workspace/Workspace logo.png" />
+      <img class="size-12 rounded-full" src="imgs/workspace/Workspace logo.png" />
       Devspace
     </button>
 
     <ng-container *ngIf="!showBackButton">
-      <img class="size-12 lg:size-20" src="/imgs/logo.svg" />
+      <img class="size-12 lg:size-20" src="imgs/logo.svg" />
       <span class="cursor-default text-2xl font-bold md:text-3xl"> DABubble </span>
     </ng-container>
   </div>
@@ -34,8 +34,9 @@
       (close)="closeDropdown()"></app-filter-box>
   </div>
   <div class="hover-me flex items-center gap-1 lg:gap-4" (click)="openUserMenu()">
-    <p class="font-nunito hidden max-w-[140px] flex-1 text-2xl font-bold md:block lg:max-w-[400px] lg:text-3xl truncate"
-    [title]="currentUser()?.name || 'Gast'">
+    <p
+      class="font-nunito hidden max-w-[140px] flex-1 truncate text-2xl font-bold md:block lg:max-w-[400px] lg:text-3xl"
+      [title]="currentUser()?.name || 'Gast'">
       {{ currentUser()?.name | displayName }}
     </p>
     <div class="relative">

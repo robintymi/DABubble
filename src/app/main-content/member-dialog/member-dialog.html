@@ -14,7 +14,7 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <span [ngClass]="data.user.onlineStatus ? 'status-online' : 'status-offline'"></span  >
+      <span [ngClass]="data.user.onlineStatus ? 'status-online' : 'status-offline'"></span>
 
       <p [ngClass]="data.user.onlineStatus ? 'status-text-online' : 'status-text-offline'">
         {{ data.user.onlineStatus ? 'Aktiv' : 'Abwesend' }}
@@ -32,7 +32,7 @@
 
   <div class="mt-4 flex w-full justify-center" *ngIf="!isInDirectMessage">
     <button class="message-button" (click)="openDirectMessage()">
-      <img src="/imgs/member dialog/message_icon.png" />Nachricht
+      <img src="imgs/member dialog/message_icon.png" />Nachricht
     </button>
   </div>
 </section>

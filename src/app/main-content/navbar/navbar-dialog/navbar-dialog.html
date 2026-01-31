@@ -14,7 +14,7 @@
     (click)="openProfileDialog()">
     <img
       class="account-img lg:hidden"
-      [src]="activeItem === 'profile' ? '/imgs/account_focus.png' : '/imgs/direktnachrichten img.svg'"
+      [src]="activeItem === 'profile' ? 'imgs/account_focus.png' : 'imgs/direktnachrichten img.svg'"
       alt="" />
     Profil
   </button>
@@ -26,7 +26,7 @@
     (click)="logOut()">
     <img
       class="account-img lg:hidden"
-      [src]="activeItem === 'logout' ? '/imgs/logout_focus.png' : '/imgs/logout.svg'"
+      [src]="activeItem === 'logout' ? 'imgs/logout_focus.png' : 'imgs/logout.svg'"
       alt="" />
     Log out
   </button>
