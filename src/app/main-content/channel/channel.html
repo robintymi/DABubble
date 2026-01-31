@@ -58,7 +58,7 @@
                   [id]="'message-' + message.id"
                   [class.channel__message--own]="message.isOwn">
                   <img
-                    class="channel__message-avatar"
+                    class="channel__message-avatar rounded-full"
                     [src]="getAvatarUrl(message.profilePictureKey)"
                     [alt]="message.author" />
 
