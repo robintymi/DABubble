@@ -47,16 +47,15 @@ export class MainContent {
 
     this.router.events
       .pipe(
-        filter(
-          (e): e is NavigationEnd =>
-            e instanceof NavigationEnd && !this.screenService.isTabletScreen() && e.urlAfterRedirects === '/main'
-        ),
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe(() => {
-        this.router.navigateByUrl('/main/channels/GzP5VuJtvB50FtijLqlI', {
-          replaceUrl: true,
-        });
+      .subscribe((event) => {
+        if (this.handleRedirect(event)) {
+          return;
+        }
+
+        this.syncRouteState(this.route);
       });
   }
 
@@ -154,5 +153,14 @@ export class MainContent {
     this.unreadMessagesService.setActiveChannelId(channelId);
     this.unreadMessagesService.setActiveDmId(dmId);
     this.activeView.set(view);
+  }
+
+  private handleRedirect(event: NavigationEnd): boolean {
+    if (!this.screenService.isTabletScreen() && event.urlAfterRedirects === '/main') {
+      this.router.navigateByUrl('/main/channels/GzP5VuJtvB50FtijLqlI', { replaceUrl: true });
+      return true;
+    }
+
+    return false;
   }
 }

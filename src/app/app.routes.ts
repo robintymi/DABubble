@@ -75,7 +75,15 @@ export const routes: Routes = [
             path: ':channelId',
             component: ChannelComponent,
             canActivate: [ChannelAccessGuard],
-            children: [{ path: 'threads/:threadId', component: Thread }],
+            children: [
+              {
+                path: 'threads/:threadId',
+                component: Thread,
+                data: {
+                  viewTransitionRouteKey: 'threads',
+                },
+              },
+            ],
           },
         ],
       },
